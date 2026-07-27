@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lasertopia — Hours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/lasertopia.css" />
+<style>
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 820px) { .two-col { grid-template-columns: 1fr; } }
+
+  .hrow {
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    padding: 15px 0; border-bottom: 1px solid var(--border); font-size: 15.5px;
+  }
+  .hrow:last-child { border-bottom: none; }
+  .hrow .d { color: var(--muted); font-weight: 500; }
+  .hrow .t { font-family: 'Space Grotesk'; font-weight: 700; }
+  .hrow.today { color: var(--white); }
+  .hrow.today .d { color: var(--cyan); font-weight: 700; }
+  .hrow.today .t { color: var(--cyan); }
+  .hrow .now {
+    font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 800; letter-spacing: .1em;
+    background: var(--cyan); color: #04121a; padding: 3px 7px; border-radius: 999px; margin-left: 9px;
+  }
+
+  .srow {
+    display: flex; justify-content: space-between; align-items: center; gap: 14px;
+    padding: 13px 15px; border-radius: 11px; background: var(--near-black);
+    border: 1px solid var(--border); font-size: 14.5px;
+  }
+  .srow + .srow { margin-top: 9px; }
+  .srow.shut { border-color: rgba(255,91,91,.4); background: rgba(255,91,91,.06); }
+  .srow .d { font-weight: 600; }
+  .srow .d small { display: block; color: var(--dim); font-size: 12px; font-weight: 500; margin-top: 2px; }
+  .srow .t { font-family: 'Space Grotesk'; font-weight: 700; color: var(--orange); white-space: nowrap; }
+  .srow.shut .t { color: var(--danger); }
+
+  .status {
+    display: inline-flex; align-items: center; gap: 9px; font-family: 'Space Grotesk';
+    font-weight: 700; font-size: 15px; padding: 9px 16px; border-radius: 999px; margin-bottom: 18px;
+  }
+  .status.open  { background: rgba(53,208,127,.13); border: 1px solid rgba(53,208,127,.45); color: var(--ok); }
+  .status.shut  { background: rgba(255,91,91,.11); border: 1px solid rgba(255,91,91,.42); color: var(--danger); }
+  .status .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+</style>
+</head>
+<body>
+
+<div class="wrap hero">
+  <div class="eyebrow">Hours</div>
+  <h1>When we're <span class="hi">open</span></h1>
+  <p>Reservations are strongly encouraged. Our last game starts 30 minutes before we close.</p>
+</div>
+
+<div class="wrap stack">
+  <div id="status-host"></div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><div><h2>Regular hours</h2><div class="sub">Open daily</div></div></div>
+      <div id="weekly"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div><h2>Special hours</h2><div class="sub">These dates differ from the usual schedule</div></div></div>
+      <div id="specials"></div>
+      <div class="note-box" style="margin-top:16px">
+        The booking page already knows about these — closed days can't be selected, and days with
+        different hours only show the games we're actually running.
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px;text-align:center">
+    <h2 style="margin-bottom:6px">Reservations are strongly encouraged</h2>
+    <div class="sub" style="margin-bottom:18px">Grab your game time before it fills up.</div>
+    <a class="btn btn-primary" href="/">Book a game</a>
+  </div>
+
+  <div class="note-box warn" style="margin-top:18px">
+    No outside food, drinks, cakes or candies are allowed in the facility, as we are a nut-free environment.
+  </div>
+</div>
+
+<script type="module">
+import { WEEKLY_HOURS, SPECIAL_HOURS, ARENA, hoursFor, isoDate, parseISO, fmtTime } from '/lib/arena.js';
+import { mountShell, $, esc, longDate } from '/assets/shell.js';
+
+mountShell({ active: '/hours' });
+
+const now = new Date();
+const todayISO = isoDate(now);
+const todayWd = now.getDay();
+const nowMin = now.getHours() * 60 + now.getMinutes();
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+/* ---------- Are we open right now? ---------- */
+const h = hoursFor(todayISO);
+const openNow = !h.closed && nowMin >= h.open && nowMin < h.close;
+$('#status-host').innerHTML = openNow
+  ? `<div class="status open"><span class="dot"></span>Open now — until ${fmtTime(h.close)}</div>`
+  : `<div class="status shut"><span class="dot"></span>${h.closed ? 'Closed today' : `Closed right now — ${nowMin < h.open ? `opens ${fmtTime(h.open)}` : 'back tomorrow'}`}</div>`;
+
+/* ---------- Weekly ---------- */
+$('#weekly').innerHTML = [1, 2, 3, 4, 5, 6, 0].map((wd) => {
+  const [o, c] = WEEKLY_HOURS[wd];
+  const isToday = wd === todayWd;
+  return `<div class="hrow${isToday ? ' today' : ''}">
+    <span class="d">${DAY_NAMES[wd]}${isToday ? '<span class="now">TODAY</span>' : ''}</span>
+    <span class="t">${fmtTime(o)} – ${fmtTime(c)}</span>
+  </div>`;
+}).join('');
+
+/* ---------- Specials (upcoming first, past ones dropped) ---------- */
+const upcoming = Object.entries(SPECIAL_HOURS)
+  .filter(([date]) => date >= todayISO)
+  .sort(([a], [b]) => a.localeCompare(b));
+
+$('#specials').innerHTML = upcoming.length
+  ? upcoming.map(([date, spec]) => {
+      const closed = !spec.hours;
+      return `<div class="srow${closed ? ' shut' : ''}">
+        <span class="d">${esc(longDate(date))}<small>${esc(spec.note || '')}</small></span>
+        <span class="t">${closed ? 'CLOSED' : `${fmtTime(spec.hours[0])} – ${fmtTime(spec.hours[1])}`}</span>
+      </div>`;
+    }).join('')
+  : `<div style="color:var(--dim);font-size:14.5px;line-height:1.6">No special hours coming up — we're on our regular schedule. Call us at ${esc(ARENA.phone)} if you're planning around a holiday.</div>`;
+</script>
+</body>
+</html>

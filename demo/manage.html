@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lasertopia — Find My Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/lasertopia.css" />
+<style>
+  .narrow { max-width: 560px; margin: 0 auto; }
+  .code-input {
+    font-family: 'Space Grotesk'; font-weight: 700; font-size: 21px; letter-spacing: .14em;
+    text-align: center; text-transform: uppercase;
+  }
+  .found .k { color: var(--dim); }
+  .cancelled-note { text-align: center; padding: 10px 0; }
+  .cancelled-note .x {
+    width: 58px; height: 58px; border-radius: 50%; background: rgba(255,91,91,.12);
+    border: 1px solid rgba(255,91,91,.45); display: grid; place-items: center; margin: 0 auto 16px;
+    color: var(--danger); font-size: 26px; font-family: 'Space Grotesk'; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap hero">
+  <div class="eyebrow">Your booking</div>
+  <h1>Find my <span class="hi">booking</span></h1>
+  <p>Enter the code from your confirmation to see the details or cancel.</p>
+</div>
+
+<div class="wrap stack">
+  <div class="narrow">
+    <div class="panel" id="lookup-panel">
+      <label class="fld" for="code">Booking code</label>
+      <input class="input code-input" id="code" placeholder="LT-XXXXXX" maxlength="9" autocomplete="off" />
+      <div class="err" id="err"></div>
+      <button class="btn btn-primary btn-block" id="find" style="margin-top:16px">Find my booking</button>
+      <div class="note-box" style="margin-top:16px">
+        Your code looks like <b>LT-A3JMFZ</b> and is on the confirmation you saw after booking.
+        Can't find it? Call us at <b id="phone"></b>.
+      </div>
+    </div>
+
+    <div class="panel" id="result-panel" style="display:none">
+      <div class="panel-head"><div><h2 id="r-title">Your booking</h2><div class="sub" id="r-code"></div></div></div>
+      <div class="recap found" id="r-body" style="margin-top:0;border-top:none;padding-top:0"></div>
+      <div class="note-box warn" style="margin-top:18px">
+        Every player needs a signed waiver. Players under 18 need a parent or legal guardian to sign.
+      </div>
+      <div class="err" id="r-err"></div>
+      <a class="btn btn-orange btn-block" href="/waiver" style="margin-top:16px">Sign the waiver</a>
+      <button class="btn btn-ghost btn-block" id="cancel" style="margin-top:9px">Cancel this booking</button>
+      <button class="btn btn-ghost btn-block" id="back" style="margin-top:9px">Look up another</button>
+    </div>
+
+    <div class="panel" id="cancelled-panel" style="display:none">
+      <div class="cancelled-note">
+        <div class="x">✕</div>
+        <h2 style="font-size:22px;margin-bottom:8px">Booking cancelled</h2>
+        <div style="color:var(--muted);font-size:14.5px;line-height:1.65">
+          Your seats have been released. Sorry we'll miss you — book again any time.
+        </div>
+        <a class="btn btn-primary btn-block" href="/" style="margin-top:20px">Book a game</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { ARENA, sessionSpan, fmtTime, money } from '/lib/arena.js';
+import { mountShell, $, esc, api, jsonPost, longDate } from '/assets/shell.js';
+
+mountShell({ active: '' });
+
+$('#phone').textContent = ARENA.phone;
+
+let found = null;
+
+/* Keep the input tidy: uppercase, and auto-insert the LT- prefix as they type. */
+$('#code').oninput = (e) => {
+  let v = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  if (v.length >= 2 && !v.startsWith('LT-') && !v.startsWith('LT')) v = 'LT-' + v;
+  else if (v.startsWith('LT') && v[2] !== '-' && v.length > 2) v = 'LT-' + v.slice(2);
+  e.target.value = v;
+};
+$('#code').onkeydown = (e) => { if (e.key === 'Enter') $('#find').click(); };
+
+$('#find').onclick = async () => {
+  const err = $('#err');
+  err.textContent = '';
+  const code = $('#code').value.trim();
+  if (!code) { err.textContent = 'Enter the booking code from your confirmation.'; return; }
+
+  const btn = $('#find');
+  btn.disabled = true;
+  try {
+    const res = await api(`/api/booking/${encodeURIComponent(code)}`);
+    show(res.booking);
+  } catch (e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+function show(b) {
+  found = b;
+  const span = sessionSpan(b.dateISO, b.startMin, b.games);
+  const kind = { online: 'Booked online', walkin: 'Walk-in', party: 'Party package' }[b.kind] || b.kind;
+
+  $('#r-title').textContent = b.packageName || 'Your booking';
+  $('#r-code').textContent = b.code;
+  $('#r-body').innerHTML = `
+    <div class="row"><span class="k">Name</span><span class="v">${esc(b.name)}</span></div>
+    <div class="row"><span class="k">Date</span><span class="v">${esc(longDate(b.dateISO))}</span></div>
+    <div class="row"><span class="k">Game time</span><span class="v">${span.map(fmtTime).join(' · ')}</span></div>
+    <div class="row"><span class="k">${b.kind === 'party' ? 'Guests' : 'Players'}</span><span class="v">${b.players}</span></div>
+    <div class="row"><span class="k">Type</span><span class="v">${kind}</span></div>
+    ${b.group ? '<div class="row"><span class="k">Group</span><span class="v" style="color:var(--orange)">12+ players</span></div>' : ''}
+    <div class="row tot"><span class="k">Total</span><span class="v">${money(b.totalCents)}</span></div>`;
+
+  $('#lookup-panel').style.display = 'none';
+  $('#result-panel').style.display = 'block';
+}
+
+$('#cancel').onclick = async () => {
+  if (!found) return;
+  const btn = $('#cancel');
+  $('#r-err').textContent = '';
+  btn.disabled = true;
+  try {
+    await jsonPost('/api/cancel', { code: found.code });
+    $('#result-panel').style.display = 'none';
+    $('#cancelled-panel').style.display = 'block';
+  } catch (e) {
+    $('#r-err').textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+$('#back').onclick = () => {
+  found = null;
+  $('#code').value = '';
+  $('#err').textContent = '';
+  $('#result-panel').style.display = 'none';
+  $('#lookup-panel').style.display = 'block';
+};
+</script>
+</body>
+</html>

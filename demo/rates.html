@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lasertopia — Rates &amp; Pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/lasertopia.css" />
+<style>
+  .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .price {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 26px 22px; text-align: center; position: relative; transition: .16s;
+  }
+  .price:hover { border-color: var(--cyan); box-shadow: 0 0 26px rgba(41,171,226,.16); transform: translateY(-2px); }
+  .price.best { border-color: var(--orange); }
+  .price.best:hover { border-color: var(--orange); box-shadow: 0 0 26px rgba(249,161,27,.2); }
+  .price .flag {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--orange); color: #1a1200; font-family: 'Space Grotesk'; font-size: 10px;
+    font-weight: 800; letter-spacing: .11em; padding: 4px 11px; border-radius: 999px; white-space: nowrap;
+  }
+  .price .n { font-family: 'Space Grotesk'; font-size: 13px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); }
+  .price .p { font-family: 'Space Grotesk'; font-size: 42px; font-weight: 800; color: var(--cyan); margin: 10px 0 4px; letter-spacing: -.03em; }
+  .price.best .p { color: var(--orange); }
+  .price .per { font-size: 12.5px; color: var(--dim); }
+  .price .save { font-size: 12.5px; color: var(--ok); font-weight: 600; margin-top: 8px; min-height: 18px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+  .fact { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; color: var(--muted); line-height: 1.6; }
+  .fact:last-child { border-bottom: none; }
+  .fact .ic { color: var(--cyan); font-size: 15px; flex-shrink: 0; line-height: 1.5; }
+  .fact b { color: var(--white); }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+  .big-note { font-size: 15px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="wrap hero">
+  <div class="eyebrow">Rates + pricing</div>
+  <h1>Laser tag <span class="hi">games</span></h1>
+  <p>Per person, same-day play. Taxes not included. Reservations are strongly encouraged.</p>
+</div>
+
+<div class="wrap stack">
+  <div class="price-grid" id="prices"></div>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="/">Book a game</a>
+    <a class="btn btn-ghost" href="/waiver">Fill out a waiver</a>
+  </div>
+
+  <div class="two-col" style="margin-top:26px">
+    <div class="panel">
+      <div class="panel-head"><div><h2>Group rates — 12 players or more</h2><div class="sub">Reservations strongly encouraged</div></div></div>
+      <div class="big-note" style="color:var(--muted)">
+        Group rates are available with a minimum <b style="color:var(--white)">24 hours advance notice</b>.
+        Groups must consist of a minimum of <b style="color:var(--white)">12 players</b> or more.
+      </div>
+      <div class="note-box warn" style="margin-top:16px">
+        Booking 12+ players online? The booking page checks the 24-hour rule for you and flags your
+        reservation as a group so the front desk can apply your rate.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div><h2>The arena</h2><div class="sub">Two floors, 4,500 sq ft</div></div></div>
+      <div class="fact"><span class="ic">●</span><span>Recommended age is <b>6 years old</b> and up to play laser tag.</span></div>
+      <div class="fact"><span class="ic">●</span><span>We run laser tag games <b>every 15 minutes</b>.</span></div>
+      <div class="fact"><span class="ic">●</span><span>Games run with as few as <b>2 players</b> and up to <b>25 people</b> at one time.</span></div>
+      <div class="fact"><span class="ic">●</span><span>Waivers are required for all players. Anyone under 18 must have a waiver signed by a parent or legal guardian.</span></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <div class="panel-head"><div><h2>Friendly reminders</h2><div class="sub">So everyone has a good time</div></div></div>
+    <div class="two-col">
+      <div>
+        <div class="fact"><span class="ic" style="color:var(--orange)">●</span><span>
+          For safety reasons, we require everyone entering the arena to wear <b>clean, closed-toe shoes</b>.
+          Please, no flip-flops, sandals or platforms.
+        </span></div>
+      </div>
+      <div>
+        <div class="fact"><span class="ic" style="color:var(--orange)">●</span><span>
+          <b>No outside food, drinks, cakes or candies</b> are allowed in the facility, as we are a
+          <b>nut-free environment</b>.
+        </span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px;text-align:center">
+    <h2 style="margin-bottom:8px">Why not make it a party?</h2>
+    <div class="sub" style="margin-bottom:18px">Private room, pizza, cupcakes and merch for the guest of honour.</div>
+    <a class="btn btn-orange" href="/packages">See event packages</a>
+  </div>
+</div>
+
+<script type="module">
+import { PACKAGES, money } from '/lib/arena.js';
+import { mountShell, $ } from '/assets/shell.js';
+
+mountShell({ active: '/rates' });
+
+const single = PACKAGES[0].cents;   // the 1-game price, used to show what a bundle saves
+
+$('#prices').innerHTML = PACKAGES.map((p) => {
+  const saving = single * p.games - p.cents;
+  const best = p.games === 3;
+  return `<div class="price${best ? ' best' : ''}">
+    ${best ? '<div class="flag">Best value</div>' : ''}
+    <div class="n">${p.games === 1 ? 'One game' : p.games === 2 ? 'Two games' : 'Three games'}</div>
+    <div class="p">${money(p.cents)}</div>
+    <div class="per">per person</div>
+    <div class="save">${saving > 0 ? `Save ${money(saving)}` : ''}</div>
+  </div>`;
+}).join('');
+</script>
+</body>
+</html>

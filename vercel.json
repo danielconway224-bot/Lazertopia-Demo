@@ -1,0 +1,21 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
+
+    { "source": "/assets/(.*)", "destination": "/demo/assets/$1" },
+
+    { "source": "/", "destination": "/demo/index.html" },
+    { "source": "/rates", "destination": "/demo/rates.html" },
+    { "source": "/packages", "destination": "/demo/packages.html" },
+    { "source": "/hours", "destination": "/demo/hours.html" },
+    { "source": "/waiver", "destination": "/demo/waiver.html" },
+    { "source": "/manage", "destination": "/demo/manage.html" },
+    { "source": "/admin", "destination": "/demo/admin.html" }
+  ],
+  "headers": [
+    {
+      "source": "/lib/(.*).js",
+      "headers": [{ "key": "Content-Type", "value": "application/javascript; charset=utf-8" }]
+    }
+  ]
+}

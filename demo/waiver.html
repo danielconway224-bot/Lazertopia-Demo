@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lasertopia — Participant Waiver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/lasertopia.css" />
+<style>
+  .narrow { max-width: 660px; margin: 0 auto; }
+  .terms {
+    background: var(--near-black); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; max-height: 220px; overflow-y: auto; font-size: 13.5px;
+    line-height: 1.7; color: var(--muted);
+  }
+  .terms p + p { margin-top: 11px; }
+  .terms b { color: var(--white); }
+
+  .agree { display: flex; gap: 11px; align-items: flex-start; font-size: 14px; color: var(--muted); line-height: 1.6; cursor: pointer; }
+  .agree input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--cyan); cursor: pointer; flex-shrink: 0; }
+
+  .seg-age { display: flex; gap: 4px; background: var(--near-black); border: 1px solid var(--border); border-radius: 10px; padding: 4px; }
+  .seg-age button {
+    flex: 1; border: none; background: transparent; color: var(--muted); cursor: pointer;
+    font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px; padding: 9px 12px;
+    border-radius: 8px; transition: .13s;
+  }
+  .seg-age button:hover:not(.on) { color: var(--white); }
+  .seg-age button.on { background: var(--cyan); color: #04121a; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row2 .input { margin-top: 0; }
+
+  .signed { text-align: center; padding: 12px 0; }
+  .signed .check {
+    width: 62px; height: 62px; border-radius: 50%; background: rgba(53,208,127,.14);
+    border: 1px solid rgba(53,208,127,.5); display: grid; place-items: center; margin: 0 auto 18px;
+  }
+  .signed .check svg { width: 30px; height: 30px; stroke: var(--ok); fill: none; }
+  #guardian-block { display: none; }
+  #guardian-block.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="wrap hero">
+  <div class="eyebrow">Before you play</div>
+  <h1>Participant <span class="hi">waiver</span></h1>
+  <p>A signed waiver is required for every player. Sign it here and skip the paperwork at the front desk.</p>
+</div>
+
+<div class="wrap stack">
+  <div class="narrow">
+    <div class="panel" id="form-panel">
+      <div class="panel-head"><div><h2>Waiver &amp; release</h2><div class="sub">One per player</div></div></div>
+
+      <label class="fld">Who is this waiver for?</label>
+      <div class="seg-age" id="age-seg">
+        <button class="on" data-minor="0">I'm 18 or older</button>
+        <button data-minor="1">This is for a player under 18</button>
+      </div>
+
+      <div style="margin-top:18px">
+        <label class="fld" for="w-name" id="name-label">Player's full name</label>
+        <input class="input" id="w-name" placeholder="Full name" autocomplete="name" />
+      </div>
+
+      <div id="guardian-block">
+        <div class="note-box warn" style="margin:16px 0">
+          Players under 18 must have this waiver signed by a <b>parent or legal guardian</b>.
+        </div>
+        <label class="fld" for="w-guardian">Parent or legal guardian's full name</label>
+        <input class="input" id="w-guardian" placeholder="Parent or guardian name" />
+      </div>
+
+      <div class="row2" style="margin-top:14px">
+        <div>
+          <label class="fld" for="w-phone">Phone</label>
+          <input class="input" id="w-phone" type="tel" placeholder="204-555-0142" autocomplete="tel" />
+        </div>
+        <div>
+          <label class="fld" for="w-email">Email <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">(optional)</span></label>
+          <input class="input" id="w-email" type="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+      </div>
+
+      <label class="fld" style="margin-top:18px">Terms</label>
+      <div class="terms">
+        <p>I understand that laser tag at <b>Lasertopia Inc.</b> involves physical activity in a
+           darkened, two-level arena, and that this activity carries inherent risks including slips,
+           trips, falls, and collisions with other participants or with fixed objects.</p>
+        <p>I confirm that the participant is in good health and is not aware of any medical condition —
+           including but not limited to heart conditions, epilepsy, photosensitivity, pregnancy, or
+           recent injury or surgery — that would make participation unsafe. The arena uses
+           <b>flashing lights, fog effects and loud music</b>.</p>
+        <p>I agree to follow all posted rules and staff instructions at all times: no running, no
+           climbing, no physical contact with other players, and <b>clean, closed-toe shoes</b> must be
+           worn in the arena. I understand that staff may remove any participant who does not follow
+           these rules, without refund.</p>
+        <p>Lasertopia is a <b>nut-free facility</b>. No outside food, drinks, cakes or candies may be
+           brought into the building.</p>
+        <p>To the fullest extent permitted by law, I release and hold harmless Lasertopia Inc., its
+           owners, staff and agents from any claim for injury, loss or damage arising from
+           participation, except where caused by their own gross negligence.</p>
+        <p>I confirm I have the legal authority to sign this waiver — for myself, or as the parent or
+           legal guardian of the participant named above.</p>
+      </div>
+
+      <label class="agree" style="margin-top:16px">
+        <input type="checkbox" id="w-agree" />
+        <span id="agree-text">I have read and agree to the waiver and release above, and I confirm the details I've entered are accurate.</span>
+      </label>
+
+      <div class="err" id="w-error"></div>
+      <button class="btn btn-primary btn-block" id="w-sign" style="margin-top:18px">Sign the waiver</button>
+
+      <div class="note-box" style="margin-top:16px">
+        <b>Demo note:</b> this prototype doesn't store waivers yet — signing shows you the confirmation
+        the real system would produce. Wiring it to the database is the next step.
+      </div>
+    </div>
+
+    <div class="panel" id="done-panel" style="display:none">
+      <div class="signed">
+        <div class="check"><svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h2 style="font-size:23px;margin-bottom:8px">Waiver signed</h2>
+        <div style="color:var(--muted);font-size:14.5px;line-height:1.65" id="done-msg"></div>
+        <div class="recap" id="done-recap" style="text-align:left"></div>
+        <a class="btn btn-primary btn-block" href="/" style="margin-top:20px">Book a game</a>
+        <button class="btn btn-ghost btn-block" id="another" style="margin-top:9px">Sign another waiver</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { ARENA } from '/lib/arena.js';
+import { mountShell, $, esc } from '/assets/shell.js';
+
+mountShell({ active: '/waiver' });
+
+let isMinor = false;
+
+/* ---------- Adult / minor toggle ---------- */
+$('#age-seg').querySelectorAll('button').forEach((b) => {
+  b.onclick = () => {
+    $('#age-seg').querySelectorAll('button').forEach((x) => x.classList.remove('on'));
+    b.classList.add('on');
+    isMinor = b.dataset.minor === '1';
+    $('#guardian-block').classList.toggle('show', isMinor);
+    $('#name-label').textContent = isMinor ? "Player's full name (the person playing)" : 'Your full name';
+    $('#agree-text').textContent = isMinor
+      ? 'I am the parent or legal guardian of the player named above. I have read and agree to the waiver and release on their behalf.'
+      : "I have read and agree to the waiver and release above, and I confirm the details I've entered are accurate.";
+  };
+});
+
+/* ---------- Sign ---------- */
+$('#w-sign').onclick = () => {
+  const err = $('#w-error');
+  err.textContent = '';
+
+  const name = $('#w-name').value.trim();
+  const guardian = $('#w-guardian').value.trim();
+  const phone = $('#w-phone').value.trim();
+
+  if (!name) { err.textContent = "Please enter the player's full name."; $('#w-name').focus(); return; }
+  if (isMinor && !guardian) {
+    err.textContent = 'Players under 18 need a parent or legal guardian to sign. Please enter their name.';
+    $('#w-guardian').focus();
+    return;
+  }
+  if (!phone) { err.textContent = 'Please enter a phone number so we can match this waiver to your visit.'; $('#w-phone').focus(); return; }
+  if (!$('#w-agree').checked) { err.textContent = 'Please tick the box to agree to the waiver before signing.'; return; }
+
+  const signedOn = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  $('#done-msg').innerHTML = isMinor
+    ? `Signed by <b style="color:var(--white)">${esc(guardian)}</b> as parent or legal guardian of <b style="color:var(--white)">${esc(name)}</b>. Show your name at the front desk when you arrive.`
+    : `Thanks, <b style="color:var(--white)">${esc(name)}</b>. Show your name at the front desk when you arrive and you're good to go.`;
+
+  $('#done-recap').innerHTML = `
+    <div class="row"><span class="k">Player</span><span class="v">${esc(name)}</span></div>
+    ${isMinor ? `<div class="row"><span class="k">Signed by</span><span class="v">${esc(guardian)}</span></div>` : ''}
+    <div class="row"><span class="k">Phone</span><span class="v">${esc(phone)}</span></div>
+    <div class="row"><span class="k">Signed</span><span class="v">${esc(signedOn)}</span></div>`;
+
+  $('#form-panel').style.display = 'none';
+  $('#done-panel').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+$('#another').onclick = () => {
+  ['#w-name', '#w-guardian', '#w-phone', '#w-email'].forEach((s) => { $(s).value = ''; });
+  $('#w-agree').checked = false;
+  $('#w-error').textContent = '';
+  $('#done-panel').style.display = 'none';
+  $('#form-panel').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+</script>
+</body>
+</html>

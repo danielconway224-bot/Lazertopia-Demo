@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lasertopia — Event Packages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/lasertopia.css" />
+<style>
+  .pkgs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: stretch; }
+  .pkg {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 26px 24px; display: flex; flex-direction: column; transition: .16s; position: relative;
+  }
+  .pkg:hover { border-color: var(--cyan); box-shadow: 0 0 30px rgba(41,171,226,.15); transform: translateY(-2px); }
+  .pkg.top { border-color: var(--orange); }
+  .pkg.top:hover { border-color: var(--orange); box-shadow: 0 0 30px rgba(249,161,27,.2); }
+  .pkg .flag {
+    position: absolute; top: -10px; left: 24px; background: var(--orange); color: #1a1200;
+    font-family: 'Space Grotesk'; font-size: 10px; font-weight: 800; letter-spacing: .11em;
+    padding: 4px 11px; border-radius: 999px;
+  }
+  .pkg h3 { font-size: 22px; margin-bottom: 4px; }
+  .pkg .meta { color: var(--dim); font-size: 12.5px; margin-bottom: 16px; }
+  .pkg .p { font-family: 'Space Grotesk'; font-weight: 800; font-size: 36px; color: var(--cyan); letter-spacing: -.03em; }
+  .pkg.top .p { color: var(--orange); }
+  .pkg .p small { font-family: 'Raleway'; font-size: 13px; font-weight: 500; color: var(--dim); display: block; margin-top: 3px; letter-spacing: 0; }
+  /* align-content:start keeps short lists tight — without it the grid rows stretch to fill
+     the card height and a 3-item package looks awkwardly spaced next to a 7-item one. */
+  .pkg ul { list-style: none; margin: 18px 0 0; display: grid; gap: 9px; flex: 1; align-content: start; }
+  .pkg li { display: flex; gap: 9px; font-size: 13.8px; color: var(--muted); line-height: 1.5; align-items: flex-start; }
+  .pkg li .tick { color: var(--cyan); flex-shrink: 0; font-size: 12px; line-height: 1.45; }
+  .pkg.top li .tick { color: var(--orange); }
+  .pkg .addon { margin-top: 14px; font-size: 12.5px; color: var(--yellow); font-weight: 600; }
+  .pkg .btn { margin-top: 20px; }
+
+  .perks { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; margin-top: 22px; }
+  .perk { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+  .perk .ic { color: var(--yellow); }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row2 .input { margin-top: 0; }
+  .modal.conf { text-align: center; }
+  .modal.conf .recap { text-align: left; }
+  .conf .check {
+    width: 60px; height: 60px; border-radius: 50%; background: rgba(53,208,127,.14);
+    border: 1px solid rgba(53,208,127,.5); display: grid; place-items: center; margin: 0 auto 16px;
+  }
+  .conf .check svg { width: 29px; height: 29px; stroke: var(--ok); fill: none; }
+  .code { font-family: 'Space Grotesk'; font-weight: 800; font-size: 24px; letter-spacing: .08em; color: var(--cyan); margin: 6px 0; }
+</style>
+</head>
+<body>
+
+<div class="wrap hero">
+  <div class="eyebrow">Event packages</div>
+  <h1>Why not make it a <span class="hi">party?</span></h1>
+  <p>We deliver the best experience ever for you and your guest of honour. Private room, laser tag,
+     food and merch — we handle setup and cleanup.</p>
+</div>
+
+<div class="wrap stack">
+  <div class="pkgs" id="pkgs"></div>
+
+  <div class="panel" style="margin-top:22px;text-align:center">
+    <h2 style="margin-bottom:4px">Every package includes</h2>
+    <div class="perks" id="perks"></div>
+  </div>
+
+  <div class="note-box warn" style="margin-top:18px">
+    <b>Heads up:</b> party guests play 2 games of laser tag, so we hold two back-to-back games in the
+    arena for your group. Every player still needs a signed waiver —
+    <a href="/waiver" style="color:inherit;text-decoration:underline">sign online</a> to skip the desk.
+  </div>
+</div>
+
+<!-- Party booking modal -->
+<div class="overlay" id="bk-overlay">
+  <div class="modal">
+    <button class="modal-close" id="bk-close" aria-label="Close">✕</button>
+    <h3 id="bk-title"></h3>
+    <div class="sub" id="bk-sub"></div>
+
+    <label class="fld" for="bk-date">Party date</label>
+    <input class="input" type="date" id="bk-date" />
+
+    <label class="fld" for="bk-time" style="margin-top:14px">Start time</label>
+    <select class="input" id="bk-time"><option>Pick a date first</option></select>
+
+    <div class="row2" style="margin-top:14px">
+      <div>
+        <label class="fld" for="bk-guests">Guests</label>
+        <input class="input" id="bk-guests" type="number" min="1" max="25" value="10" />
+      </div>
+      <div>
+        <label class="fld" for="bk-phone">Phone</label>
+        <input class="input" id="bk-phone" type="tel" placeholder="204-555-0142" />
+      </div>
+    </div>
+
+    <label class="fld" for="bk-name" style="margin-top:14px">Name</label>
+    <input class="input" id="bk-name" placeholder="Guest of honour / booking name" />
+
+    <div class="note-box" id="bk-total" style="margin-top:16px"></div>
+    <div class="err" id="bk-error"></div>
+    <button class="btn btn-orange btn-block" id="bk-save" style="margin-top:16px">Request this party</button>
+  </div>
+</div>
+
+<!-- Confirmation -->
+<div class="overlay" id="ok-overlay">
+  <div class="modal conf">
+    <div class="check"><svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <h3>Party requested</h3>
+    <div class="code" id="ok-code"></div>
+    <div style="color:var(--muted);font-size:14px;line-height:1.6">
+      We've pencilled you in. The front desk will call to confirm the details and take your deposit.
+    </div>
+    <div class="recap" id="ok-recap"></div>
+    <a class="btn btn-primary btn-block" href="/waiver" style="margin-top:18px">Sign the waiver</a>
+    <button class="btn btn-ghost btn-block" id="ok-done" style="margin-top:9px">Done</button>
+  </div>
+</div>
+
+<script type="module">
+import { EVENT_PACKAGES, PACKAGE_PERKS, ARENA, hoursFor, priceEventPackage, isoDate, fmtTime, money } from '/lib/arena.js';
+import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
+
+mountShell({ active: '/packages' });
+
+let current = null;   // package being booked
+
+/* ---------- Cards ---------- */
+$('#pkgs').innerHTML = EVENT_PACKAGES.map((p, i) => {
+  const top = i === EVENT_PACKAGES.length - 1;
+  return `<div class="pkg${top ? ' top' : ''}">
+    ${top ? '<div class="flag">The full experience</div>' : ''}
+    <h3>${esc(p.name)}</h3>
+    <div class="meta">Up to ${p.guests} guests · ${p.roomMinutes / 60} hours in the party room</div>
+    <div class="p">${money(p.cents)}<small>Extra guests ${money(p.extraGuestCents)} each</small></div>
+    <ul>${p.includes.map((inc) => `<li><span class="tick">◆</span><span>${esc(inc)}</span></li>`).join('')}</ul>
+    ${p.addOn ? `<div class="addon">Add ${esc(p.addOn.name)} for ${money(p.addOn.cents)} per person</div>` : ''}
+    <button class="btn ${top ? 'btn-orange' : 'btn-primary'}" data-pkg="${p.id}">Book ${esc(p.name)}</button>
+  </div>`;
+}).join('');
+
+$('#perks').innerHTML = PACKAGE_PERKS
+  .map((p) => `<div class="perk"><span class="ic">★</span>${esc(p)}</div>`).join('');
+
+document.querySelectorAll('[data-pkg]').forEach((b) => { b.onclick = () => openBooking(b.dataset.pkg); });
+
+/* ---------- Booking modal ---------- */
+function openBooking(id) {
+  current = EVENT_PACKAGES.find((p) => p.id === id);
+  $('#bk-title').textContent = current.name;
+  $('#bk-sub').textContent = `Up to ${current.guests} guests · ${current.roomMinutes} minutes in the party room`;
+  $('#bk-error').textContent = '';
+  $('#bk-name').value = '';
+  $('#bk-phone').value = '';
+  $('#bk-guests').value = String(current.guests);
+
+  // Parties need 24h notice like any group, so default to a few days out.
+  const d = new Date();
+  d.setDate(d.getDate() + 3);
+  $('#bk-date').value = isoDate(d);
+  $('#bk-date').min = isoDate(new Date());
+
+  updateTotal();
+  $('#bk-overlay').classList.add('show');
+  fillTimes();
+}
+
+let dayAvailability = [];   // live seat counts for the chosen date
+
+/**
+ * Party guests play 2 games, so a start time only works if BOTH that game and the next one
+ * can seat the whole party. Offering times that can't fit just moves the failure to the
+ * submit button, so we filter them out here.
+ */
+async function fillTimes() {
+  const date = $('#bk-date').value;
+  const sel = $('#bk-time');
+  const h = hoursFor(date);
+
+  if (!date || h.closed) {
+    dayAvailability = [];
+    sel.innerHTML = '<option value="">Closed that day — pick another date</option>';
+    return;
+  }
+
+  sel.innerHTML = '<option value="">Loading times…</option>';
+  try {
+    const data = await api(`/api/sessions?date=${encodeURIComponent(date)}`);
+    dayAvailability = data.sessions;
+  } catch (e) {
+    dayAvailability = [];
+    sel.innerHTML = '<option value="">Could not load times — please try again</option>';
+    return;
+  }
+  renderTimeOptions();
+}
+
+function renderTimeOptions() {
+  const sel = $('#bk-time');
+  const guests = Math.max(1, Number($('#bk-guests').value) || 1);
+
+  const fits = dayAvailability.filter((s, i) => {
+    const next = dayAvailability[i + 1];
+    if (!next) return false;                                   // needs a second game after it
+    if (s.past || s.blocked || next.blocked) return false;
+    return s.seatsLeft >= guests && next.seatsLeft >= guests;
+  });
+
+  if (!fits.length) {
+    sel.innerHTML = `<option value="">No slot fits ${guests} guests that day — try another date</option>`;
+    return;
+  }
+
+  const prev = sel.value;
+  sel.innerHTML = fits.map((s) => `<option value="${s.startMin}">${fmtTime(s.startMin)}</option>`).join('');
+
+  // Keep the current pick if it still fits, else default to an afternoon party time.
+  if (fits.some((s) => String(s.startMin) === prev)) sel.value = prev;
+  else {
+    const preferred = fits.find((s) => s.startMin >= 13 * 60) || fits[0];
+    sel.value = String(preferred.startMin);
+  }
+}
+
+function updateTotal() {
+  const priced = priceEventPackage(current?.id, $('#bk-guests').value);
+  const el = $('#bk-total');
+  if (!priced.ok) {
+    el.className = 'note-box bad';
+    el.textContent = priced.error;
+    return;
+  }
+  el.className = 'note-box';
+  el.innerHTML = `<b style="font-size:17px">${money(priced.totalCents)}</b> total` +
+    `<br>${esc(priced.name)} base ${money(priced.baseCents)}` +
+    (priced.extraGuests > 0 ? ` · ${priced.extraGuests} extra guest${priced.extraGuests > 1 ? 's' : ''} ${money(priced.extraCents)}` : '');
+}
+
+$('#bk-date').onchange = () => { fillTimes(); updateTotal(); };
+$('#bk-guests').oninput = () => { renderTimeOptions(); updateTotal(); };
+
+$('#bk-save').onclick = async () => {
+  const btn = $('#bk-save');
+  const err = $('#bk-error');
+  err.textContent = '';
+
+  const startMin = Number($('#bk-time').value);
+  if (!$('#bk-time').value) { err.textContent = 'Pick a start time for the party.'; return; }
+  if (!$('#bk-name').value.trim())  { err.textContent = 'Please enter a name for the booking.'; $('#bk-name').focus(); return; }
+  if (!$('#bk-phone').value.trim()) { err.textContent = 'Please enter a phone number so we can confirm.'; $('#bk-phone').focus(); return; }
+
+  btn.disabled = true;
+  try {
+    const res = await jsonPost('/api/party', {
+      dateISO: $('#bk-date').value,
+      startMin,
+      packageId: current.id,
+      guests: Number($('#bk-guests').value),
+      name: $('#bk-name').value.trim(),
+      phone: $('#bk-phone').value.trim(),
+    });
+    showOk(res.booking, res.price);
+  } catch (e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+function showOk(booking, priced) {
+  $('#ok-code').textContent = booking.code;
+  $('#ok-recap').innerHTML = `
+    <div class="row"><span class="k">Package</span><span class="v">${esc(priced.name)}</span></div>
+    <div class="row"><span class="k">Date</span><span class="v">${esc(longDate(booking.dateISO))}</span></div>
+    <div class="row"><span class="k">Start</span><span class="v">${fmtTime(booking.startMin)}</span></div>
+    <div class="row"><span class="k">Guests</span><span class="v">${priced.guests}</span></div>
+    <div class="row"><span class="k">Party room</span><span class="v">${priced.roomMinutes} minutes</span></div>
+    <div class="row tot"><span class="k">Total</span><span class="v">${money(priced.totalCents)}</span></div>`;
+  $('#bk-overlay').classList.remove('show');
+  $('#ok-overlay').classList.add('show');
+}
+
+$('#ok-done').onclick = () => $('#ok-overlay').classList.remove('show');
+$('#bk-close').onclick = () => $('#bk-overlay').classList.remove('show');
+$('#bk-overlay').onclick = (e) => { if (e.target === $('#bk-overlay')) $('#bk-overlay').classList.remove('show'); };
+</script>
+</body>
+</html>

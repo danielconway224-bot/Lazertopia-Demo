@@ -1,0 +1,14 @@
+{
+  "name": "lasertopia-booking",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lasertopia Inc. — laser tag booking demo (game sessions, arena capacity, staff game sheet)",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test lib/arena.test.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
