@@ -69,10 +69,19 @@ header {
   backdrop-filter: blur(10px);
   position: sticky; top: 0; z-index: 30;
 }
-.nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 74px; padding: 10px 0; flex-wrap: wrap; }
+/* row-reverse puts the logo on the right while keeping it first in the DOM, where a
+   logo-links-home belongs for screen readers and keyboard order. */
+.nav {
+  display: flex; flex-direction: row-reverse; align-items: center; justify-content: space-between;
+  gap: 16px; min-height: 116px; padding: 8px 0; flex-wrap: wrap;
+}
 
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
-.brand img { height: 58px; width: auto; display: block; }
+/* The source PNG carries a lot of transparent space around the burst, so the box has to be
+   noticeably taller than the wordmark itself to read at a sensible size. Negative margins
+   claw back some of that padding so the header doesn't balloon to match — but not so much
+   that the artwork paints outside the header and over the page below. */
+.brand img { height: 112px; width: auto; display: block; margin: -12px 0; }
 .brand-fallback { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -.02em; white-space: nowrap; }
 .brand-fallback .a { color: var(--orange); }
 .brand-fallback .b { color: var(--cyan); }
@@ -87,7 +96,13 @@ header {
 .nav-link.active { color: var(--cyan); border-color: var(--cyan); }
 .nav-link.cta { background: var(--cyan); color: #04121a; border-color: var(--cyan); }
 .nav-link.cta:hover { background: #4fc0f0; color: #04121a; }
-@media (max-width: 640px) { .nav-link { padding: 7px 11px; font-size: 12px; } .brand img { height: 42px; } }
+@media (max-width: 760px) {
+  /* Stacked on small screens: logo on top, nav beneath, both centred. */
+  .nav { flex-direction: column; justify-content: center; gap: 6px; min-height: 0; padding: 8px 0; }
+  .nav-links { justify-content: center; }
+  .brand img { height: 92px; margin: -10px 0; }
+}
+@media (max-width: 640px) { .nav-link { padding: 7px 11px; font-size: 12px; } .brand img { height: 78px; margin: -8px 0; } }
 
 /* ---------- Hero ---------- */
 .hero { padding: 34px 0 4px; }
@@ -221,5 +236,78 @@ footer a { color: var(--muted); text-decoration: none; }
 footer a:hover { color: var(--cyan); }
 footer .ft-brand { color: var(--muted); font-weight: 600; }
 
+/* Powered by Voltris Booking.
+   Voltris publish a white-on-transparent "Voltris" wordmark but no combined lockup, so the
+   "Booking" half is set in type to match. Their logo runs "Voltris" dark + "Booking" blue;
+   on this dark footer the dark half becomes white, which is the standard inversion.
+   --voltris-blue is the one value to change if their exact brand blue differs. */
+:root { --voltris-blue: #3B41F0; }
+
+.powered {
+  display: inline-flex; align-items: center; gap: 12px; margin-top: 22px;
+  padding: 10px 20px; border: 1px solid var(--border); border-radius: 999px;
+  text-decoration: none; transition: .16s; background: rgba(255,255,255,.02);
+}
+.powered:hover { border-color: var(--border-lit); background: rgba(255,255,255,.05); }
+.powered .pb-label {
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--dim); font-weight: 700; white-space: nowrap;
+}
+/* The wordmark image and the "Booking" type share a baseline so they read as one lockup. */
+.powered .pb-mark { display: inline-flex; align-items: center; gap: 1px; }
+.powered .pb-mark img { height: 20px; width: auto; display: block; opacity: .95; transition: opacity .16s; }
+.powered:hover .pb-mark img { opacity: 1; }
+.powered .pb-booking {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 20px;
+  color: var(--voltris-blue); letter-spacing: -.02em; line-height: 1;
+  /* Nudge to sit level with the wordmark's baseline rather than its box. */
+  position: relative; top: 1px;
+}
+@media (max-width: 480px) {
+  .powered { padding: 9px 15px; gap: 9px; }
+  .powered .pb-mark img { height: 17px; }
+  .powered .pb-booking { font-size: 17px; }
+  .powered .pb-label { font-size: 10px; }
+}
+
 /* ---------- Loading ---------- */
 .loading { color: var(--dim); font-size: 14px; padding: 26px; text-align: center; }
+
+/* ---------- Customer / staff view switch ---------- */
+/* Fixed bottom-right on every page. This is a demo affordance — it's how you show both
+   halves of the system without typing URLs — so it sits above everything else. */
+.view-switch {
+  position: fixed; right: 20px; bottom: 20px; z-index: 80;
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(16,16,24,.94); border: 1px solid var(--border-lit);
+  border-radius: 999px; padding: 5px 6px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 30px rgba(0,0,0,.55);
+  font-family: 'Space Grotesk', sans-serif;
+  transition: bottom .32s cubic-bezier(.4,0,.2,1);
+}
+.view-switch .vs-label {
+  font-size: 9.5px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--dim); padding: 0 7px 0 8px; font-weight: 700; white-space: nowrap;
+}
+.view-switch .vs-btn {
+  font-size: 12.5px; font-weight: 700; color: var(--muted); text-decoration: none;
+  padding: 7px 14px; border-radius: 999px; transition: .15s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.view-switch .vs-btn:hover { color: var(--white); }
+.view-switch .vs-btn.active { background: var(--cyan); color: #04121a; }
+/* Staff view gets the orange treatment, so it's obvious at a glance you're in the back end */
+.view-switch .vs-btn.active.staff { background: var(--orange); color: #1a1200; }
+.view-switch .vs-btn svg { width: 13px; height: 13px; }
+
+/* The booking page's sticky checkout bar slides up over this corner — lift the switch
+   clear of it rather than letting the two overlap. */
+body:has(.checkbar.show) .view-switch { bottom: 92px; }
+
+@media (max-width: 560px) {
+  .view-switch { right: 12px; bottom: 12px; padding: 4px 5px; }
+  .view-switch .vs-label { display: none; }
+  .view-switch .vs-btn { padding: 7px 12px; font-size: 12px; }
+  body:has(.checkbar.show) .view-switch { bottom: 84px; }
+}

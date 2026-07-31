@@ -42,6 +42,31 @@
 
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .row2 .input { margin-top: 0; }
+
+  .age-hint { font-size: 12.5px; color: var(--dim); margin-top: 7px; line-height: 1.5; }
+
+  /* Party time slots — 2 hours each, two age-matched parties per slot */
+  .slots { display: grid; gap: 8px; max-height: 260px; overflow-y: auto; }
+  .slot {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--near-black); border: 1px solid var(--border); border-radius: 11px;
+    padding: 12px 14px; cursor: pointer; transition: .14s; text-align: left; width: 100%;
+    font-family: 'Raleway', sans-serif; color: var(--white);
+  }
+  .slot:hover:not(:disabled) { border-color: var(--orange); }
+  .slot.on { border-color: var(--orange); background: rgba(249,161,27,.12); box-shadow: 0 0 18px rgba(249,161,27,.2); }
+  .slot:disabled { opacity: .5; cursor: not-allowed; }
+  .slot .t { font-family: 'Space Grotesk'; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .slot .d { font-size: 12px; color: var(--dim); margin-top: 3px; line-height: 1.45; }
+  .slot.on .d { color: #f4cd91; }
+  .slot .right { text-align: right; flex-shrink: 0; }
+  .slot .spots {
+    font-family: 'Space Grotesk'; font-size: 10px; font-weight: 800; letter-spacing: .08em;
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+    background: rgba(53,208,127,.14); color: var(--ok); border: 1px solid rgba(53,208,127,.4);
+  }
+  .slot .spots.none { background: rgba(255,91,91,.12); color: var(--danger); border-color: rgba(255,91,91,.4); }
+  .slot .spots.share { background: rgba(255,224,0,.12); color: var(--yellow); border-color: rgba(255,224,0,.4); }
   .modal.conf { text-align: center; }
   .modal.conf .recap { text-align: left; }
   .conf .check {
@@ -70,8 +95,9 @@
   </div>
 
   <div class="note-box warn" style="margin-top:18px">
-    <b>Heads up:</b> party guests play 2 games of laser tag, so we hold two back-to-back games in the
-    arena for your group. Every player still needs a signed waiver —
+    <b>How our party times work:</b> parties run in 2-hour slots, and two parties share each slot.
+    We match them within 2 years of age so the kids play together — that's why we ask what age
+    the birthday guest is turning. Every player still needs a signed waiver —
     <a href="/waiver" style="color:inherit;text-decoration:underline">sign online</a> to skip the desk.
   </div>
 </div>
@@ -83,13 +109,22 @@
     <h3 id="bk-title"></h3>
     <div class="sub" id="bk-sub"></div>
 
-    <label class="fld" for="bk-date">Party date</label>
-    <input class="input" type="date" id="bk-date" />
+    <div class="row2">
+      <div>
+        <label class="fld" for="bk-date">Party date</label>
+        <input class="input" type="date" id="bk-date" />
+      </div>
+      <div>
+        <label class="fld" for="bk-age">Birthday age turning</label>
+        <input class="input" id="bk-age" type="number" min="1" max="99" value="8" />
+      </div>
+    </div>
+    <div class="age-hint" id="bk-age-hint"></div>
 
-    <label class="fld" for="bk-time" style="margin-top:14px">Start time</label>
-    <select class="input" id="bk-time"><option>Pick a date first</option></select>
+    <label class="fld" style="margin-top:16px">Party time</label>
+    <div id="bk-slots"><div class="loading" style="padding:14px">Pick a date to see party times…</div></div>
 
-    <div class="row2" style="margin-top:14px">
+    <div class="row2" style="margin-top:16px">
       <div>
         <label class="fld" for="bk-guests">Guests</label>
         <input class="input" id="bk-guests" type="number" min="1" max="25" value="10" />
@@ -125,7 +160,7 @@
 </div>
 
 <script type="module">
-import { EVENT_PACKAGES, PACKAGE_PERKS, ARENA, hoursFor, priceEventPackage, isoDate, fmtTime, money } from '/lib/arena.js';
+import { EVENT_PACKAGES, PACKAGE_PERKS, ARENA, hoursFor, priceEventPackage, isoDate, fmtTime, money, validAge } from '/lib/arena.js';
 import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
 
 mountShell({ active: '/packages' });
@@ -160,8 +195,11 @@ function openBooking(id) {
   $('#bk-name').value = '';
   $('#bk-phone').value = '';
   $('#bk-guests').value = String(current.guests);
+  $('#bk-age').value = '8';
+  $('#bk-age-hint').textContent = `We'll seat you with a party within ${ARENA.partyAgeSpreadYears} years of this age.`;
+  pickedSlot = null;
 
-  // Parties need 24h notice like any group, so default to a few days out.
+  // Parties are planned ahead, so default a few days out rather than today.
   const d = new Date();
   d.setDate(d.getDate() + 3);
   $('#bk-date').value = isoDate(d);
@@ -169,64 +207,88 @@ function openBooking(id) {
 
   updateTotal();
   $('#bk-overlay').classList.add('show');
-  fillTimes();
+  loadSlots();
 }
 
-let dayAvailability = [];   // live seat counts for the chosen date
+let daySlots = [];        // party room slots for the chosen date, from the server
+let pickedSlot = null;    // slotStart the customer selected
 
 /**
- * Party guests play 2 games, so a start time only works if BOTH that game and the next one
- * can seat the whole party. Offering times that can't fit just moves the failure to the
- * submit button, so we filter them out here.
+ * Load the party board for the chosen date and age.
+ *
+ * Parties run in fixed 2-hour room slots, two per slot, and the two are matched within a
+ * couple of years of each other because the kids share the room. The server decides all of
+ * that; we send the age so each slot comes back knowing whether THIS party fits.
  */
-async function fillTimes() {
+async function loadSlots() {
   const date = $('#bk-date').value;
-  const sel = $('#bk-time');
-  const h = hoursFor(date);
+  const host = $('#bk-slots');
+  const age = Number($('#bk-age').value);
 
-  if (!date || h.closed) {
-    dayAvailability = [];
-    sel.innerHTML = '<option value="">Closed that day — pick another date</option>';
+  if (!date) {
+    daySlots = [];
+    host.innerHTML = '<div class="loading" style="padding:14px">Pick a date to see party times…</div>';
+    return;
+  }
+  if (hoursFor(date).closed) {
+    daySlots = [];
+    host.innerHTML = '<div class="note-box bad">We\'re closed that day — please pick another date.</div>';
     return;
   }
 
-  sel.innerHTML = '<option value="">Loading times…</option>';
+  host.innerHTML = '<div class="loading" style="padding:14px">Loading party times…</div>';
   try {
-    const data = await api(`/api/sessions?date=${encodeURIComponent(date)}`);
-    dayAvailability = data.sessions;
+    const q = `date=${encodeURIComponent(date)}${age ? `&age=${age}` : ''}`;
+    const data = await api(`/api/party-slots?${q}`);
+    daySlots = data.slots;
   } catch (e) {
-    dayAvailability = [];
-    sel.innerHTML = '<option value="">Could not load times — please try again</option>';
+    daySlots = [];
+    host.innerHTML = `<div class="note-box bad">${esc(e.message)}</div>`;
     return;
   }
-  renderTimeOptions();
+  renderSlots();
 }
 
-function renderTimeOptions() {
-  const sel = $('#bk-time');
-  const guests = Math.max(1, Number($('#bk-guests').value) || 1);
+function renderSlots() {
+  const host = $('#bk-slots');
 
-  const fits = dayAvailability.filter((s, i) => {
-    const next = dayAvailability[i + 1];
-    if (!next) return false;                                   // needs a second game after it
-    if (s.past || s.blocked || next.blocked) return false;
-    return s.seatsLeft >= guests && next.seatsLeft >= guests;
-  });
-
-  if (!fits.length) {
-    sel.innerHTML = `<option value="">No slot fits ${guests} guests that day — try another date</option>`;
+  if (!daySlots.length) {
+    host.innerHTML = '<div class="note-box bad">No party times on this day — please pick another date.</div>';
     return;
   }
 
-  const prev = sel.value;
-  sel.innerHTML = fits.map((s) => `<option value="${s.startMin}">${fmtTime(s.startMin)}</option>`).join('');
-
-  // Keep the current pick if it still fits, else default to an afternoon party time.
-  if (fits.some((s) => String(s.startMin) === prev)) sel.value = prev;
-  else {
-    const preferred = fits.find((s) => s.startMin >= 13 * 60) || fits[0];
-    sel.value = String(preferred.startMin);
+  // Drop a selection that's no longer valid (age changed, or someone else took the spot).
+  if (pickedSlot != null && !daySlots.some((s) => s.start === pickedSlot && s.available)) pickedSlot = null;
+  if (pickedSlot == null) {
+    const firstFree = daySlots.find((s) => s.available);
+    if (firstFree) pickedSlot = firstFree.start;
   }
+
+  host.innerHTML = `<div class="slots">${daySlots.map((s) => {
+    const shared = s.parties.length > 0;
+    const spotsCls = !s.available ? 'none' : shared ? 'share' : '';
+    const spotsTxt = !s.available ? 'FULL' : `${s.spotsLeft} SPOT${s.spotsLeft > 1 ? 'S' : ''}`;
+
+    // Say what's actually going on: who you'd share with, or why you can't have it.
+    let detail;
+    if (!s.available) detail = s.reason;
+    else if (shared) detail = `Shared with a ${s.parties[0].age}-year-old's party`;
+    else detail = 'You\'d have the slot to yourselves so far';
+    if (s.available && s.games.length) detail += ` · laser tag at ${s.games.map(fmtTime).join(' and ')}`;
+
+    return `<button class="slot${s.start === pickedSlot ? ' on' : ''}"
+                    ${s.available ? `data-slot="${s.start}"` : 'disabled'}>
+      <span>
+        <span class="t">${fmtTime(s.start)} – ${fmtTime(s.end)}</span>
+        <span class="d">${esc(detail)}</span>
+      </span>
+      <span class="right"><span class="spots ${spotsCls}">${spotsTxt}</span></span>
+    </button>`;
+  }).join('')}</div>`;
+
+  host.querySelectorAll('[data-slot]').forEach((b) => {
+    b.onclick = () => { pickedSlot = Number(b.dataset.slot); renderSlots(); };
+  });
 }
 
 function updateTotal() {
@@ -243,16 +305,26 @@ function updateTotal() {
     (priced.extraGuests > 0 ? ` · ${priced.extraGuests} extra guest${priced.extraGuests > 1 ? 's' : ''} ${money(priced.extraCents)}` : '');
 }
 
-$('#bk-date').onchange = () => { fillTimes(); updateTotal(); };
-$('#bk-guests').oninput = () => { renderTimeOptions(); updateTotal(); };
+$('#bk-date').onchange = () => { pickedSlot = null; loadSlots(); };
+$('#bk-guests').oninput = updateTotal;
+
+// Changing the age can open or close slots, so the board has to be re-asked.
+let ageTimer = null;
+$('#bk-age').oninput = () => {
+  $('#bk-age-hint').textContent = validAge($('#bk-age').value)
+    ? `We'll seat you with a party within ${ARENA.partyAgeSpreadYears} years of this age.`
+    : 'Please enter the age the birthday guest is turning.';
+  clearTimeout(ageTimer);
+  ageTimer = setTimeout(loadSlots, 350);
+};
 
 $('#bk-save').onclick = async () => {
   const btn = $('#bk-save');
   const err = $('#bk-error');
   err.textContent = '';
 
-  const startMin = Number($('#bk-time').value);
-  if (!$('#bk-time').value) { err.textContent = 'Pick a start time for the party.'; return; }
+  if (pickedSlot == null) { err.textContent = 'Pick a party time above.'; return; }
+  if (!validAge($('#bk-age').value)) { err.textContent = "Please tell us the age the birthday guest is turning."; $('#bk-age').focus(); return; }
   if (!$('#bk-name').value.trim())  { err.textContent = 'Please enter a name for the booking.'; $('#bk-name').focus(); return; }
   if (!$('#bk-phone').value.trim()) { err.textContent = 'Please enter a phone number so we can confirm.'; $('#bk-phone').focus(); return; }
 
@@ -260,7 +332,8 @@ $('#bk-save').onclick = async () => {
   try {
     const res = await jsonPost('/api/party', {
       dateISO: $('#bk-date').value,
-      startMin,
+      slotStart: pickedSlot,
+      age: Number($('#bk-age').value),
       packageId: current.id,
       guests: Number($('#bk-guests').value),
       name: $('#bk-name').value.trim(),
@@ -269,6 +342,8 @@ $('#bk-save').onclick = async () => {
     showOk(res.booking, res.price);
   } catch (e) {
     err.textContent = e.message;
+    // Someone may have taken the spot while the form was open — refresh the board.
+    if (e.status === 409) await loadSlots();
   } finally {
     btn.disabled = false;
   }
@@ -276,12 +351,16 @@ $('#bk-save').onclick = async () => {
 
 function showOk(booking, priced) {
   $('#ok-code').textContent = booking.code;
+  const slot = daySlots.find((s) => s.start === booking.slotStart);
+  const games = slot && slot.games.length ? slot.games.map(fmtTime).join(' and ') : null;
+
   $('#ok-recap').innerHTML = `
     <div class="row"><span class="k">Package</span><span class="v">${esc(priced.name)}</span></div>
     <div class="row"><span class="k">Date</span><span class="v">${esc(longDate(booking.dateISO))}</span></div>
-    <div class="row"><span class="k">Start</span><span class="v">${fmtTime(booking.startMin)}</span></div>
+    <div class="row"><span class="k">Party room</span><span class="v">${fmtTime(booking.slotStart)} – ${fmtTime(booking.slotEnd)}</span></div>
+    ${games ? `<div class="row"><span class="k">Laser tag</span><span class="v">${games}</span></div>` : ''}
+    <div class="row"><span class="k">Birthday age</span><span class="v">${booking.age}</span></div>
     <div class="row"><span class="k">Guests</span><span class="v">${priced.guests}</span></div>
-    <div class="row"><span class="k">Party room</span><span class="v">${priced.roomMinutes} minutes</span></div>
     <div class="row tot"><span class="k">Total</span><span class="v">${money(priced.totalCents)}</span></div>`;
   $('#bk-overlay').classList.remove('show');
   $('#ok-overlay').classList.add('show');

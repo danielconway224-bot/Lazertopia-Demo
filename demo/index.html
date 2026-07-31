@@ -92,9 +92,19 @@
     font-weight: 800; letter-spacing: .09em; color: var(--danger);
   }
   .sess .tag.past { color: var(--dim); }
+  .sess .tag.party { color: var(--yellow); }
   /* Games that already kicked off today — visible for context, never bookable */
   .sess.gone { opacity: .3; }
   .sess.gone .bar i { background: var(--dim); }
+  /* Times Lasertopia reserves for birthday parties. Shown rather than hidden, because they
+     do open up when no party takes them — a hidden slot just looks like we're sold out. */
+  .sess.held {
+    opacity: .58;
+    border-style: dashed;
+    border-color: rgba(255,224,0,.4);
+    background: rgba(255,224,0,.04);
+  }
+  .sess.held .bar i { background: rgba(255,224,0,.5); }
 
   .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: var(--dim); align-items: center; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -237,6 +247,7 @@
         <span><i style="background:var(--cyan)"></i> Lots of room</span>
         <span><i style="background:var(--orange)"></i> Filling up</span>
         <span><i style="background:var(--danger)"></i> Almost full</span>
+        <span><i style="background:rgba(255,224,0,.55)"></i> Held for parties</span>
       </div>
     </div>
     <div id="sessions-host"><div class="empty-note">Pick a date above to see game times.</div></div>
@@ -427,16 +438,26 @@ async function loadSessions() {
   renderSessions();
 }
 
+function sessionAt(min) {
+  return state.sessions.find((x) => x.startMin === min) || null;
+}
 function seatsLeftAt(min) {
-  const s = state.sessions.find((x) => x.startMin === min);
+  const s = sessionAt(min);
   return s ? s.seatsLeft : 0;
 }
 
-/** Can this many players run this many games from here, given what's loaded? */
+/**
+ * Can this many players run this many games from here, given what's loaded?
+ * A run has to clear every game it occupies — seats AND party holds — so the "2 games"
+ * button disables itself rather than letting the server reject it at checkout.
+ */
 function spanOk(startMin, games, players) {
   const span = sessionSpan(state.date, startMin, games);
   if (span.length < games) return false;
-  return span.every((m) => seatsLeftAt(m) >= players);
+  return span.every((m) => {
+    const s = sessionAt(m);
+    return s && !s.held && !s.blocked && s.seatsLeft >= players;
+  });
 }
 
 function renderSessions() {
@@ -458,19 +479,32 @@ function renderSessions() {
 
   const span = state.startMin != null ? sessionSpan(state.date, state.startMin, state.games) : [];
 
-  host.innerHTML = `<div class="sessions">${state.sessions.map((s) => {
+  // Only worth explaining the dashed slots when the day actually has some.
+  const heldCount = state.sessions.filter((s) => s.held && !s.past).length;
+  const heldNote = heldCount
+    ? `<div class="note-box warn" style="margin-bottom:16px">
+         <b>${heldCount} game${heldCount > 1 ? 's are' : ' is'} held for birthday parties</b> on this day.
+         They open up when no party takes them — give us a call at ${esc(ARENA.phone)} and we'll check.
+       </div>`
+    : '';
+
+  host.innerHTML = heldNote + `<div class="sessions">${state.sessions.map((s) => {
     const pct = Math.round((s.taken / s.capacity) * 100);
-    const unavailable = s.past || s.blocked || s.seatsLeft < ARENA.minPlayers;
+    const unavailable = s.past || s.blocked || s.held || s.seatsLeft < ARENA.minPlayers;
 
     const cls = ['sess'];
     if (s.past) cls.push('gone');
+    if (s.held && !s.past) cls.push('held');
     if (s.startMin === state.startMin) cls.push('sel');
     else if (span.includes(s.startMin)) cls.push('inspan');
 
     const tag = s.past ? '<span class="tag past">STARTED</span>'
+      : s.held ? '<span class="tag party">PARTIES</span>'
       : s.blocked ? '<span class="tag">CLOSED</span>'
       : s.seatsLeft === 0 ? '<span class="tag">FULL</span>' : '';
+    // Held slots get a hopeful message rather than a flat no — they genuinely do open up.
     const sub = s.past ? 'Already started'
+      : s.held ? 'Held for parties'
       : s.blocked ? 'Private booking'
       : s.seatsLeft === 0 ? 'No seats left'
       : s.seatsLeft < ARENA.minPlayers ? `Only ${s.seatsLeft} seat left`

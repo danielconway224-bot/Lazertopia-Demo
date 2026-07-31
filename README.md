@@ -17,7 +17,7 @@ npm start
 Then open **http://localhost:4242**.
 
 ```bash
-npm test        # 31 checks on the pricing, capacity and hours logic
+npm test        # 51 checks on pricing, capacity, hours, held slots and party rules
 ```
 
 ## Pages
@@ -49,6 +49,57 @@ timetable, so the model is different:
 - **Today's earlier games stop being bookable** once their start time passes. Staff can still record
   a walk-in into the game that's currently running.
 
+## Parties and held game times
+
+From Shannon's email — this is how Lasertopia actually schedules, and the demo enforces it.
+
+**Certain game times are held back for birthday parties** and don't appear as bookable to the
+public. They show on the grid as dashed "Held for parties" rather than being hidden, because they
+genuinely do open up when no party takes them.
+
+| Day | Held game times |
+|---|---|
+| Mon–Fri | 5:15, 5:30, 6:15, 6:45 |
+| Saturday | 1:15, 1:45, 3:15, 3:45, 5:15, 5:45 |
+| Sunday | 1:15, 1:45, 3:00, 3:15, 4:15, 4:45 |
+
+The front desk releases them with one click on `/admin`, and can also **hold back extra times**
+when a party needs them ("we sometimes have to book off other time slots as well"). A multi-game
+run can't quietly swallow a held slot either — buying 3 games at 5:00pm is refused because it
+would cover the held 5:15 and 5:30.
+
+**Parties book a 2-hour room slot, not a game time.** Two parties share each slot, matched within
+**2 years of age** so the kids play together — which is why the booking form asks what age the
+birthday guest is turning.
+
+| Day | Party room slots |
+|---|---|
+| Mon–Fri | 5–7, 6–8 |
+| Saturday | 10–12, 11–1, 1–3, 3–5, 5–7 |
+| Sunday | 10–12, 11–1, 1–3, 3–5, 4–6 |
+
+Two more rules fall out of that:
+
+- **The building holds 2 parties at once.** The slots overlap (5–7 and 6–8), so they're staggered
+  alternatives, not extra rooms — filling 5–7 takes 6–8 off the board.
+- **Weekend parties start at 10am** even though public laser tag opens at noon. The arena opens
+  early for a booked party, not for walk-ins.
+- **Age matching is enforced online but overridable at the desk.** A mismatched party is refused
+  with the reason; staff get a warning they can accept, and the override is recorded on the booking.
+
+A party's laser tag games are derived, not hard-coded: each held game belongs to the latest slot
+that has already started when it runs. That lands on exactly two games per slot, matching the two
+games every party package includes.
+
+### Three things to confirm with Shannon
+
+Built to the email as written; these are the gaps, and each is a one-line config edit:
+
+1. **Saturday 10–12 and 11–1 have no held game times listed.** Every other slot has two. Do
+   morning parties play laser tag, and if so when?
+2. **Sunday's held games are 3:00 and 3:15** — 15 minutes apart, where every other day spaces them
+   15–30 minutes. Possibly a typo for 3:00/3:30.
+
 ### The group rate is deliberately not invented
 
 Lasertopia publishes that 12+ players get group rates, but not what the rate *is*. Rather than
@@ -59,13 +110,16 @@ downstream — pricing, the checkout recap, the staff sheet — follows.
 ## Layout
 
 ```
-lib/arena.js        Hours, sessions, capacity, pricing. The single source of truth —
-                    the server imports it AND the browser loads the same file, so the
-                    price a customer sees can't drift from the price the server records.
-lib/demo-store.js   In-memory bookings, with each date seeded deterministically so the
-                    arena looks realistically busy and looks the same on every visit.
+lib/arena.js        Hours, sessions, capacity, pricing, party slots and held game times.
+                    The single source of truth — the server imports it AND the browser
+                    loads the same file, so the price and the rules a customer sees
+                    can't drift from what the server enforces.
+lib/demo-store.js   In-memory bookings and parties, with each date seeded deterministically
+                    so the arena looks realistically busy and identical on every visit.
+lib/api-app.js      The JSON API as an Express app, shared by both runtimes below.
 lib/arena.test.js   Unit tests for all of the above.
-server.js           Express: static pages + the demo JSON API.
+server.js           Local dev: the API app + static pages.
+api/index.js        Vercel: the same API app as a serverless function.
 demo/               The pages. Shared shell in demo/assets/.
 ```
 

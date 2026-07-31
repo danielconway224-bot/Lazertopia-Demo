@@ -80,6 +80,46 @@
   .empty-slot { color: var(--dim); font-size: 12.5px; font-style: italic; }
   .acts { display: flex; gap: 7px; justify-content: flex-end; }
 
+  /* Games Lasertopia holds back for parties */
+  .game.heldrow { border-color: rgba(255,224,0,.34); background: rgba(255,224,0,.04); }
+  .game .held-tag {
+    font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 800; letter-spacing: .09em;
+    color: var(--yellow); background: rgba(255,224,0,.12); border: 1px solid rgba(255,224,0,.4);
+    padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+  }
+
+  /* Party room board */
+  .pboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 11px; }
+  .pslot {
+    background: var(--near-black); border: 1px solid var(--border); border-radius: 12px; padding: 14px 15px;
+  }
+  .pslot.full { border-color: rgba(255,91,91,.35); }
+  .pslot.has { border-color: rgba(255,224,0,.35); }
+  .pslot .ph { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+  .pslot .pt { font-family: 'Space Grotesk'; font-weight: 700; font-size: 15px; }
+  .pslot .pspots {
+    font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 800; letter-spacing: .08em;
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+    background: rgba(53,208,127,.14); color: var(--ok); border: 1px solid rgba(53,208,127,.4);
+  }
+  .pslot .pspots.none { background: rgba(255,91,91,.12); color: var(--danger); border-color: rgba(255,91,91,.4); }
+  .pslot .pparty {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    font-size: 13px; padding: 7px 9px; border-radius: 8px; background: var(--surface-2);
+    cursor: pointer; transition: .13s;
+  }
+  .pslot .pparty:hover { background: #26263a; }
+  .pslot .pparty + .pparty { margin-top: 6px; }
+  .pslot .pparty .age {
+    font-family: 'Space Grotesk'; font-weight: 700; font-size: 11px; color: var(--orange);
+    white-space: nowrap;
+  }
+  .pslot .pparty .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pslot .pgames { font-size: 11.5px; color: var(--dim); margin-top: 9px; }
+  .pslot .pempty { font-size: 12.5px; color: var(--dim); font-style: italic; padding: 5px 0; }
+  .pslot .btn { margin-top: 10px; width: 100%; }
+  .warn-line { color: var(--orange); font-size: 12.5px; margin-top: 10px; line-height: 1.5; }
+
   .sheet-empty { text-align: center; padding: 46px 20px; color: var(--dim); font-size: 15px; line-height: 1.7; }
 
   /* ---------- Modals ---------- */
@@ -115,6 +155,16 @@
   </div>
 
   <div class="stats" id="stats"></div>
+
+  <div class="panel" id="party-panel" style="margin-bottom:18px">
+    <div class="panel-head">
+      <div>
+        <h2>Party rooms</h2>
+        <div class="sub">2-hour slots · two parties each, matched within <span id="age-spread">2</span> years of age</div>
+      </div>
+    </div>
+    <div id="party-board"><div class="loading">Loading…</div></div>
+  </div>
 
   <div id="sheet"><div class="loading">Loading the game sheet…</div></div>
 </div>
@@ -167,6 +217,39 @@
   </div>
 </div>
 
+<!-- Add party modal -->
+<div class="overlay" id="pt-overlay">
+  <div class="modal">
+    <button class="modal-close" id="pt-close" aria-label="Close">✕</button>
+    <h3>Add a party</h3>
+    <div class="sub" id="pt-sub"></div>
+
+    <label class="fld" for="pt-name">Booking name</label>
+    <input class="input" id="pt-name" placeholder="Guest of honour / booking name" />
+
+    <div class="row2" style="margin-top:14px">
+      <div>
+        <label class="fld" for="pt-age">Age turning</label>
+        <input class="input" id="pt-age" type="number" min="1" max="99" value="8" />
+      </div>
+      <div>
+        <label class="fld" for="pt-guests">Guests</label>
+        <input class="input" id="pt-guests" type="number" min="1" max="25" value="10" />
+      </div>
+    </div>
+
+    <label class="fld" for="pt-phone" style="margin-top:14px">Phone</label>
+    <input class="input" id="pt-phone" type="tel" placeholder="204-555-0142" />
+
+    <label class="fld" for="pt-pkg" style="margin-top:14px">Package</label>
+    <select class="input" id="pt-pkg"></select>
+
+    <div id="pt-agewarn"></div>
+    <div class="err" id="pt-error"></div>
+    <button class="btn btn-primary btn-block" id="pt-save" style="margin-top:16px">Add party</button>
+  </div>
+</div>
+
 <!-- Booking detail modal -->
 <div class="overlay" id="dt-overlay">
   <div class="modal">
@@ -180,7 +263,10 @@
 </div>
 
 <script type="module">
-import { ARENA, PACKAGES, hoursFor, sessionSpan, priceBooking, isoDate, parseISO, fmtTime, money } from '/lib/arena.js';
+import {
+  ARENA, PACKAGES, EVENT_PACKAGES, hoursFor, sessionSpan, priceBooking,
+  ageCompatible, isoDate, parseISO, fmtTime, money,
+} from '/lib/arena.js';
 import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
 
 mountShell({
@@ -200,7 +286,65 @@ async function load() {
   }
   renderHeader();
   renderStats();
+  renderPartyBoard();
   renderSheet();
+}
+
+/* ---------- Party rooms ---------- */
+function renderPartyBoard() {
+  const host = $('#party-board');
+  const slots = state.sheet.partySlots || [];
+  $('#age-spread').textContent = String(ARENA.partyAgeSpreadYears);
+
+  if (!slots.length) {
+    host.innerHTML = '<div class="empty-slot" style="padding:8px 0">No party slots on this day.</div>';
+    return;
+  }
+
+  host.innerHTML = `<div class="pboard">${slots.map((s) => {
+    const cls = ['pslot'];
+    if (s.spotsLeft === 0) cls.push('full');
+    else if (s.parties.length) cls.push('has');
+
+    const parties = s.parties.length
+      ? s.parties.map((p) => `<div class="pparty" data-booking="${p.id}">
+           <span class="nm">${esc(p.name)}${p.guests ? ` · ${p.guests}` : ''}</span>
+           <span class="age">turning ${p.age ?? '?'}</span>
+         </div>`).join('')
+      : '<div class="pempty">No parties booked</div>';
+
+    // Once a party is in, the desk needs to know the age window a second one must fall in.
+    const window = s.ages.length
+      ? `<div class="warn-line">Second party must be ${Math.max(1, s.ages[0] - ARENA.partyAgeSpreadYears)}–${s.ages[0] + ARENA.partyAgeSpreadYears} years old</div>`
+      : '';
+
+    return `<div class="${cls.join(' ')}">
+      <div class="ph">
+        <span class="pt">${fmtTime(s.start)} – ${fmtTime(s.end)}</span>
+        <span class="pspots ${s.spotsLeft === 0 ? 'none' : ''}">${s.spotsLeft === 0 ? 'FULL' : `${s.spotsLeft} / ${s.capacity} FREE`}</span>
+      </div>
+      ${parties}
+      ${window}
+      <div class="pgames">${s.games.length ? `Laser tag at ${s.games.map(fmtTime).join(' · ')}` : 'No laser tag games held for this slot'}</div>
+      ${s.spotsLeft > 0 ? `<button class="btn btn-ghost btn-sm" data-addparty="${s.start}">+ Add party</button>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+
+  host.querySelectorAll('[data-addparty]').forEach((b) => { b.onclick = () => openParty(Number(b.dataset.addparty)); });
+  host.querySelectorAll('[data-booking]').forEach((b) => { b.onclick = () => openDetail(Number(b.dataset.booking)); });
+}
+
+/* ---------- Hold / release a game time ---------- */
+async function toggleHold(startMin, hold) {
+  try {
+    await jsonPost(hold ? '/api/staff/hold-game' : '/api/staff/release-game', { dateISO: state.date, startMin });
+    await load();
+    toast(hold
+      ? `${fmtTime(startMin)} is now held — it's off the public booking page.`
+      : `${fmtTime(startMin)} is open to the public.`);
+  } catch (err) {
+    toast(err.message);
+  }
 }
 
 function renderHeader() {
@@ -241,22 +385,35 @@ function renderSheet() {
     const cls = ['game'];
     if (s.past) cls.push('past');
     if (s.blocked) cls.push('blocked');
+    else if (s.held) cls.push('heldrow');
     else if (s.taken >= ARENA.minPlayers) cls.push('busy');
 
     const chips = s.bookings.length
       ? s.bookings.map((b) => groupChip(b)).join('')
-      : `<span class="empty-slot">${s.past ? 'No one played' : 'Open — no bookings yet'}</span>`;
+      : `<span class="empty-slot">${s.past ? 'No one played' : s.held ? 'Held for parties — not on the public page' : 'Open — no bookings yet'}</span>`;
 
     const runs = s.taken >= ARENA.minPlayers;
+    const sub = s.blocked ? 'closed' : s.held ? 'held' : runs ? 'runs' : `needs ${ARENA.minPlayers - s.taken}`;
+
+    // "Release" opens a party-held time to the public; "Hold" takes a public one back.
+    // Wording differs for a slot the desk held itself, where releasing is really an undo.
+    const holdBtn = s.held
+      ? `<button class="btn btn-ghost btn-sm" data-release="${s.startMin}">${s.heldByDefault ? 'Release' : 'Un-hold'}</button>`
+      : `<button class="btn btn-ghost btn-sm" data-hold="${s.startMin}">Hold</button>`;
+
     return `<div class="${cls.join(' ')}">
-      <div class="time">${fmtTime(s.startMin)}<small>${s.blocked ? 'closed' : runs ? 'runs' : 'needs ' + (ARENA.minPlayers - s.taken)}</small></div>
+      <div class="time">${fmtTime(s.startMin)}<small>${sub}</small></div>
       <div class="cap">
-        <div class="cap-top"><span><b>${s.taken}</b> / ${s.capacity}</span><span>${s.seatsLeft} left</span></div>
+        <div class="cap-top">
+          <span><b>${s.taken}</b> / ${s.capacity}</span>
+          <span>${s.held ? '<span class="held-tag">PARTIES</span>' : `${s.seatsLeft} left`}</span>
+        </div>
         <div class="bar"><i class="${barCls}" style="width:${pct}%"></i></div>
       </div>
       <div class="groups">${chips}</div>
       <div class="acts">
         <button class="btn btn-ghost btn-sm" data-walkin="${s.startMin}">+ Walk-in</button>
+        ${s.blocked ? '' : holdBtn}
         ${s.blocked ? '' : `<button class="btn btn-ghost btn-sm" data-block="${s.startMin}">Close</button>`}
       </div>
     </div>`;
@@ -265,6 +422,8 @@ function renderSheet() {
   host.querySelectorAll('[data-walkin]').forEach((b) => { b.onclick = () => openWalkin(Number(b.dataset.walkin)); });
   host.querySelectorAll('[data-block]').forEach((b) => { b.onclick = () => openBlock(Number(b.dataset.block)); });
   host.querySelectorAll('[data-booking]').forEach((b) => { b.onclick = () => openDetail(Number(b.dataset.booking)); });
+  host.querySelectorAll('[data-release]').forEach((b) => { b.onclick = () => toggleHold(Number(b.dataset.release), false); });
+  host.querySelectorAll('[data-hold]').forEach((b) => { b.onclick = () => toggleHold(Number(b.dataset.hold), true); });
 }
 
 function groupChip(b) {
@@ -383,10 +542,83 @@ $('#bl-save').onclick = async () => {
   }
 };
 
+/* ---------- Add a party ---------- */
+function openParty(slotStart) {
+  state.target = slotStart;
+  const slot = (state.sheet.partySlots || []).find((s) => s.start === slotStart);
+  if (!slot) return;
+
+  $('#pt-sub').textContent = `${fmtTime(slot.start)} – ${fmtTime(slot.end)} · ${longDate(state.date)}`;
+  $('#pt-name').value = '';
+  $('#pt-phone').value = '';
+  $('#pt-age').value = slot.ages.length ? String(slot.ages[0]) : '8';
+  $('#pt-guests').value = '10';
+  $('#pt-error').textContent = '';
+  $('#pt-pkg').innerHTML = EVENT_PACKAGES
+    .map((p) => `<option value="${p.id}">${esc(p.name)} — ${money(p.cents)}</option>`).join('');
+
+  updateAgeWarning();
+  $('#pt-overlay').classList.add('show');
+}
+
+/**
+ * The desk may seat two parties outside the age window — it's their judgement call — but
+ * they should see that they're doing it before they commit.
+ */
+function updateAgeWarning() {
+  const slot = (state.sheet.partySlots || []).find((s) => s.start === state.target);
+  const age = Number($('#pt-age').value);
+  const el = $('#pt-agewarn');
+  const clash = slot && slot.ages.find((a) => !ageCompatible(a, age));
+
+  if (clash == null) { el.innerHTML = ''; el.dataset.override = ''; return; }
+  el.innerHTML = `<div class="note-box warn" style="margin-top:14px">
+      <b>Age gap.</b> This slot has a ${clash}-year-old's party, and ${age} is outside the
+      ${ARENA.partyAgeSpreadYears}-year window. Adding this party anyway is your call.
+    </div>`;
+  el.dataset.override = '1';
+}
+$('#pt-age').oninput = updateAgeWarning;
+
+$('#pt-save').onclick = async () => {
+  const btn = $('#pt-save');
+  $('#pt-error').textContent = '';
+
+  if (!$('#pt-name').value.trim())  { $('#pt-error').textContent = 'Enter a booking name.'; return; }
+  if (!$('#pt-phone').value.trim()) { $('#pt-error').textContent = 'Enter a phone number.'; return; }
+
+  btn.disabled = true;
+  try {
+    await jsonPost('/api/staff/party', {
+      dateISO: state.date,
+      slotStart: state.target,
+      age: Number($('#pt-age').value),
+      guests: Number($('#pt-guests').value),
+      packageId: $('#pt-pkg').value,
+      name: $('#pt-name').value.trim(),
+      phone: $('#pt-phone').value.trim(),
+      override: $('#pt-agewarn').dataset.override === '1',
+    });
+    $('#pt-overlay').classList.remove('show');
+    await load();
+    toast(`Party added to the ${fmtTime(state.target)} slot.`);
+  } catch (err) {
+    $('#pt-error').textContent = err.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
 /* ---------- Booking detail ---------- */
 function findBooking(id) {
   for (const s of state.sheet.sessions) {
     const hit = s.bookings.find((b) => b.id === id);
+    if (hit) return hit;
+  }
+  // A party with no held games in its slot (Saturday mornings) never appears on the game
+  // sheet, so the party board is the only place it can be found.
+  for (const s of state.sheet.partySlots || []) {
+    const hit = s.parties.find((p) => p.id === id);
     if (hit) return hit;
   }
   return null;
@@ -401,13 +633,26 @@ function openDetail(id) {
   $('#dt-code').textContent = b.kind === 'block' ? 'Closed session' : b.code;
   $('#dt-error').textContent = '';
 
-  const span = b.kind === 'block' ? [b.startMin] : sessionSpan(b.dateISO, b.startMin, b.games);
   const kindLabel = { online: 'Booked online', walkin: 'Walk-in', party: 'Party package', block: 'Closed by staff' }[b.kind] || b.kind;
+
+  // A party's games come from its slot, not from a consecutive run like a normal booking.
+  let gamesLine;
+  if (b.kind === 'party') {
+    const slot = (state.sheet.partySlots || []).find((s) => s.start === b.slotStart);
+    gamesLine = slot && slot.games.length ? slot.games.map(fmtTime).join(' · ') : 'No games held for this slot';
+  } else {
+    const span = b.kind === 'block' ? [b.startMin] : sessionSpan(b.dateISO, b.startMin, b.games);
+    gamesLine = span.map(fmtTime).join(' · ');
+  }
 
   $('#dt-body').innerHTML = `
     <div class="detail-line"><span class="k">Type</span><span class="v">${kindLabel}</span></div>
     <div class="detail-line"><span class="k">Date</span><span class="v">${esc(longDate(b.dateISO))}</span></div>
-    <div class="detail-line"><span class="k">Games</span><span class="v">${span.map(fmtTime).join(' · ')}</span></div>
+    ${b.kind === 'party' ? `
+      <div class="detail-line"><span class="k">Party room</span><span class="v">${fmtTime(b.slotStart)} – ${fmtTime(b.slotEnd)}</span></div>
+      <div class="detail-line"><span class="k">Age turning</span><span class="v">${b.age ?? '—'}</span></div>
+      ${b.ageOverride ? '<div class="detail-line"><span class="k">Age match</span><span class="v" style="color:var(--orange)">Seated outside the age window</span></div>' : ''}` : ''}
+    <div class="detail-line"><span class="k">Games</span><span class="v">${gamesLine}</span></div>
     ${b.kind === 'block' ? '' : `
       <div class="detail-line"><span class="k">Players</span><span class="v">${b.players}</span></div>
       <div class="detail-line"><span class="k">Phone</span><span class="v">${esc(b.phone || '—')}</span></div>
@@ -440,7 +685,7 @@ $('#dt-cancel').onclick = async () => {
 };
 
 /* ---------- Modal plumbing ---------- */
-for (const [closeBtn, overlay] of [['#wi-close', '#wi-overlay'], ['#bl-close', '#bl-overlay'], ['#dt-close', '#dt-overlay']]) {
+for (const [closeBtn, overlay] of [['#wi-close', '#wi-overlay'], ['#bl-close', '#bl-overlay'], ['#dt-close', '#dt-overlay'], ['#pt-close', '#pt-overlay']]) {
   $(closeBtn).onclick = () => $(overlay).classList.remove('show');
   $(overlay).onclick = (e) => { if (e.target === $(overlay)) $(overlay).classList.remove('show'); };
 }
