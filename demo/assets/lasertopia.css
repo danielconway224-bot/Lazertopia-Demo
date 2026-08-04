@@ -292,6 +292,88 @@ footer .ft-brand { color: var(--muted); font-weight: 600; }
 /* ---------- Loading ---------- */
 .loading { color: var(--dim); font-size: 14px; padding: 26px; text-align: center; }
 
+/* ---------- Calendar ----------
+   Shared by the booking page's inline calendar and the party page's pop-up, so a day cell
+   looks and behaves the same wherever a date gets picked. */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.cal-title { font-family: 'Space Grotesk'; font-weight: 700; font-size: 19px; }
+.cal-nav { display: flex; gap: 8px; }
+.cal-btn {
+  width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--near-black); color: var(--white); cursor: pointer; font-size: 17px;
+  display: grid; place-items: center; transition: .15s;
+}
+.cal-btn:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
+.cal-btn:disabled { opacity: .28; cursor: not-allowed; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
+.cal-dow { font-size: 10.5px; color: var(--dim); text-align: center; padding-bottom: 5px; text-transform: uppercase; letter-spacing: .07em; }
+.cal-day {
+  height: 54px; position: relative; display: grid; place-items: center; border-radius: 11px;
+  border: 1px solid var(--border); background: var(--near-black); cursor: pointer;
+  font-family: 'Space Grotesk'; font-weight: 700; font-size: 15px; color: var(--white);
+  transition: border-color .12s, background .12s, color .12s, box-shadow .12s, height .4s cubic-bezier(.4,0,.2,1);
+}
+.cal-day.empty { background: transparent; border: none; cursor: default; }
+.cal-day.past { opacity: .22; cursor: not-allowed; }
+.cal-day.closed { color: var(--dim); background: repeating-linear-gradient(45deg,#101018,#101018 4px,#0a0a10 4px,#0a0a10 8px); cursor: not-allowed; }
+.cal-day.today:not(.sel) { border-color: var(--border-lit); color: var(--cyan); }
+.cal-day.sel { background: var(--cyan); border-color: var(--cyan); color: #04121a; box-shadow: 0 0 20px var(--cyan-glow); }
+.cal-day:hover:not(.sel):not(.past):not(.empty):not(.closed) { border-color: var(--cyan); }
+/* Dot marking a day whose hours differ from the usual weekly pattern */
+.cal-day .mark { position: absolute; bottom: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--orange); }
+.cal-day.sel .mark { background: #04121a; }
+.cal-day.closed .mark { background: var(--danger); }
+
+.cal-key { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 11.5px; color: var(--dim); }
+.cal-key span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-key i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+/* ---------- Pop-up calendar (date field) ---------- */
+.datefield { position: relative; }
+.datefield-btn {
+  width: 100%; background: var(--near-black); border: 1px solid var(--border); color: var(--white);
+  border-radius: 10px; padding: 12px 14px; font-size: 14.5px; font-family: 'Raleway', sans-serif;
+  text-align: left; cursor: pointer; transition: .15s; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px; min-height: 46px;
+}
+.datefield-btn:hover { border-color: var(--border-lit); }
+.datefield-btn.open { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 16px var(--cyan-glow); }
+.datefield-btn .placeholder { color: var(--dim); }
+.datefield-btn svg { width: 17px; height: 17px; stroke: var(--dim); flex-shrink: 0; }
+.datefield-btn.open svg, .datefield-btn:hover svg { stroke: var(--cyan); }
+
+.calpop {
+  position: absolute; z-index: 70; top: calc(100% + 8px); left: 0; width: 330px; max-width: 92vw;
+  background: var(--surface); border: 1px solid var(--border-lit); border-radius: 14px;
+  padding: 16px; box-shadow: 0 18px 50px rgba(0,0,0,.6); display: none;
+}
+.calpop.show { display: block; }
+.calpop.drop-up { top: auto; bottom: calc(100% + 8px); }
+.calpop.align-right { left: auto; right: 0; }
+.calpop .cal-day { height: 38px; font-size: 14px; border-radius: 9px; }
+.calpop .cal-grid { gap: 5px; }
+.calpop .cal-title { font-size: 16px; }
+.calpop .cal-btn { width: 32px; height: 32px; font-size: 15px; }
+.calpop .cal-head { margin-bottom: 12px; }
+.calpop .cal-key { margin-top: 12px; font-size: 11px; gap: 12px; }
+
+/* On a phone the popover becomes a centred sheet — anchoring a 330px panel to a field in a
+   narrow modal leaves it half off-screen. */
+@media (max-width: 560px) {
+  .calpop {
+    position: fixed; top: 50%; left: 50%; right: auto; bottom: auto;
+    transform: translate(-50%, -50%); width: 320px; max-width: calc(100vw - 28px);
+  }
+  .calpop.drop-up { top: 50%; bottom: auto; }
+  .calpop .cal-day { height: 42px; }
+}
+.calpop-backdrop {
+  position: fixed; inset: 0; z-index: 69; background: rgba(0,0,0,.45); display: none;
+}
+.calpop-backdrop.show { display: block; }
+@media (min-width: 561px) { .calpop-backdrop { background: transparent; } }
+
 /* ---------- Customer / staff view switch ---------- */
 /* Fixed bottom-right on every page. This is a demo affordance — it's how you show both
    halves of the system without typing URLs — so it sits above everything else. */

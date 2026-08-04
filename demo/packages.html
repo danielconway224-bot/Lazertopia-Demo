@@ -111,8 +111,8 @@
 
     <div class="row2">
       <div>
-        <label class="fld" for="bk-date">Party date</label>
-        <input class="input" type="date" id="bk-date" />
+        <span class="fld">Party date</span>
+        <div id="bk-date"></div>
       </div>
       <div>
         <label class="fld" for="bk-age">Birthday age turning</label>
@@ -161,11 +161,31 @@
 
 <script type="module">
 import { EVENT_PACKAGES, PACKAGE_PERKS, ARENA, hoursFor, priceEventPackage, isoDate, fmtTime, money, validAge } from '/lib/arena.js';
-import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
+import { mountShell, $, esc, toast, api, jsonPost, longDate, mountDateField } from '/assets/shell.js';
 
 mountShell({ active: '/packages' });
 
 let current = null;   // package being booked
+
+/* ---------- Date field ---------- */
+// The pop-up shows the same day states as the booking page: closed days can't be picked,
+// and days on special hours carry a dot.
+const dateField = mountDateField($('#bk-date'), {
+  placeholder: 'Choose a date',
+  dayInfo: (iso) => {
+    const h = hoursFor(iso);
+    return {
+      closed: h.closed,
+      special: h.special,
+      title: h.closed ? 'Closed' : (h.special ? `Special hours: ${fmtTime(h.open)} – ${fmtTime(h.close)}` : ''),
+    };
+  },
+  legend: [
+    { color: 'var(--orange)', label: 'Special hours' },
+    { color: 'var(--danger)', label: 'Closed' },
+  ],
+  onPick: () => { pickedSlot = null; loadSlots(); },
+});
 
 /* ---------- Cards ---------- */
 $('#pkgs').innerHTML = EVENT_PACKAGES.map((p, i) => {
@@ -202,8 +222,7 @@ function openBooking(id) {
   // Parties are planned ahead, so default a few days out rather than today.
   const d = new Date();
   d.setDate(d.getDate() + 3);
-  $('#bk-date').value = isoDate(d);
-  $('#bk-date').min = isoDate(new Date());
+  dateField.set(isoDate(d));
 
   updateTotal();
   $('#bk-overlay').classList.add('show');
@@ -221,7 +240,7 @@ let pickedSlot = null;    // slotStart the customer selected
  * that; we send the age so each slot comes back knowing whether THIS party fits.
  */
 async function loadSlots() {
-  const date = $('#bk-date').value;
+  const date = dateField.value();
   const host = $('#bk-slots');
   const age = Number($('#bk-age').value);
 
@@ -305,7 +324,6 @@ function updateTotal() {
     (priced.extraGuests > 0 ? ` · ${priced.extraGuests} extra guest${priced.extraGuests > 1 ? 's' : ''} ${money(priced.extraCents)}` : '');
 }
 
-$('#bk-date').onchange = () => { pickedSlot = null; loadSlots(); };
 $('#bk-guests').oninput = updateTotal;
 
 // Changing the age can open or close slots, so the board has to be re-asked.
@@ -331,7 +349,7 @@ $('#bk-save').onclick = async () => {
   btn.disabled = true;
   try {
     const res = await jsonPost('/api/party', {
-      dateISO: $('#bk-date').value,
+      dateISO: dateField.value(),
       slotStart: pickedSlot,
       age: Number($('#bk-age').value),
       packageId: current.id,

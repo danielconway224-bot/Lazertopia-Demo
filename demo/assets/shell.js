@@ -160,3 +160,159 @@ export function longDate(dateISO) {
   const [y, m, d] = dateISO.split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 }
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const pad2 = (n) => String(n).padStart(2, '0');
+const toISO = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+/**
+ * Turn a container into a date field that opens a calendar pop-up.
+ *
+ * Built on the same `.cal-*` markup as the booking page's inline calendar, so closed days,
+ * special-hours dots and the selected state all look identical wherever a date gets picked.
+ *
+ * @param {HTMLElement} host        empty element to build into
+ * @param {object}      opts
+ * @param {string}      opts.value      initially selected 'YYYY-MM-DD' (optional)
+ * @param {(iso:string)=>({closed?:boolean, special?:boolean, title?:string})} opts.dayInfo
+ *        per-day state, so the caller decides what's bookable
+ * @param {(iso:string)=>void} opts.onPick  called when a date is chosen
+ * @param {string}      opts.placeholder
+ * @param {Array<{color:string,label:string}>} opts.legend
+ * @returns {{ value:()=>string|null, set:(iso:string)=>void, close:()=>void }}
+ */
+export function mountDateField(host, opts = {}) {
+  const { dayInfo = () => ({}), onPick = () => {}, placeholder = 'Pick a date', legend = [] } = opts;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let value = opts.value || null;
+  let month = new Date((value ? new Date(value + 'T00:00:00') : today).getFullYear(),
+                       (value ? new Date(value + 'T00:00:00') : today).getMonth(), 1);
+
+  host.classList.add('datefield');
+  host.innerHTML = `
+    <button type="button" class="datefield-btn">
+      <span class="df-text"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+    </button>
+    <div class="calpop-backdrop"></div>
+    <div class="calpop" role="dialog" aria-label="Choose a date">
+      <div class="cal-head">
+        <div class="cal-title"></div>
+        <div class="cal-nav">
+          <button type="button" class="cal-btn df-prev" aria-label="Previous month">‹</button>
+          <button type="button" class="cal-btn df-next" aria-label="Next month">›</button>
+        </div>
+      </div>
+      <div class="cal-grid df-grid"></div>
+      ${legend.length ? `<div class="cal-key">${legend
+        .map((l) => `<span><i style="background:${l.color}"></i> ${esc(l.label)}</span>`).join('')}</div>` : ''}
+    </div>`;
+
+  const btn = host.querySelector('.datefield-btn');
+  const pop = host.querySelector('.calpop');
+  const backdrop = host.querySelector('.calpop-backdrop');
+  const grid = host.querySelector('.df-grid');
+  const title = host.querySelector('.cal-title');
+  const label = host.querySelector('.df-text');
+
+  function paintLabel() {
+    if (value) { label.textContent = longDate(value); label.classList.remove('placeholder'); }
+    else { label.textContent = placeholder; label.classList.add('placeholder'); }
+  }
+
+  function paintGrid() {
+    title.textContent = `${MONTHS[month.getMonth()]} ${month.getFullYear()}`;
+    host.querySelector('.df-prev').disabled =
+      month.getFullYear() === today.getFullYear() && month.getMonth() === today.getMonth();
+
+    const first = new Date(month.getFullYear(), month.getMonth(), 1);
+    const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+
+    let html = DOW.map((d) => `<div class="cal-dow">${d}</div>`).join('');
+    for (let i = 0; i < first.getDay(); i++) html += '<div class="cal-day empty"></div>';
+
+    for (let day = 1; day <= days; day++) {
+      const d = new Date(month.getFullYear(), month.getMonth(), day);
+      const iso = toISO(d);
+      const info = dayInfo(iso) || {};
+      const past = d < today;
+
+      const cls = ['cal-day'];
+      if (past) cls.push('past');
+      if (info.closed && !past) cls.push('closed');
+      if (iso === toISO(today)) cls.push('today');
+      if (iso === value) cls.push('sel');
+
+      const mark = (!past && (info.closed || info.special)) ? '<span class="mark"></span>' : '';
+      const pickable = !past && !info.closed;
+      html += `<div class="${cls.join(' ')}"${pickable ? ` data-date="${iso}"` : ''}${info.title ? ` title="${esc(info.title)}"` : ''}>${day}${mark}</div>`;
+    }
+    grid.innerHTML = html;
+
+    grid.querySelectorAll('[data-date]').forEach((el) => {
+      el.onclick = () => {
+        value = el.dataset.date;
+        paintLabel();
+        close();
+        onPick(value);
+      };
+    });
+  }
+
+  /** Flip the popover above the field, or right-align it, when it would leave the screen. */
+  function place() {
+    pop.classList.remove('drop-up', 'align-right');
+    if (window.innerWidth <= 560) return;          // centred sheet on phones
+    const r = btn.getBoundingClientRect();
+    const h = pop.offsetHeight || 340;
+    if (r.bottom + h + 12 > window.innerHeight && r.top - h - 12 > 0) pop.classList.add('drop-up');
+    if (r.left + pop.offsetWidth + 12 > window.innerWidth) pop.classList.add('align-right');
+  }
+
+  function open() {
+    month = new Date((value ? new Date(value + 'T00:00:00') : today).getFullYear(),
+                     (value ? new Date(value + 'T00:00:00') : today).getMonth(), 1);
+    paintGrid();
+    pop.classList.add('show');
+    backdrop.classList.add('show');
+    btn.classList.add('open');
+    place();
+  }
+  function close() {
+    pop.classList.remove('show');
+    backdrop.classList.remove('show');
+    btn.classList.remove('open');
+  }
+
+  btn.onclick = (e) => { e.stopPropagation(); pop.classList.contains('show') ? close() : open(); };
+  backdrop.onclick = close;
+  pop.onclick = (e) => e.stopPropagation();
+  host.querySelector('.df-prev').onclick = (e) => {
+    e.stopPropagation();
+    month = new Date(month.getFullYear(), month.getMonth() - 1, 1);
+    paintGrid();
+  };
+  host.querySelector('.df-next').onclick = (e) => {
+    e.stopPropagation();
+    month = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+    paintGrid();
+  };
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pop.classList.contains('show')) close(); });
+  addEventListener('resize', () => { if (pop.classList.contains('show')) place(); });
+
+  paintLabel();
+
+  return {
+    value: () => value,
+    set: (iso) => { value = iso; paintLabel(); },
+    close,
+  };
+}

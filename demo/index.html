@@ -19,39 +19,8 @@
   .date-layout.full .cal-day { height: 64px; font-size: 17px; }
   @media (max-width: 760px) { .date-layout, .date-layout.full { grid-template-columns: 1fr; gap: 26px; } }
 
-  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .cal-title { font-family: 'Space Grotesk'; font-weight: 700; font-size: 19px; }
-  .cal-nav { display: flex; gap: 8px; }
-  .cal-btn {
-    width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
-    background: var(--near-black); color: var(--white); cursor: pointer; font-size: 17px;
-    display: grid; place-items: center; transition: .15s;
-  }
-  .cal-btn:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
-  .cal-btn:disabled { opacity: .28; cursor: not-allowed; }
-
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
-  .cal-dow { font-size: 10.5px; color: var(--dim); text-align: center; padding-bottom: 5px; text-transform: uppercase; letter-spacing: .07em; }
-  .cal-day {
-    height: 54px; position: relative; display: grid; place-items: center; border-radius: 11px;
-    border: 1px solid var(--border); background: var(--near-black); cursor: pointer;
-    font-family: 'Space Grotesk'; font-weight: 700; font-size: 15px; color: var(--white);
-    transition: border-color .12s, background .12s, color .12s, box-shadow .12s, height .4s cubic-bezier(.4,0,.2,1);
-  }
-  .cal-day.empty { background: transparent; border: none; cursor: default; }
-  .cal-day.past { opacity: .22; cursor: not-allowed; }
-  .cal-day.closed { color: var(--dim); background: repeating-linear-gradient(45deg,#101018,#101018 4px,#0a0a10 4px,#0a0a10 8px); cursor: not-allowed; }
-  .cal-day.today:not(.sel) { border-color: var(--border-lit); color: var(--cyan); }
-  .cal-day.sel { background: var(--cyan); border-color: var(--cyan); color: #04121a; box-shadow: 0 0 20px var(--cyan-glow); }
-  .cal-day:hover:not(.sel):not(.past):not(.empty):not(.closed) { border-color: var(--cyan); }
-  /* Dot marking a day whose hours differ from the usual weekly pattern */
-  .cal-day .mark { position: absolute; bottom: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--orange); }
-  .cal-day.sel .mark { background: #04121a; }
-  .cal-day.closed .mark { background: var(--danger); }
-
-  .cal-key { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 11.5px; color: var(--dim); }
-  .cal-key span { display: inline-flex; align-items: center; gap: 6px; }
-  .cal-key i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  /* Base calendar styling lives in assets/lasertopia.css so the party page's pop-up matches.
+     Only the booking page's own sizing is overridden here. */
 
   .day-summary {
     border-left: 1px solid var(--border); padding-left: 40px; display: flex; flex-direction: column;
