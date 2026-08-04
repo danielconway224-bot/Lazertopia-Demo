@@ -139,6 +139,90 @@
   .pslot .btn { margin-top: 10px; width: 100%; }
   .warn-line { color: var(--orange); font-size: 12.5px; margin-top: 10px; line-height: 1.5; }
 
+  /* ---------- Revenue analytics ----------
+     Palette is the documented categorical instance, validated against this exact surface
+     (#14141E) for lightness, chroma, CVD separation and contrast — not eyeballed. */
+  .viz {
+    --surface-1: var(--surface);
+    --series-1: #3987e5;   /* online   */
+    --series-2: #d95926;   /* walk-ins */
+    --series-3: #199e70;   /* parties  */
+    --grid: #2A2A3B;
+  }
+  .an-toolbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .an-seg { display: flex; gap: 3px; background: var(--near-black); border: 1px solid var(--border); border-radius: 9px; padding: 3px; }
+  .an-seg button {
+    border: none; background: transparent; color: var(--muted); cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 12px;
+    padding: 7px 12px; border-radius: 7px; transition: .12s; white-space: nowrap;
+  }
+  .an-seg button:hover:not(.on) { color: var(--white); }
+  .an-seg button.on { background: var(--cyan); color: #04121a; }
+
+  /* KPI row — the headline numbers read as figures, not as a chart */
+  .an-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 22px; }
+  .an-kpi { background: var(--near-black); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .an-kpi .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .13em; color: var(--dim); font-weight: 700; }
+  .an-kpi .v { font-family: 'Space Grotesk'; font-weight: 700; font-size: 24px; margin-top: 6px; letter-spacing: -.02em; }
+  .an-kpi.hero .v { font-size: 32px; color: var(--cyan); }
+  .an-kpi .sub2 { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
+
+  /* Column chart. Bars are capped in width so the band keeps its air. */
+  .an-chart { position: relative; padding-top: 22px; }
+  .an-plot { display: flex; align-items: flex-end; gap: 2px; height: 150px; position: relative; }
+  .an-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; position: relative; cursor: default; }
+  .an-bar {
+    width: 100%; max-width: 24px; background: var(--series-1);
+    border-radius: 4px 4px 0 0;   /* rounded data-end, square at the baseline */
+    min-height: 2px; transition: filter .14s;
+  }
+  .an-col:hover .an-bar { filter: brightness(1.25); }
+  .an-col.closed .an-bar { background: var(--grid); }
+  .an-cap {
+    position: absolute; bottom: 100%; margin-bottom: 5px; font-family: 'Space Grotesk';
+    font-weight: 700; font-size: 11px; color: var(--muted); white-space: nowrap;
+  }
+  .an-axis { display: flex; gap: 2px; margin-top: 9px; }
+  .an-tick { flex: 1; text-align: center; font-size: 10.5px; color: var(--dim); }
+  .an-tick.sel { color: var(--cyan); font-weight: 700; }
+  .an-max {
+    position: absolute; top: 0; left: 0; right: 0; border-top: 1px solid var(--grid);
+    font-size: 10.5px; color: var(--dim); padding-bottom: 3px;
+  }
+  .an-max span { background: var(--surface); padding-right: 6px; }
+
+  /* Part-to-whole: where the money came from */
+  .an-split { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .an-stack { display: flex; gap: 2px; height: 26px; border-radius: 6px; overflow: hidden; }
+  .an-seg-fill { transition: filter .14s; min-width: 2px; }
+  .an-seg-fill:hover { filter: brightness(1.2); }
+  .an-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 13px; }
+  .an-leg { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .an-leg i { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+  .an-leg b { color: var(--white); font-family: 'Space Grotesk'; font-weight: 700; }
+  .an-leg .pct { color: var(--dim); font-size: 12px; }
+
+  /* Table view — the same numbers without relying on colour or hover */
+  .an-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .an-table th, .an-table td { text-align: right; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  .an-table th:first-child, .an-table td:first-child { text-align: left; }
+  .an-table th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); font-weight: 700; }
+  .an-table tr:last-child td { border-bottom: none; }
+  .an-table td.closed { color: var(--dim); font-style: italic; }
+
+  /* Range buttons are as tappable as every other control on touch-sized screens. */
+  @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+    .an-seg button { padding: 11px 14px; min-height: 40px; }
+  }
+  @media (max-width: 620px) {
+    .an-plot { height: 120px; }
+    .an-tick { font-size: 9.5px; }
+    .an-cap { display: none; }        /* labels collide at this width — tooltip + table carry them */
+    .an-toolbar { width: 100%; }
+    .an-seg { flex: 1; }
+    .an-seg button { flex: 1; }
+  }
+
   .sheet-empty { text-align: center; padding: 46px 20px; color: var(--dim); font-size: 15px; line-height: 1.7; }
 
   /* ---------- Modals ---------- */
@@ -174,6 +258,24 @@
   </div>
 
   <div class="stats" id="stats"></div>
+
+  <div class="panel viz" id="analytics-panel" style="margin-bottom:18px">
+    <div class="panel-head">
+      <div>
+        <h2>Revenue</h2>
+        <div class="sub" id="an-sub">Booked revenue, day by day</div>
+      </div>
+      <div class="an-toolbar">
+        <div class="an-seg" id="an-range">
+          <button data-days="7" class="on">7 days</button>
+          <button data-days="14">14 days</button>
+          <button data-days="30">30 days</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="an-view">Table</button>
+      </div>
+    </div>
+    <div id="an-body"><div class="loading">Loading revenue…</div></div>
+  </div>
 
   <div class="panel" id="party-panel" style="margin-bottom:18px">
     <div class="panel-head">
@@ -290,10 +392,12 @@ import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shel
 
 mountShell({
   active: '/admin',
+  chrome: 'staff',
   banner: 'Staff game sheet · demo data, in-memory · no sign-in in this prototype',
 });
 
-const state = { date: isoDate(new Date()), sheet: null, target: null, detail: null };
+const state = { date: isoDate(new Date()), sheet: null, target: null, detail: null,
+                analytics: null, anDays: 7, anTable: false };
 
 /* ---------- Load & render ---------- */
 async function load() {
@@ -307,7 +411,151 @@ async function load() {
   renderStats();
   renderPartyBoard();
   renderSheet();
+  loadAnalytics();
 }
+
+/* ---------- Revenue analytics ---------- */
+const SOURCES = [
+  { key: 'online', label: 'Booked online', varName: '--series-1' },
+  { key: 'walkin', label: 'Walk-ins',      varName: '--series-2' },
+  { key: 'party',  label: 'Parties',       varName: '--series-3' },
+];
+
+async function loadAnalytics() {
+  const host = $('#an-body');
+  try {
+    state.analytics = await api(`/api/staff/analytics?date=${encodeURIComponent(state.date)}&days=${state.anDays}`);
+  } catch (err) {
+    host.innerHTML = `<div class="empty-slot" style="padding:10px 0">${esc(err.message)}</div>`;
+    return;
+  }
+  renderAnalytics();
+}
+
+function renderAnalytics() {
+  const host = $('#an-body');
+  const { days, totals } = state.analytics;
+  if (!days.length) { host.innerHTML = '<div class="empty-slot">No revenue data.</div>'; return; }
+
+  $('#an-sub').textContent = `Booked revenue over the ${days.length} days to ${longDate(state.date)}`;
+  host.innerHTML = state.anTable ? tableHTML(days, totals) : chartHTML(days, totals);
+}
+
+function kpisHTML(totals) {
+  return `<div class="an-kpis">
+    <div class="an-kpi hero">
+      <div class="k">Revenue</div><div class="v">${money(totals.revenueCents)}</div>
+      <div class="sub2">${totals.bookings} bookings</div>
+    </div>
+    <div class="an-kpi">
+      <div class="k">Average open day</div><div class="v">${money(totals.avgPerOpenDayCents)}</div>
+      <div class="sub2">across ${totals.openDays} trading days</div>
+    </div>
+    <div class="an-kpi">
+      <div class="k">Best day</div><div class="v">${money(totals.bestDay.revenueCents)}</div>
+      <div class="sub2">${esc(longDate(totals.bestDay.date))}</div>
+    </div>
+    <div class="an-kpi">
+      <div class="k">Players</div><div class="v">${totals.players}</div>
+      <div class="sub2">through the arena</div>
+    </div>
+  </div>`;
+}
+
+function chartHTML(days, totals) {
+  const max = Math.max(...days.map((d) => d.revenueCents), 1);
+  // Round the ceiling to a clean number so the gridline reads as a real scale.
+  const step = max > 200000 ? 50000 : max > 50000 ? 20000 : 10000;
+  const ceil = Math.ceil(max / step) * step;
+  const best = totals.bestDay.date;
+
+  const cols = days.map((d) => {
+    const pct = (d.revenueCents / ceil) * 100;
+    const isSel = d.date === state.date;
+    // Label sparingly — only the best day and the day being viewed.
+    const label = (d.date === best || isSel) && d.revenueCents > 0
+      ? `<span class="an-cap">${money(d.revenueCents)}</span>` : '';
+    const title = d.closed
+      ? `${longDate(d.date)} — closed`
+      : `${longDate(d.date)} — ${money(d.revenueCents)} · ${d.players} players · ${d.bookings} bookings`;
+    return `<div class="an-col${d.closed ? ' closed' : ''}" title="${esc(title)}">
+      ${label}<div class="an-bar" style="height:${Math.max(pct, d.closed ? 1 : 1.5)}%"></div>
+    </div>`;
+  }).join('');
+
+  const ticks = days.map((d) => {
+    const dt = new Date(d.date + 'T00:00:00');
+    const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()];
+    // Long ranges can't fit a label per column; show the weekday only when there's room.
+    const txt = days.length <= 10 ? `${dow}<br>${dt.getDate()}` : String(dt.getDate());
+    return `<div class="an-tick${d.date === state.date ? ' sel' : ''}">${txt}</div>`;
+  }).join('');
+
+  return kpisHTML(totals) + `
+    <div class="an-chart">
+      <div class="an-max"><span>${money(ceil)}</span></div>
+      <div class="an-plot">${cols}</div>
+      <div class="an-axis">${ticks}</div>
+    </div>
+    ${splitHTML(totals)}`;
+}
+
+function splitHTML(totals) {
+  const by = totals.bySource;
+  const sum = SOURCES.reduce((t, s) => t + by[s.key], 0) || 1;
+
+  const segs = SOURCES.map((s) => {
+    const pct = (by[s.key] / sum) * 100;
+    if (pct <= 0) return '';
+    return `<div class="an-seg-fill" style="width:${pct}%;background:var(${s.varName})"
+                 title="${esc(s.label)} — ${money(by[s.key])} (${Math.round(pct)}%)"></div>`;
+  }).join('');
+
+  // Legend is always present for 3 series — identity never rests on colour alone.
+  const legend = SOURCES.map((s) => `<div class="an-leg">
+      <i style="background:var(${s.varName})"></i>
+      <span>${esc(s.label)} <b>${money(by[s.key])}</b>
+      <span class="pct">${Math.round((by[s.key] / sum) * 100)}%</span></span>
+    </div>`).join('');
+
+  return `<div class="an-split">
+    <div class="k" style="font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--dim);font-weight:700;margin-bottom:10px">Where it came from</div>
+    <div class="an-stack">${segs}</div>
+    <div class="an-legend">${legend}</div>
+  </div>`;
+}
+
+function tableHTML(days, totals) {
+  const rows = days.map((d) => `<tr>
+      <td${d.closed ? ' class="closed"' : ''}>${esc(longDate(d.date))}${d.closed ? ' — closed' : ''}</td>
+      <td>${d.closed ? '—' : money(d.revenueCents)}</td>
+      <td>${d.closed ? '—' : d.players}</td>
+      <td>${d.closed ? '—' : d.bookings}</td>
+      <td>${d.closed ? '—' : d.gamesRun}</td>
+    </tr>`).join('');
+
+  return kpisHTML(totals) + `<table class="an-table">
+    <thead><tr><th>Day</th><th>Revenue</th><th>Players</th><th>Bookings</th><th>Games run</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr>
+      <th>Total</th><th>${money(totals.revenueCents)}</th><th>${totals.players}</th><th>${totals.bookings}</th><th></th>
+    </tr></tfoot>
+  </table>` + splitHTML(totals);
+}
+
+$('#an-range').querySelectorAll('button').forEach((b) => {
+  b.onclick = () => {
+    $('#an-range').querySelectorAll('button').forEach((x) => x.classList.remove('on'));
+    b.classList.add('on');
+    state.anDays = Number(b.dataset.days);
+    loadAnalytics();
+  };
+});
+$('#an-view').onclick = () => {
+  state.anTable = !state.anTable;
+  $('#an-view').textContent = state.anTable ? 'Chart' : 'Table';
+  renderAnalytics();
+};
 
 /* ---------- Party rooms ---------- */
 function renderPartyBoard() {

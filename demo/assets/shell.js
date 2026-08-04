@@ -15,7 +15,7 @@ export function esc(s) {
 // Both logos are served from /assets rather than hotlinked, so the pages don't depend on
 // anyone else's CDN staying up and render instantly.
 const LOGO = '/assets/lasertopia-logo.png';
-const VOLTRIS_LOGO = '/assets/voltris-booking.png';
+const VOLTRIS_LOGO = '/assets/voltrisbooking-text-2x.png';
 const VOLTRIS_URL = 'https://www.voltrisbooking.com';
 
 const NAV = [
@@ -30,7 +30,7 @@ const NAV = [
  * Render the demo banner, header and footer into the page.
  * @param {{active?: string, banner?: string}} opts
  */
-export function mountShell({ active = '', banner = '' } = {}) {
+export function mountShell({ active = '', banner = '', chrome = 'customer' } = {}) {
   const bannerText = banner
     || 'Booking demo for Lasertopia · real rates, hours &amp; packages · checkout is simulated (no real charge)';
 
@@ -48,10 +48,15 @@ export function mountShell({ active = '', banner = '' } = {}) {
      </svg>`);
   document.head.insertAdjacentHTML('beforeend', `<link rel="icon" href="${favicon}" />`);
 
-  const links = NAV.map((n) => {
-    const cls = ['nav-link', n.cta ? 'cta' : '', n.href === active ? 'active' : ''].filter(Boolean).join(' ');
-    return `<a class="${cls}" href="${n.href}">${n.label}</a>`;
-  }).join('');
+  // The staff page has no use for customer navigation — booking, rates and waivers are
+  // the customer's journey, not the front desk's. It gets a role badge instead, and the
+  // view switch is how staff get back to the customer side.
+  const links = chrome === 'staff'
+    ? '<span class="staff-badge">Front desk</span>'
+    : NAV.map((n) => {
+        const cls = ['nav-link', n.cta ? 'cta' : '', n.href === active ? 'active' : ''].filter(Boolean).join(' ');
+        return `<a class="${cls}" href="${n.href}">${n.label}</a>`;
+      }).join('');
 
   document.body.insertAdjacentHTML('afterbegin', `
     <div class="demo-banner"><b>PROTOTYPE</b> — ${bannerText}</div>
@@ -70,19 +75,15 @@ export function mountShell({ active = '', banner = '' } = {}) {
     <footer>
       <div class="ft-brand">Lasertopia Inc.</div>
       <div>${esc(ARENA.address)} · <a href="tel:${ARENA.phone.replace(/\D/g, '')}">${esc(ARENA.phone)}</a></div>
-      <div style="margin-top:8px">
+      ${chrome === 'staff' ? '' : `<div style="margin-top:8px">
         <a href="/manage">Find my booking</a> ·
-        <a href="/hours">Hours</a> ·
-        <a href="/admin">Staff game sheet</a>
-      </div>
+        <a href="/hours">Hours</a>
+      </div>`}
       <div style="margin-top:10px;font-size:12px;opacity:.7">Booking prototype</div>
       <a class="powered" href="${VOLTRIS_URL}" target="_blank" rel="noopener noreferrer"
          aria-label="Powered by Voltris Booking — opens voltrisbooking.com in a new tab">
         <span class="pb-label">Powered by</span>
-        <span class="pb-mark">
-          <img src="${VOLTRIS_LOGO}" alt="Voltris" />
-          <span class="pb-booking">Booking</span>
-        </span>
+        <span class="pb-plate"><img src="${VOLTRIS_LOGO}" alt="Voltris Booking" /></span>
       </a>
     </footer>`);
 

@@ -96,6 +96,14 @@ header {
 .nav-link.active { color: var(--cyan); border-color: var(--cyan); }
 .nav-link.cta { background: var(--cyan); color: #04121a; border-color: var(--cyan); }
 .nav-link.cta:hover { background: #4fc0f0; color: #04121a; }
+
+/* Replaces the customer nav on staff pages — says where you are, links nowhere. */
+.staff-badge {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 11px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--orange);
+  border: 1px solid rgba(249,161,27,.45); background: rgba(249,161,27,.10);
+  padding: 9px 16px; border-radius: 999px; white-space: nowrap;
+}
 @media (max-width: 760px) {
   /* Stacked on small screens: logo on top, nav beneath, both centred. */
   .nav { flex-direction: column; justify-content: center; gap: 6px; min-height: 0; padding: 8px 0; }
@@ -256,15 +264,13 @@ footer .ft-brand { color: var(--muted); font-weight: 600; }
 }
 
 /* Powered by Voltris Booking.
-   Voltris publish a white-on-transparent "Voltris" wordmark but no combined lockup, so the
-   "Booking" half is set in type to match. Their logo runs "Voltris" dark + "Booking" blue;
-   on this dark footer the dark half becomes white, which is the standard inversion.
-   --voltris-blue is the one value to change if their exact brand blue differs. */
-:root { --voltris-blue: #3B41F0; }
-
+   The supplied lockup sets "Voltris" in black, which would be invisible on this near-black
+   footer, so it sits on a light plate — the standard treatment for a dark-text logo on a
+   dark surface, and it keeps their brand colours exactly as drawn rather than inverting
+   or recolouring them. */
 .powered {
-  display: inline-flex; align-items: center; gap: 12px; margin-top: 22px;
-  padding: 10px 20px; border: 1px solid var(--border); border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 13px; margin-top: 22px;
+  padding: 9px 9px 9px 19px; border: 1px solid var(--border); border-radius: 999px;
   text-decoration: none; transition: .16s; background: rgba(255,255,255,.02);
 }
 .powered:hover { border-color: var(--border-lit); background: rgba(255,255,255,.05); }
@@ -272,20 +278,17 @@ footer .ft-brand { color: var(--muted); font-weight: 600; }
   font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
   color: var(--dim); font-weight: 700; white-space: nowrap;
 }
-/* The wordmark image and the "Booking" type share a baseline so they read as one lockup. */
-.powered .pb-mark { display: inline-flex; align-items: center; gap: 1px; }
-.powered .pb-mark img { height: 20px; width: auto; display: block; opacity: .95; transition: opacity .16s; }
-.powered:hover .pb-mark img { opacity: 1; }
-.powered .pb-booking {
-  font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 20px;
-  color: var(--voltris-blue); letter-spacing: -.02em; line-height: 1;
-  /* Nudge to sit level with the wordmark's baseline rather than its box. */
-  position: relative; top: 1px;
+.powered .pb-plate {
+  display: inline-flex; align-items: center; background: #fff;
+  border-radius: 999px; padding: 7px 16px; transition: box-shadow .16s;
 }
+.powered:hover .pb-plate { box-shadow: 0 0 18px rgba(255,255,255,.22); }
+.powered .pb-plate img { height: 17px; width: auto; display: block; }
+
 @media (max-width: 480px) {
-  .powered { padding: 9px 15px; gap: 9px; }
-  .powered .pb-mark img { height: 17px; }
-  .powered .pb-booking { font-size: 17px; }
+  .powered { padding: 7px 7px 7px 15px; gap: 10px; }
+  .powered .pb-plate { padding: 6px 13px; }
+  .powered .pb-plate img { height: 15px; }
   .powered .pb-label { font-size: 10px; }
 }
 
