@@ -154,6 +154,20 @@ header {
 .btn-block { width: 100%; }
 .btn-sm { padding: 8px 13px; font-size: 12.5px; border-radius: 9px; }
 
+/* Bigger hit areas on phones and tablets. Anything under ~40px is fiddly with a thumb, and
+   the small secondary buttons (Release, Hold, Close, +Walk-in) are exactly the ones staff
+   will be tapping on a tablet at the front desk.
+   Width is the primary signal because it's deterministic; the pointer query is a comma'd
+   fallback so touch laptops get the same treatment at any width. */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  .btn { min-height: 44px; }
+  .btn-sm { min-height: 40px; padding: 10px 14px; }
+  .input, select.input { min-height: 44px; }
+  .nav-link { padding: 11px 15px; }
+  .modal-close { width: 38px; height: 38px; }
+  .cal-btn, .nav-sq { width: 42px; height: 42px; }
+}
+
 /* ---------- Forms ---------- */
 .input, select.input, textarea.input {
   width: 100%; background: var(--near-black); border: 1px solid var(--border);
@@ -235,6 +249,11 @@ footer {
 footer a { color: var(--muted); text-decoration: none; }
 footer a:hover { color: var(--cyan); }
 footer .ft-brand { color: var(--muted); font-weight: 600; }
+/* Footer links sit in running text, so they only need padding out on touch-sized screens. */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  footer a { display: inline-block; padding: 9px 3px; }
+  footer { line-height: 1.5; }
+}
 
 /* Powered by Voltris Booking.
    Voltris publish a white-on-transparent "Voltris" wordmark but no combined lockup, so the
@@ -301,13 +320,20 @@ footer .ft-brand { color: var(--muted); font-weight: 600; }
 .view-switch .vs-btn.active.staff { background: var(--orange); color: #1a1200; }
 .view-switch .vs-btn svg { width: 13px; height: 13px; }
 
-/* The booking page's sticky checkout bar slides up over this corner — lift the switch
-   clear of it rather than letting the two overlap. */
-body:has(.checkbar.show) .view-switch { bottom: 92px; }
+/* The booking page's sticky checkout bar slides up over this corner. The bar measures itself
+   and publishes --checkbar-h, so the switch clears it at any width and any content — a
+   fixed offset would break the moment the bar wrapped to another line. */
+body:has(.checkbar.show) .view-switch { bottom: calc(var(--checkbar-h, 92px) + 14px); }
+
+/* Bigger hit area on touch-sized screens. Declared here, after the base .vs-btn rule, so it
+   actually wins — same specificity means source order decides. */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  .view-switch .vs-btn { padding: 12px 16px; }
+}
 
 @media (max-width: 560px) {
   .view-switch { right: 12px; bottom: 12px; padding: 4px 5px; }
   .view-switch .vs-label { display: none; }
-  .view-switch .vs-btn { padding: 7px 12px; font-size: 12px; }
-  body:has(.checkbar.show) .view-switch { bottom: 84px; }
+  .view-switch .vs-btn { padding: 12px 14px; font-size: 12.5px; }
+  body:has(.checkbar.show) .view-switch { bottom: calc(var(--checkbar-h, 84px) + 12px); }
 }

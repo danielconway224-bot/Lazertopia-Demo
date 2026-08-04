@@ -14,9 +14,18 @@
     display: flex; align-items: center; justify-content: space-between; gap: 16px;
     flex-wrap: wrap; margin-bottom: 20px;
   }
-  .date-nav { display: flex; align-items: center; gap: 10px; }
+  .date-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .date-nav .cur {
     font-family: 'Space Grotesk'; font-weight: 700; font-size: 20px; min-width: 220px;
+  }
+  /* The fixed 220px label plus four controls can't fit a phone — let the label take the
+     space it has and the buttons wrap beneath rather than pushing the page sideways. */
+  @media (max-width: 620px) {
+    .toolbar { gap: 12px; }
+    .date-nav { width: 100%; gap: 8px; }
+    .date-nav .cur { min-width: 0; flex: 1; font-size: 17px; }
+    .toolbar > div:last-child { width: 100%; }
+    .toolbar > div:last-child #date-input { flex: 1; }
   }
   .date-nav .cur small { display: block; font-family: 'Raleway'; font-size: 12.5px; font-weight: 500; color: var(--dim); margin-top: 2px; }
   .nav-sq {
@@ -42,7 +51,17 @@
     padding: 13px 16px; display: grid; grid-template-columns: 92px 150px 1fr auto; gap: 16px;
     align-items: center; transition: .14s;
   }
-  @media (max-width: 860px) { .game { grid-template-columns: 78px 1fr; row-gap: 11px; } .game .cap { grid-column: 1 / -1; } .game .acts { grid-column: 1 / -1; justify-content: flex-start; } }
+  /* Narrow layout: time and capacity share the top row, then the groups and the buttons each
+     get the full width. Every child needs an explicit column or it silently lands back in
+     the 78px time column — which is what was crushing the booking chips. */
+  @media (max-width: 860px) {
+    .game { grid-template-columns: 84px 1fr; row-gap: 12px; column-gap: 14px; padding: 14px; }
+    .game .time { grid-column: 1; }
+    .game .cap { grid-column: 2; }
+    .game .groups { grid-column: 1 / -1; }
+    .game .acts { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; }
+    .game .acts .btn { flex: 1 1 auto; min-width: 92px; }
+  }
   .game:hover { border-color: var(--border-lit); }
   .game.past { opacity: .45; }
   .game.blocked { border-color: rgba(255,91,91,.4); background: rgba(255,91,91,.05); }

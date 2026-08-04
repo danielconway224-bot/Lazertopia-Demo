@@ -141,10 +141,30 @@
   .cb-total .v { font-family: 'Space Grotesk'; font-weight: 700; font-size: 21px; color: var(--cyan); }
   .cb-actions { display: flex; gap: 10px; align-items: center; }
   @media (max-width: 720px) {
-    .checkbar .inner { padding: 12px 16px; gap: 14px; }
-    .cb-info { gap: 16px; }
+    .checkbar .inner { padding: 11px 16px 13px; gap: 10px; }
+    .cb-info { gap: 14px; }
     .cb-actions { width: 100%; }
     .cb-actions .btn { flex: 1; }
+  }
+  /* On a phone the four info blocks wrap unevenly and eat a third of the screen. A 2×2 grid
+     places them deterministically — time/total on top, the two controls beneath — instead of
+     depending on how flex happens to wrap at a given width. */
+  @media (max-width: 560px) {
+    .checkbar .inner { padding: 10px 14px 12px; gap: 9px; }
+    .cb-info {
+      display: grid; width: 100%; gap: 9px 14px; align-items: end;
+      grid-template-columns: 1fr auto;
+      grid-template-areas: "time total" "players games";
+    }
+    .cb-item .k { margin-bottom: 3px; font-size: 9.5px; }
+    .cb-item:first-child { grid-area: time; min-width: 0; }
+    .cb-item:first-child .v { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cb-item:nth-child(2) { grid-area: players; }
+    .cb-item:nth-child(3) { grid-area: games; justify-self: end; }
+    .cb-total { grid-area: total; justify-self: end; text-align: right; }
+    .cb-total .v { font-size: 20px; }
+    .cb-total .v small { display: none; }
+    .cb-actions .btn { padding: 11px 16px; }
   }
 
   .stepper { display: flex; align-items: center; gap: 2px; background: var(--near-black); border: 1px solid var(--border); border-radius: 9px; padding: 3px; }
@@ -536,9 +556,23 @@ function renderSessions() {
 /* ---------- Checkout bar ---------- */
 const selectionValid = () => state.date && state.startMin != null;
 
+/**
+ * Publish the checkout bar's real height so the fixed view-switch can sit clear of it.
+ * Measured rather than hard-coded, because the bar's height changes with the viewport and
+ * with how the info blocks wrap.
+ */
+function publishCheckbarHeight() {
+  const bar = $('#checkbar');
+  requestAnimationFrame(() => {
+    const h = bar.classList.contains('show') ? Math.round(bar.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty('--checkbar-h', `${h}px`);
+  });
+}
+addEventListener('resize', publishCheckbarHeight);
+
 function renderCheckbar() {
   const bar = $('#checkbar');
-  if (!selectionValid()) { bar.classList.remove('show'); return; }
+  if (!selectionValid()) { bar.classList.remove('show'); publishCheckbarHeight(); return; }
 
   const priced = priceBooking({ players: state.players, games: state.games });
   const seats = seatsLeftAt(state.startMin);
@@ -576,6 +610,7 @@ function renderCheckbar() {
     </div>`;
 
   bar.classList.add('show');
+  publishCheckbarHeight();
   $('#cb-continue').disabled = !(priced.ok && fits);
 
   $('#st-players').querySelectorAll('button').forEach((b) => {
