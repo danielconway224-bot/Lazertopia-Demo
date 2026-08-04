@@ -9,8 +9,10 @@
     "test": "node --test lib/arena.test.js"
   },
   "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
     "dotenv": "^17.4.2",
     "express": "^4.19.2",
-    "stripe": "^22.4.0"
+    "stripe": "^22.4.0",
+    "twilio": "^6.0.2"
   }
 }

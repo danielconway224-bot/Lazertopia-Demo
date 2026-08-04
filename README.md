@@ -203,6 +203,70 @@ keeps using the simulated checkout.
 Parties are deliberately left as a **request** rather than a payment — the front desk calls
 to confirm and take a deposit, which is how Lasertopia actually runs them.
 
+## Automated texts and emails (Twilio + SendGrid)
+
+Every booking triggers a confirmation **text and email**, staff can fire **day-before
+reminders** from the game sheet, and an **Outbox** on `/admin` shows everything the system
+has sent.
+
+Like payments, it's fail-safe: with no credentials the messages are still composed and
+listed in the Outbox marked **simulated**, so the whole flow demos on a laptop with no
+account at all. Nothing silently pretends to have sent.
+
+### Twilio (SMS)
+
+1. Sign in at [console.twilio.com](https://console.twilio.com). The free trial is enough.
+2. From the dashboard copy **Account SID** (starts `AC`) and **Auth Token**.
+3. Get a number: **Phone Numbers → Manage → Buy a number** (trial credit covers it). Copy it
+   in E.164 form, e.g. `+12045550123`.
+4. **Verify the phone you'll demo to:** *Phone Numbers → Manage → Verified Caller IDs*.
+5. Add to `.env`:
+
+   ```
+   TWILIO_ACCOUNT_SID=AC…
+   TWILIO_AUTH_TOKEN=…
+   TWILIO_PHONE_NUMBER=+1…
+   ```
+
+**Two trial limits that surprise people.** A trial account can *only* text verified numbers —
+anything else fails, and the Outbox says so in plain words rather than a Twilio error code.
+And trial texts arrive prefixed *"Sent from your Twilio trial account -"*. Both disappear
+when the account is upgraded; neither is something the code can work around.
+
+### SendGrid (email)
+
+SendGrid is Twilio's email product but a separate signup.
+
+1. Sign in at [app.sendgrid.com](https://app.sendgrid.com).
+2. **Settings → Sender Authentication** — verify the address you'll send from. SendGrid
+   rejects mail from unverified senders.
+3. **Settings → API Keys → Create API Key**, with **Mail Send** permission. It starts `SG.`
+   and is shown once.
+4. Add to `.env`:
+
+   ```
+   SENDGRID_API_KEY=SG.…
+   SENDGRID_FROM_EMAIL=you@yourdomain.com
+   ```
+
+### What gets sent
+
+| Trigger | Goes out |
+|---|---|
+| Laser tag booking confirmed | SMS + email — code, date, time, players, waiver reminder |
+| Party requested | SMS + email — pencilled in, desk will call for the deposit |
+| Staff clicks *Send reminders* | Day-before SMS + email to every booking that day |
+| Staff clicks *Resend confirmation* | Re-sends that booking's confirmation |
+
+Reminders are a **button** rather than a schedule, so they can be demonstrated without
+waiting a day. A production build would run the same call on a cron.
+
+### On Vercel
+
+Add the same five variables under **Settings → Environment Variables** and redeploy.
+Note the Outbox lives in memory like the bookings do, so it's per-instance until Supabase
+lands.
+
 ## What's not wired up yet
 
 By design, for this stage:

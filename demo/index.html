@@ -330,14 +330,15 @@
 import {
   ARENA, PACKAGES, HOUSE_RULES, WEEKLY_HOURS,
   hoursFor, sessionSpan, priceBooking, groupNoticeOk,
-  isoDate, parseISO, fmtTime, money,
+  isoDate, parseISO, fmtTime, money, arenaToday,
 } from '/lib/arena.js';
 import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
 
 mountShell({ active: '/' });
 
-const today = new Date();
-today.setHours(0, 0, 0, 0);
+// Winnipeg's today — a customer browsing from another timezone (or the UTC server) must
+// still see the arena's calendar, not their own.
+const today = parseISO(arenaToday());
 
 const state = {
   date: null,          // 'YYYY-MM-DD'

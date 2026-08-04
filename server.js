@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createApiApp } from './lib/api-app.js';
 import { stripeStatus } from './lib/payments.js';
+import { messagingStatus } from './lib/messaging.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 4242;
@@ -60,5 +61,13 @@ app.listen(PORT, () => {
   } else {
     console.log('\n    Simulated checkout — add Stripe test keys to .env to take real test cards.');
   }
-  console.log('    In-memory bookings (reset on restart)\n');
+  const msg = messagingStatus();
+  const channel = (name, st) => st.problem ? `⚠ ${name}: ${st.problem}`
+    : st.enabled ? `✉ ${name} live (${st.from})`
+    : `   ${name} simulated — messages appear in the Outbox but aren't sent`;
+  console.log('');
+  console.log('  ' + channel('SMS  ', msg.sms));
+  console.log('  ' + channel('Email', msg.email));
+
+  console.log('\n    In-memory bookings (reset on restart)\n');
 });

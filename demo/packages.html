@@ -160,7 +160,7 @@
 </div>
 
 <script type="module">
-import { EVENT_PACKAGES, PACKAGE_PERKS, ARENA, hoursFor, priceEventPackage, isoDate, fmtTime, money, validAge } from '/lib/arena.js';
+import { EVENT_PACKAGES, PACKAGE_PERKS, ARENA, hoursFor, priceEventPackage, isoDate, parseISO, fmtTime, money, validAge, arenaToday } from '/lib/arena.js';
 import { mountShell, $, esc, toast, api, jsonPost, longDate, mountDateField } from '/assets/shell.js';
 
 mountShell({ active: '/packages' });
@@ -220,7 +220,7 @@ function openBooking(id) {
   pickedSlot = null;
 
   // Parties are planned ahead, so default a few days out rather than today.
-  const d = new Date();
+  const d = parseISO(arenaToday());
   d.setDate(d.getDate() + 3);
   dateField.set(isoDate(d));
 

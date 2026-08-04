@@ -1,7 +1,7 @@
 // Shared page shell — header, footer, and the small helpers every page uses.
 // Imported as an ES module so pages can also pull from /lib/arena.js directly.
 
-import { ARENA } from '/lib/arena.js';
+import { ARENA, arenaToday, parseISO } from '/lib/arena.js';
 
 export const $  = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -52,7 +52,7 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
   // the customer's journey, not the front desk's. It gets a role badge instead, and the
   // view switch is how staff get back to the customer side.
   const links = chrome === 'staff'
-    ? '<span class="staff-badge">Front desk</span>'
+    ? '<span class="staff-badge">Admin</span>'
     : NAV.map((n) => {
         const cls = ['nav-link', n.cta ? 'cta' : '', n.href === active ? 'active' : ''].filter(Boolean).join(' ');
         return `<a class="${cls}" href="${n.href}">${n.label}</a>`;
@@ -110,7 +110,7 @@ function mountViewSwitch() {
       <a class="vs-btn${onStaff ? '' : ' active'}" href="/"
          ${onStaff ? '' : 'aria-current="page"'}>${eyeIcon}Customer</a>
       <a class="vs-btn staff${onStaff ? ' active' : ''}" href="/admin"
-         ${onStaff ? 'aria-current="page"' : ''}>${deskIcon}Staff</a>
+         ${onStaff ? 'aria-current="page"' : ''}>${deskIcon}Admin</a>
     </div>`);
 }
 
@@ -188,8 +188,8 @@ const toISO = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getD
 export function mountDateField(host, opts = {}) {
   const { dayInfo = () => ({}), onPick = () => {}, placeholder = 'Pick a date', legend = [] } = opts;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Winnipeg's today, so past days grey out against the arena's clock not the visitor's.
+  const today = parseISO(arenaToday());
 
   let value = opts.value || null;
   let month = new Date((value ? new Date(value + 'T00:00:00') : today).getFullYear(),

@@ -139,6 +139,47 @@
   .pslot .btn { margin-top: 10px; width: 100%; }
   .warn-line { color: var(--orange); font-size: 12.5px; margin-top: 10px; line-height: 1.5; }
 
+  /* ---------- Messages / outbox ---------- */
+  .msg-chips { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 16px; }
+  .msg-chip {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12px;
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--near-black); color: var(--muted);
+  }
+  .msg-chip b { color: var(--white); font-family: 'Space Grotesk'; font-weight: 700; }
+  .msg-chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
+  .msg-chip.live i { background: var(--ok); box-shadow: 0 0 8px rgba(53,208,127,.6); }
+  .msg-chip.live { border-color: rgba(53,208,127,.4); }
+  .msg-chip.bad i { background: var(--danger); }
+  .msg-chip.bad { border-color: rgba(255,91,91,.4); color: #ffb0b0; }
+
+  .msgs { display: grid; gap: 8px; }
+  .msg {
+    display: grid; grid-template-columns: 62px 1fr auto; gap: 12px; align-items: start;
+    background: var(--near-black); border: 1px solid var(--border); border-radius: 11px;
+    padding: 11px 14px;
+  }
+  @media (max-width: 700px) { .msg { grid-template-columns: 1fr auto; } .msg .ch { grid-column: 1 / -1; } }
+  .msg .ch {
+    font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 800; letter-spacing: .09em;
+    padding: 3px 7px; border-radius: 5px; text-align: center; white-space: nowrap;
+    background: var(--surface-2); color: var(--muted);
+  }
+  .msg .ch.sms { background: rgba(41,171,226,.14); color: var(--cyan); }
+  .msg .ch.email { background: rgba(249,161,27,.14); color: var(--orange); }
+  .msg .to { font-size: 13px; font-weight: 600; }
+  .msg .to small { color: var(--dim); font-weight: 500; margin-left: 7px; }
+  .msg .body { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
+  .msg .detail { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
+  .msg .state {
+    font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 800; letter-spacing: .08em;
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap; border: 1px solid;
+  }
+  .msg .state.sent      { color: var(--ok);     border-color: rgba(53,208,127,.45); background: rgba(53,208,127,.12); }
+  .msg .state.simulated { color: var(--muted);  border-color: var(--border-lit);    background: var(--surface-2); }
+  .msg .state.failed    { color: var(--danger); border-color: rgba(255,91,91,.45);  background: rgba(255,91,91,.1); }
+  .msg .state.skipped   { color: var(--dim);    border-color: var(--border);        background: transparent; }
+
   /* ---------- Revenue analytics ----------
      Palette is the documented categorical instance, validated against this exact surface
      (#14141E) for lightness, chroma, CVD separation and contrast — not eyeballed. */
@@ -277,6 +318,21 @@
     <div id="an-body"><div class="loading">Loading revenue…</div></div>
   </div>
 
+  <div class="panel" id="msg-panel" style="margin-bottom:18px">
+    <div class="panel-head">
+      <div>
+        <h2>Messages</h2>
+        <div class="sub" id="msg-sub">Texts and emails the system has sent</div>
+      </div>
+      <div class="an-toolbar">
+        <button class="btn btn-ghost btn-sm" id="msg-remind">Send tomorrow's reminders</button>
+        <button class="btn btn-ghost btn-sm" id="msg-refresh">Refresh</button>
+      </div>
+    </div>
+    <div id="msg-status"></div>
+    <div id="msg-list"><div class="loading">Loading messages…</div></div>
+  </div>
+
   <div class="panel" id="party-panel" style="margin-bottom:18px">
     <div class="panel-head">
       <div>
@@ -379,14 +435,15 @@
     <div class="sub" id="dt-code"></div>
     <div id="dt-body"></div>
     <div class="err" id="dt-error"></div>
-    <button class="btn btn-ghost btn-block" id="dt-cancel" style="margin-top:18px">Cancel this booking</button>
+    <button class="btn btn-ghost btn-block" id="dt-resend" style="margin-top:18px">Resend confirmation</button>
+    <button class="btn btn-ghost btn-block" id="dt-cancel" style="margin-top:9px">Cancel this booking</button>
   </div>
 </div>
 
 <script type="module">
 import {
   ARENA, PACKAGES, EVENT_PACKAGES, hoursFor, sessionSpan, priceBooking,
-  ageCompatible, isoDate, parseISO, fmtTime, money,
+  ageCompatible, isoDate, parseISO, fmtTime, money, arenaToday,
 } from '/lib/arena.js';
 import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
 
@@ -396,7 +453,7 @@ mountShell({
   banner: 'Staff game sheet · demo data, in-memory · no sign-in in this prototype',
 });
 
-const state = { date: isoDate(new Date()), sheet: null, target: null, detail: null,
+const state = { date: arenaToday(), sheet: null, target: null, detail: null,
                 analytics: null, anDays: 7, anTable: false };
 
 /* ---------- Load & render ---------- */
@@ -412,7 +469,75 @@ async function load() {
   renderPartyBoard();
   renderSheet();
   loadAnalytics();
+  loadMessages();
 }
+
+/* ---------- Messages ---------- */
+async function loadMessages() {
+  const host = $('#msg-list');
+  let data;
+  try {
+    data = await api('/api/staff/outbox?limit=12');
+  } catch (err) {
+    host.innerHTML = `<div class="empty-slot">${esc(err.message)}</div>`;
+    return;
+  }
+
+  // Say plainly which channels are actually connected — a demo where "sent" might mean
+  // "pretended" has to be honest about which one it is.
+  const chip = (label, st) => {
+    const cls = st.problem ? 'bad' : st.enabled ? 'live' : '';
+    const word = st.problem ? 'needs attention' : st.enabled ? `live · ${st.from}` : 'simulated';
+    return `<span class="msg-chip ${cls}"><i></i><b>${label}</b> ${esc(word)}</span>`;
+  };
+  $('#msg-status').innerHTML = `<div class="msg-chips">
+      ${chip('SMS', data.messaging.sms)}
+      ${chip('Email', data.messaging.email)}
+    </div>` + (data.messaging.sms.problem || data.messaging.email.problem
+      ? `<div class="note-box bad" style="margin-bottom:14px">${esc(data.messaging.sms.problem || data.messaging.email.problem)}</div>`
+      : '');
+
+  if (!data.messages.length) {
+    host.innerHTML = '<div class="empty-slot" style="padding:8px 0">Nothing sent yet — make a booking and the confirmation will appear here.</div>';
+    return;
+  }
+
+  host.innerHTML = `<div class="msgs">${data.messages.map((m) => {
+    const when = new Date(m.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const preview = (m.subject ? `${m.subject} — ` : '') + (m.body || '');
+    return `<div class="msg">
+      <span class="ch ${m.channel}">${m.channel.toUpperCase()}</span>
+      <div>
+        <div class="to">${esc(m.to)}<small>${when}${m.bookingCode ? ` · ${esc(m.bookingCode)}` : ''}</small></div>
+        <div class="body">${esc(preview.slice(0, 190))}${preview.length > 190 ? '…' : ''}</div>
+        <div class="detail">${esc(m.detail || '')}</div>
+      </div>
+      <span class="state ${m.state}">${m.state.toUpperCase()}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+$('#msg-refresh').onclick = loadMessages;
+
+$('#msg-remind').onclick = async () => {
+  const btn = $('#msg-remind');
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = 'Sending…';
+  try {
+    // "Tomorrow" relative to the day being viewed, so the desk can rehearse any date.
+    const d = parseISO(state.date);
+    d.setDate(d.getDate() + 1);
+    const res = await jsonPost('/api/staff/send-reminders', { dateISO: isoDate(d) });
+    toast(res.message);
+    await loadMessages();
+  } catch (err) {
+    toast(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+};
 
 /* ---------- Revenue analytics ---------- */
 const SOURCES = [
@@ -620,6 +745,8 @@ function renderHeader() {
     ? '<span style="color:var(--danger)">Closed</span>'
     : `Open ${fmtTime(h.open)} – ${fmtTime(h.close)}${h.special ? ' · <span style="color:var(--orange)">special hours</span>' : ''}`;
   $('#cur-date').innerHTML = `${esc(longDate(state.date))}<small>${open}</small>`;
+  const next = parseISO(state.date); next.setDate(next.getDate() + 1);
+  $('#msg-remind').textContent = `Send reminders for ${longDate(isoDate(next)).replace(/^\w+, /, '')}`;
   $('#date-input').value = state.date;
 }
 
@@ -721,7 +848,7 @@ function shiftDate(days) {
 }
 $('#prev-day').onclick = () => shiftDate(-1);
 $('#next-day').onclick = () => shiftDate(1);
-$('#today-btn').onclick = () => { state.date = isoDate(new Date()); load(); };
+$('#today-btn').onclick = () => { state.date = arenaToday(); load(); };
 $('#refresh').onclick = () => load();
 $('#date-input').onchange = (e) => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)) { state.date = e.target.value; load(); }
@@ -930,8 +1057,25 @@ function openDetail(id) {
       ${b.group ? '<div class="detail-line"><span class="k">Group</span><span class="v" style="color:var(--orange)">12+ players · 24h notice</span></div>' : ''}`}`;
 
   $('#dt-cancel').textContent = b.kind === 'block' ? 'Reopen this game' : 'Cancel this booking';
+  $('#dt-resend').style.display = (b.kind === 'block' || !b.code) ? 'none' : 'flex';
   $('#dt-overlay').classList.add('show');
 }
+
+$('#dt-resend').onclick = async () => {
+  const b = state.detail;
+  if (!b) return;
+  const btn = $('#dt-resend');
+  btn.disabled = true;
+  try {
+    const r = await jsonPost('/api/staff/resend', { code: b.code });
+    toast(`Confirmation resent — text ${r.sms}, email ${r.email}.`);
+    await loadMessages();
+  } catch (err) {
+    $('#dt-error').textContent = err.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
 
 $('#dt-cancel').onclick = async () => {
   const b = state.detail;
