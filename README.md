@@ -131,6 +131,11 @@ and a walk-in added on `/admin` takes seats away from `/`.
 Out of the box the checkout is **simulated** — no keys needed, the demo works end to end.
 Add Stripe test keys and the same checkout takes real test cards instead.
 
+The flow is **Stripe Checkout**: clicking Pay sends the customer to Stripe's own hosted
+payment page, and Stripe sends them back here to their confirmation. The booking is only
+created on the way back, once Stripe confirms the money arrived — so an abandoned payment
+leaves the game time free rather than holding a phantom booking.
+
 ### Getting your test keys
 
 1. Sign in at [dashboard.stripe.com](https://dashboard.stripe.com) (a free account is enough —
@@ -181,9 +186,18 @@ keeps using the simulated checkout.
 - **The browser never sets the price.** The amount is recomputed on the server from the
   players and games chosen, using the same `priceBooking()` as everywhere else. A tampered
   request gets the correct price, not the one it sent.
-- **A booking is only saved once Stripe confirms the money arrived** — and the payment must
-  match that booking's date, time and total. Posting straight to `/api/book` without paying
-  returns `402`.
+- **A booking is only saved once Stripe confirms the money arrived.** The returning page
+  hands over nothing but the session id; the booking is rebuilt from *Stripe's* copy of it,
+  so a tampered return URL can't conjure a free booking. Posting straight to `/api/book`
+  without paying returns `402`.
+- **Refreshing the confirmation page can't book twice** — the Stripe session id is stored on
+  the booking and re-confirming returns the original.
+- **Stripe can only send customers back to this site.** The return URL is built from the
+  request's own host, never from a value the browser supplied, so nobody can redirect a
+  paying customer to a lookalike site.
+- **Paid-but-unseated is surfaced, not swallowed.** If the last seats go while someone is on
+  Stripe's page, they get told to call for a rebook or refund, and it's logged. A production
+  build would auto-refund here.
 - The secret key never leaves the server; only the publishable key reaches the browser.
 
 Parties are deliberately left as a **request** rather than a payment — the front desk calls
