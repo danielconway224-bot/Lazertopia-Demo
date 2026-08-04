@@ -126,11 +126,75 @@ demo/               The pages. Shared shell in demo/assets/.
 Because everything is in one process, a booking made on `/` shows up on `/admin` immediately,
 and a walk-in added on `/admin` takes seats away from `/`.
 
+## Card payments (Stripe test mode)
+
+Out of the box the checkout is **simulated** — no keys needed, the demo works end to end.
+Add Stripe test keys and the same checkout takes real test cards instead.
+
+### Getting your test keys
+
+1. Sign in at [dashboard.stripe.com](https://dashboard.stripe.com) (a free account is enough —
+   no business details required to use test mode).
+2. Make sure the **Test mode** toggle, top right, is **ON**. Everything below must be done
+   in test mode.
+3. Go to **Developers → API keys**, or straight to
+   [dashboard.stripe.com/test/apikeys](https://dashboard.stripe.com/test/apikeys).
+4. Copy the two keys:
+   - **Publishable key** — starts `pk_test_`. Safe to expose; it can only start payments.
+   - **Secret key** — starts `sk_test_`. Click *Reveal*. Treat it like a password.
+5. Put them in `.env` (copy `.env.example` first):
+
+   ```
+   STRIPE_SECRET_KEY=sk_test_…
+   STRIPE_PUBLISHABLE_KEY=pk_test_…
+   ```
+
+6. Restart with `npm start`. The banner should read **Stripe TEST mode**.
+
+**Safer option:** instead of the raw secret key, create a **restricted key** under
+*Developers → API keys → Create restricted key*, granting **write** on *PaymentIntents* and
+nothing else. It starts `rk_test_` and works here unchanged. If it ever leaks, it can't read
+customers or move money.
+
+### Paying in test mode
+
+Card **4242 4242 4242 4242**, any future expiry, any CVC, any postcode. Useful others:
+
+| Card | What happens |
+|---|---|
+| 4242 4242 4242 4242 | Succeeds |
+| 4000 0000 0000 0002 | Declined |
+| 4000 0025 0000 3155 | Requires 3-D Secure authentication |
+
+Every payment shows up under **Payments** in the Stripe dashboard. No real money moves.
+
+### On Vercel
+
+`.env` is not deployed. Add the same two variables under
+**Project → Settings → Environment Variables**, then redeploy. Until you do, the live site
+keeps using the simulated checkout.
+
+### How it's kept safe
+
+- **Live keys are refused.** A `sk_live_` / `pk_live_` key doesn't enable payments; the
+  server logs why and stays simulated. A prototype must never charge a real card.
+- **The browser never sets the price.** The amount is recomputed on the server from the
+  players and games chosen, using the same `priceBooking()` as everywhere else. A tampered
+  request gets the correct price, not the one it sent.
+- **A booking is only saved once Stripe confirms the money arrived** — and the payment must
+  match that booking's date, time and total. Posting straight to `/api/book` without paying
+  returns `402`.
+- The secret key never leaves the server; only the publishable key reaches the browser.
+
+Parties are deliberately left as a **request** rather than a payment — the front desk calls
+to confirm and take a deposit, which is how Lasertopia actually runs them.
+
 ## What's not wired up yet
 
 By design, for this stage:
 
-- **Payments.** The checkout modal is a simulation — no Stripe, no charge.
+- **Payments beyond test mode.** Test keys only; going live needs a real Stripe account
+  review and a webhook for out-of-band events (refunds, disputes, delayed methods).
 - **Database.** Bookings live in memory and reset when the server restarts.
 - **Staff sign-in.** `/admin` is open; anyone with the URL can see it.
 - **Waiver storage.** Signing shows the confirmation but doesn't save anything.

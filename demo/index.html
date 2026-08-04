@@ -274,14 +274,30 @@
       <input class="input" id="c-email" placeholder="you@example.com" type="email" autocomplete="email" />
     </div>
 
-    <div class="sim-badge">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      Card payment — <b style="color:var(--muted);margin-left:2px">simulated for this demo</b>
+    <!-- Real Stripe card entry — shown only when the server has test keys configured -->
+    <div id="stripe-mode" style="display:none">
+      <div class="sim-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Secured by <b style="color:var(--muted);margin-left:2px">Stripe</b> · test mode
+      </div>
+      <div id="payment-element"><div class="loading" style="padding:16px">Loading secure card form…</div></div>
+      <div class="note-box" style="margin-top:12px;font-size:12.5px">
+        <b>Test card:</b> 4242 4242 4242 4242 · any future expiry · any CVC · any postcode.
+        No real money moves.
+      </div>
     </div>
-    <input class="input" placeholder="Card number" value="4242 4242 4242 4242" />
-    <div class="card-row">
-      <input class="input" placeholder="MM / YY" value="12 / 34" />
-      <input class="input" placeholder="CVC" value="123" />
+
+    <!-- Fallback when no keys are set, so the demo always works -->
+    <div id="sim-mode" style="display:none">
+      <div class="sim-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Card payment — <b style="color:var(--muted);margin-left:2px">simulated for this demo</b>
+      </div>
+      <input class="input" placeholder="Card number" value="4242 4242 4242 4242" />
+      <div class="card-row">
+        <input class="input" placeholder="MM / YY" value="12 / 34" />
+        <input class="input" placeholder="CVC" value="123" />
+      </div>
     </div>
 
     <div class="err" id="pay-error"></div>
@@ -662,8 +678,11 @@ $('#cb-continue').onclick = () => {
   $('#pay-recap').innerHTML = recapHTML();
   $('#pay-amt').textContent = money(priced.totalCents);
   $('#pay-error').textContent = '';
+  $('#stripe-mode').style.display = stripeReady ? 'block' : 'none';
+  $('#sim-mode').style.display = stripeReady ? 'none' : 'block';
   $('#pay-overlay').classList.add('show');
   setStep(3);
+  if (stripeReady) mountPaymentElement();
 };
 
 function closePay() {
@@ -692,6 +711,28 @@ $('#pay-btn').onclick = async () => {
   btn.textContent = 'Confirming…';
 
   try {
+    let paymentIntentId = null;
+
+    if (stripeReady) {
+      // Take the card first. redirect:'if_required' keeps the customer on the page for
+      // plain cards and only redirects for methods that genuinely need it.
+      btn.textContent = 'Processing payment…';
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required',
+        confirmParams: {
+          return_url: window.location.origin + '/',
+          payment_method_data: { billing_details: { name, phone, email: $('#c-email').value.trim() || undefined } },
+        },
+      });
+      if (error) throw new Error(error.message || 'That card was declined. Please try another.');
+      if (!paymentIntent || paymentIntent.status !== 'succeeded') {
+        throw new Error("The payment didn't complete. Please try again.");
+      }
+      paymentIntentId = paymentIntent.id;
+      btn.textContent = 'Confirming booking…';
+    }
+
     const res = await jsonPost('/api/book', {
       dateISO: state.date,
       startMin: state.startMin,
@@ -699,6 +740,7 @@ $('#pay-btn').onclick = async () => {
       players: state.players,
       name, phone,
       email: $('#c-email').value.trim(),
+      paymentIntentId,
     });
     showConfirmation(res.booking, res.price);
   } catch (err) {
@@ -736,9 +778,77 @@ $('#conf-done').onclick = async () => {
   setStep(2);
 };
 
+/* ------------------------------------------------------------------ *
+ * Stripe (test mode)
+ *
+ * The server decides whether cards are live — it holds the secret key. If it says no,
+ * the simulated card form runs instead so the demo never breaks on a missing key.
+ * ------------------------------------------------------------------ */
+let stripe = null, elements = null, stripeReady = false;
+
+async function initPayments() {
+  let cfg;
+  try { cfg = await api('/api/config'); } catch (_) { return; }
+  if (!cfg.stripeEnabled || !cfg.stripePublishableKey) return;
+
+  // Stripe.js is only fetched when it's actually needed.
+  await new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://js.stripe.com/v3/';
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('stripe.js blocked'));
+    document.head.appendChild(s);
+  }).catch(() => {});
+
+  if (!window.Stripe) return;      // blocked or offline — stay simulated
+  stripe = window.Stripe(cfg.stripePublishableKey);
+  stripeReady = true;
+}
+
+/** Ask the server for a PaymentIntent and mount Stripe's card form. */
+async function mountPaymentElement() {
+  const host = $('#payment-element');
+  host.innerHTML = '<div class="loading" style="padding:16px">Loading secure card form…</div>';
+  $('#pay-btn').disabled = true;
+
+  let data;
+  try {
+    data = await jsonPost('/api/create-payment-intent', {
+      dateISO: state.date, startMin: state.startMin, games: state.games, players: state.players,
+    });
+  } catch (err) {
+    host.innerHTML = `<div class="err" style="padding:4px 0">${esc(err.message)}</div>`;
+    return;
+  }
+
+  elements = stripe.elements({
+    clientSecret: data.clientSecret,
+    appearance: {
+      theme: 'night',
+      variables: {
+        colorPrimary: '#29ABE2', colorBackground: '#0C0C13', colorText: '#FFFFFF',
+        colorTextSecondary: '#B4B4C6', colorDanger: '#FF5B5B',
+        fontFamily: 'Raleway, system-ui, sans-serif', borderRadius: '10px',
+      },
+      rules: {
+        '.Input': { backgroundColor: '#0C0C13', border: '1px solid #2A2A3B' },
+        '.Input:focus': { border: '1px solid #29ABE2', boxShadow: '0 0 0 1px #29ABE2' },
+        '.Tab, .Block': { backgroundColor: '#0C0C13', border: '1px solid #2A2A3B' },
+        '.Tab--selected': { borderColor: '#29ABE2', boxShadow: '0 0 0 1px #29ABE2' },
+        '.Label': { color: '#B4B4C6' },
+      },
+    },
+  });
+  host.innerHTML = '';
+  const el = elements.create('payment', { layout: 'tabs' });
+  el.mount('#payment-element');
+  el.on('ready', () => { $('#pay-btn').disabled = false; });
+}
+
 /* ---------- Go ---------- */
 buildCalendar();
 renderDaySummary();
+initPayments();
 </script>
 </body>
 </html>

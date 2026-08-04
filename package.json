@@ -9,6 +9,8 @@
     "test": "node --test lib/arena.test.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "stripe": "^22.4.0"
   }
 }

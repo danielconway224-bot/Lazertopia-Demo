@@ -6,11 +6,13 @@
 //
 // No Stripe, no database yet: checkout is simulated and bookings live in memory.
 
+import 'dotenv/config';          // load .env before anything reads process.env
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createApiApp } from './lib/api-app.js';
+import { stripeStatus } from './lib/payments.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 4242;
@@ -45,7 +47,18 @@ for (const [route, file] of Object.entries(PAGES)) {
 app.use((_req, res) => res.status(404).sendFile(path.join(__dirname, 'demo', 'index.html')));
 
 app.listen(PORT, () => {
+  const stripe = stripeStatus();
   console.log(`\n🔫  Lasertopia booking demo — http://localhost:${PORT}`);
   console.log(`    Staff game sheet    — http://localhost:${PORT}/admin`);
-  console.log('\n    Simulated checkout · in-memory bookings (reset on restart)\n');
+
+  if (stripe.problem) {
+    console.log(`\n⛔  ${stripe.problem}`);
+    console.log('    Checkout is running SIMULATED until that is fixed.');
+  } else if (stripe.enabled) {
+    console.log('\n💳  Stripe TEST mode — pay with card 4242 4242 4242 4242,');
+    console.log('    any future expiry, any CVC, any postcode.');
+  } else {
+    console.log('\n    Simulated checkout — add Stripe test keys to .env to take real test cards.');
+  }
+  console.log('    In-memory bookings (reset on restart)\n');
 });

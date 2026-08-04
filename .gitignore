@@ -1,3 +1,8 @@
 node_modules/
-.env
 .vercel
+
+# Every env file is ignored, including backups and per-environment variants — this repo is
+# public, so the default has to be "secret" and .env.example the single opt-in exception.
+.env
+.env.*
+!.env.example
