@@ -34,6 +34,54 @@
   .pkg li .tick { color: var(--cyan); flex-shrink: 0; font-size: 12px; line-height: 1.45; }
   .pkg.top li .tick { color: var(--orange); }
   .pkg .addon { margin-top: 14px; font-size: 12.5px; color: var(--yellow); font-weight: 600; }
+
+  /* ---------- Add-ons and extra food ---------- */
+  .extras { margin-top: 18px; }
+  .extras h4 {
+    font-family: 'Space Grotesk'; font-size: 11.5px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--dim); margin-bottom: 8px;
+  }
+  .opt-row {
+    display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px;
+    background: var(--near-black); border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; transition: .14s;
+  }
+  .opt-row + .opt-row { margin-top: 7px; }
+  .opt-row:hover { border-color: var(--border-lit); }
+  .opt-row.on { border-color: var(--orange); background: rgba(249,161,27,.09); }
+  .opt-row input { margin: 3px 0 0; accent-color: var(--orange); flex-shrink: 0; }
+  .opt-row .nm { font-size: 14px; font-weight: 600; display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+  .opt-row .pr { font-family: 'Space Grotesk'; font-size: 12.5px; color: var(--orange); font-weight: 700; }
+  .opt-row .bl { font-size: 12px; color: var(--dim); line-height: 1.45; margin-top: 3px; }
+
+  details.food { margin-top: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--near-black); }
+  details.food summary {
+    cursor: pointer; padding: 12px 14px; font-family: 'Space Grotesk'; font-weight: 700;
+    font-size: 13px; color: var(--muted); list-style: none;
+  }
+  details.food summary::-webkit-details-marker { display: none; }
+  details.food summary::before { content: '＋ '; color: var(--orange); }
+  details.food[open] summary::before { content: '－ '; }
+  details.food summary:hover { color: var(--white); }
+  .food-body { padding: 0 14px 14px; }
+  .food-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border); }
+  .food-row .nm { flex: 1; font-size: 13.5px; }
+  .food-row .pr { font-family: 'Space Grotesk'; font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .food-row input {
+    width: 58px; background: var(--surface); border: 1px solid var(--border); color: var(--white);
+    border-radius: 8px; padding: 7px 9px; font-size: 13.5px; font-family: 'Raleway', sans-serif;
+    text-align: center;
+  }
+  .food-note { font-size: 11.5px; color: var(--dim); margin-top: 10px; line-height: 1.5; }
+
+  .tot-line { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; margin-top: 5px; }
+  .tot-line .k { color: var(--dim); }
+  .tot-line.grand { font-size: 16px; margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(41,171,226,.3); }
+  .tot-line.grand .v { font-family: 'Space Grotesk'; font-weight: 700; color: var(--cyan); }
+  .deposit-line {
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(41,171,226,.3);
+    font-size: 12.5px; line-height: 1.5;
+  }
   .pkg .btn { margin-top: 20px; }
 
   .perks { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; margin-top: 22px; }
@@ -95,9 +143,13 @@
   </div>
 
   <div class="note-box warn" style="margin-top:18px">
-    <b>How our party times work:</b> parties run in 2-hour slots, and two parties share each slot.
-    We match them within 2 years of age so the kids play together — that's why we ask what age
-    the birthday guest is turning. Every player still needs a signed waiver —
+    <b>How our party times work:</b> parties run in 2-hour slots, and each slot has its own rooms —
+    most hold up to 14 guests, and a bigger party takes two rooms. Parties sharing a slot are
+    matched within 2 years of age so the kids play together, which is why we ask what age the
+    birthday guest is turning.
+    <br><br>
+    Every package covers <b>10 guests — 9 friends plus the guest of honour</b>. A
+    <b>$50 non-refundable deposit</b> confirms the booking, and every player needs a signed waiver —
     <a href="/waiver" style="color:inherit;text-decoration:underline">sign online</a> to skip the desk.
   </div>
 </div>
@@ -138,6 +190,13 @@
     <label class="fld" for="bk-name" style="margin-top:14px">Name</label>
     <input class="input" id="bk-name" placeholder="Guest of honour / booking name" />
 
+    <div class="extras" id="bk-addons"></div>
+
+    <details class="food">
+      <summary>Add pizza or wings</summary>
+      <div class="food-body" id="bk-food"></div>
+    </details>
+
     <div class="note-box" id="bk-total" style="margin-top:16px"></div>
     <div class="err" id="bk-error"></div>
     <button class="btn btn-orange btn-block" id="bk-save" style="margin-top:16px">Request this party</button>
@@ -151,16 +210,30 @@
     <h3>Party requested</h3>
     <div class="code" id="ok-code"></div>
     <div style="color:var(--muted);font-size:14px;line-height:1.6">
-      We've pencilled you in. The front desk will call to confirm the details and take your deposit.
+      We've pencilled you in. The front desk will call to confirm the details and take your
+      <b>$50 non-refundable deposit</b>.
     </div>
     <div class="recap" id="ok-recap"></div>
+    <div class="note-box warn" id="ok-split" style="margin-top:14px;text-align:left;display:none">
+      Your group is larger than the arena holds at once, so we'll split you into two groups
+      for the laser tag games. We'll walk you through it on the phone.
+    </div>
+    <div class="note-box" style="margin-top:14px;text-align:left;font-size:13px">
+      <b>Changing or cancelling:</b> we need 2 weeks notice to move your date. Cancel more than
+      14 days ahead and your deposit goes onto a gift card for use in the facility; inside 14
+      days the deposit is forfeited, or you can move to a new date.
+    </div>
     <a class="btn btn-primary btn-block" href="/waiver" style="margin-top:18px">Sign the waiver</a>
     <button class="btn btn-ghost btn-block" id="ok-done" style="margin-top:9px">Done</button>
   </div>
 </div>
 
 <script type="module">
-import { EVENT_PACKAGES, PACKAGE_PERKS, ARENA, hoursFor, priceEventPackage, isoDate, parseISO, fmtTime, money, validAge, arenaToday } from '/lib/arena.js';
+import {
+  EVENT_PACKAGES, PACKAGE_PERKS, PACKAGE_BASE_GUESTS, ARENA, ADD_ONS,
+  EXTRA_PIZZAS, PIZZA_TOPPINGS, WINGS, WING_SAUCES,
+  hoursFor, priceEventPackage, addOnsFor, isoDate, parseISO, fmtTime, money, validAge, arenaToday,
+} from '/lib/arena.js';
 import { mountShell, $, esc, toast, api, jsonPost, longDate, mountDateField } from '/assets/shell.js';
 
 mountShell({ active: '/packages' });
@@ -193,10 +266,10 @@ $('#pkgs').innerHTML = EVENT_PACKAGES.map((p, i) => {
   return `<div class="pkg${top ? ' top' : ''}">
     ${top ? '<div class="flag">The full experience</div>' : ''}
     <h3>${esc(p.name)}</h3>
-    <div class="meta">Up to ${p.guests} guests · ${p.roomMinutes / 60} hours in the party room</div>
+    <div class="meta">${p.guests} guests included · ${p.roomMinutes / 60} hours in the party room</div>
     <div class="p">${money(p.cents)}<small>Extra guests ${money(p.extraGuestCents)} each</small></div>
     <ul>${p.includes.map((inc) => `<li><span class="tick">◆</span><span>${esc(inc)}</span></li>`).join('')}</ul>
-    ${p.addOn ? `<div class="addon">Add ${esc(p.addOn.name)} for ${money(p.addOn.cents)} per person</div>` : ''}
+    <div class="addon">Add ${addOnsFor(p.id).map((a) => esc(a.name)).join(' · ')}</div>
     <button class="btn ${top ? 'btn-orange' : 'btn-primary'}" data-pkg="${p.id}">Book ${esc(p.name)}</button>
   </div>`;
 }).join('');
@@ -210,14 +283,20 @@ document.querySelectorAll('[data-pkg]').forEach((b) => { b.onclick = () => openB
 function openBooking(id) {
   current = EVENT_PACKAGES.find((p) => p.id === id);
   $('#bk-title').textContent = current.name;
-  $('#bk-sub').textContent = `Up to ${current.guests} guests · ${current.roomMinutes} minutes in the party room`;
+  $('#bk-sub').textContent = `${current.guests} guests included · ${current.roomMinutes} minutes in the party room`;
   $('#bk-error').textContent = '';
   $('#bk-name').value = '';
   $('#bk-phone').value = '';
   $('#bk-guests').value = String(current.guests);
+  $('#bk-guests').max = String(ARENA.maxPartyGuestsOnline);
   $('#bk-age').value = '8';
   $('#bk-age-hint').textContent = `We'll seat you with a party within ${ARENA.partyAgeSpreadYears} years of this age.`;
   pickedSlot = null;
+
+  chosenAddOns = new Set();
+  foodQty = {};
+  renderAddOns();
+  renderFood();
 
   // Parties are planned ahead, so default a few days out rather than today.
   const d = parseISO(arenaToday());
@@ -231,6 +310,86 @@ function openBooking(id) {
 
 let daySlots = [];        // party room slots for the chosen date, from the server
 let pickedSlot = null;    // slotStart the customer selected
+let chosenAddOns = new Set();
+let foodQty = {};         // itemId -> quantity
+
+/* ---------- Add-ons ----------
+   Q-BIX is available on every package; the two arcade cards are Traveler and Great
+   Adventure only, and are alternatives to each other rather than extras — so they render
+   as radios sharing a name, with a "neither" option, while Q-BIX is a checkbox. */
+function renderAddOns() {
+  const options = addOnsFor(current.id);
+  const attraction = options.filter((a) => a.group === 'attraction');
+  const arcade = options.filter((a) => a.group === 'arcade');
+
+  const priceLabel = (a) => (a.cents
+    ? `${money(a.cents)} per ${a.per}`
+    : `matched up to ${money(a.matchUpToCents)}`);
+
+  const box = (a, type, name) => `
+    <label class="opt-row${chosenAddOns.has(a.id) ? ' on' : ''}">
+      <input type="${type}" ${name ? `name="${name}"` : ''} value="${a.id}"
+             ${chosenAddOns.has(a.id) ? 'checked' : ''} />
+      <span>
+        <span class="nm">${esc(a.name)} <span class="pr">${priceLabel(a)}</span></span>
+        <span class="bl">${esc(a.blurb)}</span>
+      </span>
+    </label>`;
+
+  $('#bk-addons').innerHTML = `
+    <h4>Add to your party</h4>
+    ${attraction.map((a) => box(a, 'checkbox', '')).join('')}
+    ${arcade.length ? `
+      ${arcade.map((a) => box(a, 'radio', 'arcade')).join('')}
+      <label class="opt-row${arcade.every((a) => !chosenAddOns.has(a.id)) ? ' on' : ''}">
+        <input type="radio" name="arcade" value=""
+               ${arcade.every((a) => !chosenAddOns.has(a.id)) ? 'checked' : ''} />
+        <span><span class="nm">No arcade card</span></span>
+      </label>` : ''}`;
+
+  $('#bk-addons').querySelectorAll('input').forEach((input) => {
+    input.onchange = () => {
+      if (input.type === 'radio') {
+        arcade.forEach((a) => chosenAddOns.delete(a.id));
+        if (input.value) chosenAddOns.add(input.value);
+      } else if (input.checked) {
+        chosenAddOns.add(input.value);
+      } else {
+        chosenAddOns.delete(input.value);
+      }
+      renderAddOns();
+      updateTotal();
+    };
+  });
+}
+
+/* ---------- Extra food ----------
+   Priced with tax already included, unlike everything else on this page, so it is totalled
+   on its own line rather than folded into the package subtotal. */
+function renderFood() {
+  const row = (item) => `
+    <div class="food-row">
+      <span class="nm">${esc(item.name)}</span>
+      <span class="pr">${money(item.cents)}</span>
+      <input type="number" min="0" max="20" value="${foodQty[item.id] || 0}" data-food="${item.id}" />
+    </div>`;
+
+  $('#bk-food').innerHTML =
+    EXTRA_PIZZAS.map(row).join('') + WINGS.map(row).join('') + `
+    <div class="food-note">
+      Pizza toppings: ${PIZZA_TOPPINGS.join(' · ')}.<br>
+      Wing sauces: ${WING_SAUCES.join(' · ')}.<br>
+      Extra food prices include tax. We'll confirm your toppings and sauces on the phone.
+    </div>`;
+
+  $('#bk-food').querySelectorAll('[data-food]').forEach((input) => {
+    input.oninput = () => {
+      const n = Math.max(0, Math.round(Number(input.value) || 0));
+      foodQty[input.dataset.food] = n;
+      updateTotal();
+    };
+  });
+}
 
 /**
  * Load the party board for the chosen date and age.
@@ -257,7 +416,10 @@ async function loadSlots() {
 
   host.innerHTML = '<div class="loading" style="padding:14px">Loading party times…</div>';
   try {
-    const q = `date=${encodeURIComponent(date)}${age ? `&age=${age}` : ''}`;
+    // The guest count matters as much as the age: each slot has rooms of a fixed size, so
+    // the server answers for THIS party rather than in the abstract.
+    const guests = Number($('#bk-guests').value) || 0;
+    const q = `date=${encodeURIComponent(date)}${age ? `&age=${age}` : ''}${guests ? `&guests=${guests}` : ''}`;
     const data = await api(`/api/party-slots?${q}`);
     daySlots = data.slots;
   } catch (e) {
@@ -286,14 +448,22 @@ function renderSlots() {
   host.innerHTML = `<div class="slots">${daySlots.map((s) => {
     const shared = s.parties.length > 0;
     const spotsCls = !s.available ? 'none' : shared ? 'share' : '';
-    const spotsTxt = !s.available ? 'FULL' : `${s.spotsLeft} SPOT${s.spotsLeft > 1 ? 'S' : ''}`;
+    const spotsTxt = !s.available ? 'FULL'
+      : s.positionsNeeded > 1 ? 'NEEDS 2 ROOMS'
+      : `${s.spotsLeft} ROOM${s.spotsLeft > 1 ? 'S' : ''}`;
 
     // Say what's actually going on: who you'd share with, or why you can't have it.
     let detail;
     if (!s.available) detail = s.reason;
     else if (shared) detail = `Shared with a ${s.parties[0].age}-year-old's party`;
     else detail = 'You\'d have the slot to yourselves so far';
-    if (s.available && s.games.length) detail += ` · laser tag at ${s.games.map(fmtTime).join(' and ')}`;
+    if (s.available && s.positionsNeeded > 1) detail += ' · your party takes both rooms';
+    if (s.available && s.games.length) {
+      detail += ` · laser tag at ${s.games.map(fmtTime).join(', ')}`;
+    } else if (s.available) {
+      // The 11-1 slot has no laser tag times confirmed yet; say so rather than imply none.
+      detail += ' · we\'ll confirm your laser tag times when we call';
+    }
 
     return `<button class="slot${s.start === pickedSlot ? ' on' : ''}"
                     ${s.available ? `data-slot="${s.start}"` : 'disabled'}>
@@ -310,21 +480,54 @@ function renderSlots() {
   });
 }
 
+/** The extras in the shape priceEventPackage() wants. */
+function extras() {
+  return {
+    addOns: [...chosenAddOns],
+    food: Object.entries(foodQty).map(([id, qty]) => ({ id, qty })).filter((f) => f.qty > 0),
+  };
+}
+
 function updateTotal() {
-  const priced = priceEventPackage(current?.id, $('#bk-guests').value);
+  const priced = priceEventPackage(current?.id, $('#bk-guests').value, extras());
   const el = $('#bk-total');
   if (!priced.ok) {
     el.className = 'note-box bad';
     el.textContent = priced.error;
     return;
   }
+
+  const line = (k, v) => `<div class="tot-line"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+
   el.className = 'note-box';
-  el.innerHTML = `<b style="font-size:17px">${money(priced.totalCents)}</b> total` +
-    `<br>${esc(priced.name)} base ${money(priced.baseCents)}` +
-    (priced.extraGuests > 0 ? ` · ${priced.extraGuests} extra guest${priced.extraGuests > 1 ? 's' : ''} ${money(priced.extraCents)}` : '');
+  el.innerHTML =
+    line(`${esc(priced.name)} · ${priced.guests} guests`, money(priced.baseCents))
+    + (priced.extraGuests > 0
+        ? line(`${priced.extraGuests} extra guest${priced.extraGuests > 1 ? 's' : ''}`, money(priced.extraCents))
+        : '')
+    + priced.addOns.filter((a) => !a.payAtCounter)
+        .map((a) => line(esc(a.name), money(a.cents))).join('')
+    + `<div class="tot-line grand"><span class="k">Party total</span><span class="v">${money(priced.totalCents)}</span></div>`
+    + `<div class="tot-line"><span class="k" style="font-size:12px">Taxes are added at the front desk.</span><span class="v"></span></div>`
+    + (priced.foodCents
+        ? `<div class="tot-line" style="margin-top:9px"><span class="k">Extra food (tax included)</span><span class="v">${money(priced.foodCents)}</span></div>`
+        : '')
+    + priced.addOns.filter((a) => a.payAtCounter)
+        .map((a) => line(esc(a.name), 'paid at the counter')).join('')
+    + `<div class="deposit-line">
+         Includes <b>${priced.pizzas} large 1-topping pizza${priced.pizzas > 1 ? 's' : ''}</b>.
+         A <b>${money(priced.dueTodayCents)} non-refundable deposit</b> confirms your booking —
+         the front desk will call to take it.
+       </div>`;
 }
 
-$('#bk-guests').oninput = updateTotal;
+// Guest count changes both the price and which rooms can hold you, so the board is re-asked.
+let guestTimer = null;
+$('#bk-guests').oninput = () => {
+  updateTotal();
+  clearTimeout(guestTimer);
+  guestTimer = setTimeout(loadSlots, 350);
+};
 
 // Changing the age can open or close slots, so the board has to be re-asked.
 let ageTimer = null;
@@ -356,6 +559,7 @@ $('#bk-save').onclick = async () => {
       guests: Number($('#bk-guests').value),
       name: $('#bk-name').value.trim(),
       phone: $('#bk-phone').value.trim(),
+      ...extras(),
     });
     showOk(res.booking, res.price);
   } catch (e) {
@@ -372,14 +576,23 @@ function showOk(booking, priced) {
   const slot = daySlots.find((s) => s.start === booking.slotStart);
   const games = slot && slot.games.length ? slot.games.map(fmtTime).join(' and ') : null;
 
+  const addOnNames = (priced.addOns || []).map((a) => a.name).join(', ');
+
   $('#ok-recap').innerHTML = `
     <div class="row"><span class="k">Package</span><span class="v">${esc(priced.name)}</span></div>
     <div class="row"><span class="k">Date</span><span class="v">${esc(longDate(booking.dateISO))}</span></div>
     <div class="row"><span class="k">Party room</span><span class="v">${fmtTime(booking.slotStart)} – ${fmtTime(booking.slotEnd)}</span></div>
     ${games ? `<div class="row"><span class="k">Laser tag</span><span class="v">${games}</span></div>` : ''}
     <div class="row"><span class="k">Birthday age</span><span class="v">${booking.age}</span></div>
-    <div class="row"><span class="k">Guests</span><span class="v">${priced.guests}</span></div>
-    <div class="row tot"><span class="k">Total</span><span class="v">${money(priced.totalCents)}</span></div>`;
+    <div class="row"><span class="k">Guests</span><span class="v">${priced.guests}${booking.positions > 1 ? ` · ${booking.positions} rooms` : ''}</span></div>
+    <div class="row"><span class="k">Pizzas included</span><span class="v">${priced.pizzas}</span></div>
+    ${addOnNames ? `<div class="row"><span class="k">Add-ons</span><span class="v">${esc(addOnNames)}</span></div>` : ''}
+    ${priced.foodCents ? `<div class="row"><span class="k">Extra food</span><span class="v">${money(priced.foodCents)}</span></div>` : ''}
+    <div class="row tot"><span class="k">Party total</span><span class="v">${money(priced.totalCents)}</span></div>
+    <div class="row"><span class="k">Deposit to confirm</span><span class="v">${money(priced.dueTodayCents)}</span></div>`;
+
+  // Only worth saying when it's true — most parties play together in one game.
+  $('#ok-split').style.display = priced.splitsForLaserTag ? 'block' : 'none';
   $('#bk-overlay').classList.remove('show');
   $('#ok-overlay').classList.add('show');
 }

@@ -17,7 +17,7 @@ npm start
 Then open **http://localhost:4242**.
 
 ```bash
-npm test        # 51 checks on pricing, capacity, hours, held slots and party rules
+npm test        # 88 checks on pricing, capacity, hours, rooms, add-ons and party rules
 ```
 
 ## Pages
@@ -63,42 +63,87 @@ genuinely do open up when no party takes them.
 | Saturday | 1:15, 1:45, 3:15, 3:45, 5:15, 5:45 |
 | Sunday | 1:15, 1:45, 3:00, 3:15, 4:15, 4:45 |
 
+(The weekend 10–12 games are absent from this table on purpose — they run before opening, so there
+is no public session to withhold.)
+
 The front desk releases them with one click on `/admin`, and can also **hold back extra times**
 when a party needs them ("we sometimes have to book off other time slots as well"). A multi-game
 run can't quietly swallow a held slot either — buying 3 games at 5:00pm is refused because it
 would cover the held 5:15 and 5:30.
 
-**Parties book a 2-hour room slot, not a game time.** Two parties share each slot, matched within
-**2 years of age** so the kids play together — which is why the booking form asks what age the
-birthday guest is turning.
+**Parties book a 2-hour room slot, not a game time.** Each slot holds a set of physical rooms of
+different sizes, and the guest count decides how many of them a booking occupies. Parties sharing a
+slot are matched within **2 years of age** so the kids play together — which is why the booking form
+asks what age the birthday guest is turning.
 
-| Day | Party room slots |
-|---|---|
-| Mon–Fri | 5–7, 6–8 |
-| Saturday | 10–12, 11–1, 1–3, 3–5, 5–7 |
-| Sunday | 10–12, 11–1, 1–3, 3–5, 4–6 |
+| Day | Slot | Rooms | One party | Taking two |
+|---|---|---|---|---|
+| Mon–Fri | 5–7 | 14 · 14 | 14 | 20 |
+| Mon–Fri | 6–8 | 12 · 14 | 14 | 18 |
+| Sat · Sun | 10–12 | 14 · 14 · 18 | 14 (18 in the third) | 20 |
+| Sat · Sun | 11–1 | 12 · 14 | 14 | 18 |
+| Sat · Sun | 1–3 | 14 · 14 | 14 | 20 |
+| Sat · Sun | 3–5 | 12 · 14 | 14 | 18 |
+| Saturday | 5–7 | 14 · 14 | 14 | 20 |
+| Sunday | 4–6 | 14 · 14 | 14 | 20 |
 
-Two more rules fall out of that:
+Counts include the guest of honour: a 14-guest room is 13 friends plus the birthday child, matching
+how the packages are sold (10 guests = 9 friends + the guest of honour).
 
-- **The building holds 2 parties at once.** The slots overlap (5–7 and 6–8), so they're staggered
-  alternatives, not extra rooms — filling 5–7 takes 6–8 off the board.
+Rules that fall out of that:
+
+- **A party takes the smallest room that fits it**, so the larger rooms stay free for larger
+  parties. If none fits, it takes two and is capped at that slot's combined figure.
+- **Overlapping slots share the rooms.** Filling 5–7 takes 6–8 off the board, because it's the same
+  rooms an hour later.
+- **Online booking caps at 20 guests.** Above that a party needs three rooms, which only the weekend
+  10–12 slot has — so 21–28 is taken by phone and the desk arranges it.
 - **Weekend parties start at 10am** even though public laser tag opens at noon. The arena opens
   early for a booked party, not for walk-ins.
 - **Age matching is enforced online but overridable at the desk.** A mismatched party is refused
   with the reason; staff get a warning they can accept, and the override is recorded on the booking.
 
-A party's laser tag games are derived, not hard-coded: each held game belongs to the latest slot
-that has already started when it runs. That lands on exactly two games per slot, matching the two
-games every party package includes.
+**A slot's laser tag games are explicit data on the slot**, not derived from the held list. The
+weekend 10–12 games (10:15, 10:30, 10:45, 11:00) run *before* the arena opens to the public, so they
+are not public sessions at all and could never be expressed as "held-back" ones. Parties sharing a
+slot play those games together — two parties of ten is twenty players, inside the arena's 25.
 
-### Three things to confirm with Shannon
+### Add-ons, food and deposit
 
-Built to the email as written; these are the gaps, and each is a one-line config edit:
+- **Q-BIX 5D Attraction** — $3.95 per person, on any package.
+- **Arcade cards** — Traveler and Great Adventure only, and the two are *alternatives*: either the
+  **5-Up Card** (guest loads $5, matched with $5 Bonus Cash, up to $20 — paid at the counter, so it
+  carries no up-front price) or **45-minute Arcade Time Play** at $5 per guest.
+- **Pizza scales with the guest count** — 2 up to 11 guests, then 3 / 4 / 5 / 6 through to 28.
+- **Extra pizzas and wings** can be added. Their prices **include tax**, unlike everything else here,
+  so they're totalled on a separate line rather than folded into the pre-tax subtotal.
+- **A $50 non-refundable deposit** confirms a booking. 2 weeks notice to move a date; cancel more
+  than 14 days out and the deposit becomes a gift card; inside 14 days it's forfeited or moved to a
+  new date.
 
-1. **Saturday 10–12 and 11–1 have no held game times listed.** Every other slot has two. Do
-   morning parties play laser tag, and if so when?
-2. **Sunday's held games are 3:00 and 3:15** — 15 minutes apart, where every other day spaces them
-   15–30 minutes. Possibly a typo for 3:00/3:30.
+### Laser tag booking cutoff
+
+Online booking closes **90 minutes before** a game starts, so seats are left for walk-ins at the
+door. Cut-off games stay on the grid, dashed and tagged *Call us*, rather than disappearing — a
+half-empty evening shouldn't read as sold out. The front desk is exempt. Set
+`ARENA.onlineCutoffMin` to `0` to sell right up to the start time.
+
+### Still to confirm with Lasertopia
+
+Built to the brief as written; these are the gaps, and each is a one-line config edit:
+
+1. **Saturday and Sunday 11–1 have no laser tag times.** Every other slot now has them. A party
+   booked into 11–1 currently gets a room and no games, and the page says the times will be
+   confirmed by phone.
+2. **Sunday's held games are 3:00 and 3:15** — 15 minutes apart, where every other pair is 30.
+   Possibly a typo for 3:00/3:30.
+3. **The pizza bands had a gap and two overlaps** (11 guests unassigned; 20 and 25 listed twice).
+   `PIZZA_TIERS` reads each band as "up to and including", which preserves every stated figure —
+   confirm before it reaches a real till.
+4. **The tax rate behind the food prices** is unknown, which is why those prices can't be folded
+   into the pre-tax total.
+5. **Combined capacity for the 11–1 and 3–5 slots** is assumed to be 18, matching Mon–Fri 6–8,
+   which has the same two rooms.
 
 ### The group rate is deliberately not invented
 
