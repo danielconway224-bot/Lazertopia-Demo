@@ -342,6 +342,7 @@ through it before the first real customer books.
 | # | What | Why it is not done yet |
 |---|---|---|
 | 1 | **Staff sign-in on `/admin`** | Anyone with the URL can read every customer's name, phone and email. Harmless while the database is empty; a breach the moment it is not. Supabase Auth is already connected. |
+| 1b | **Remove the manager-portal shortcut** | `SHOW_MANAGER_SHORTCUT` in `demo/assets/shell.js` puts a Customer/Manager toggle in the corner of every page, which advertises `/admin` to customers. Set it to `false` — or leave it, once item 1 makes the link harmless. |
 | 2 | **Stop falling back to the in-memory store** | If `SUPABASE_URL` goes missing in production the site quietly serves an empty arena and accepts bookings that vanish. Make missing database config a hard startup failure. |
 | 3 | **Allow live Stripe keys** | `lib/payments.js` refuses `sk_live_` on purpose so a real card cannot be charged mid-build. Relax it, and add a webhook for refunds, disputes and delayed payment methods. |
 | 4 | **Store waivers** | `/waiver` shows a confirmation and saves nothing. Needs a table, and a way for the desk to look one up on arrival. |

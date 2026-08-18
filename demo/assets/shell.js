@@ -88,6 +88,46 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
       </a>
     </footer>`);
 
+  if (SHOW_MANAGER_SHORTCUT) mountViewSwitch();
+}
+
+/* ------------------------------------------------------------------ *
+ * Manager portal shortcut
+ *
+ * A build-time convenience: a corner toggle between the customer site and the manager
+ * portal, so the back office is one click away while the two are being worked on
+ * together.
+ *
+ * It also tells every visitor that /admin exists. That is fine now — the portal holds
+ * nothing but test data and nobody is being sent here. It is NOT fine once real bookings
+ * land, so this comes off at launch. Flip the constant below, or leave it: once the portal
+ * requires a sign-in the link is harmless, which is why go-live item 1 is the sign-in.
+ * ------------------------------------------------------------------ */
+
+const SHOW_MANAGER_SHORTCUT = true;   // ← set false at launch (see README go-live checklist)
+
+/**
+ * Bottom-right switch between what a customer sees and what the front desk sees.
+ *
+ * Returning to the customer side goes to `/` rather than the previous page, because the
+ * manager portal has no customer-side counterpart to go "back" to.
+ */
+function mountViewSwitch() {
+  const onStaff = location.pathname.startsWith('/admin');
+
+  const eyeIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+    stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const deskIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+    stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 10h18M8 18v2M16 18v2"/></svg>`;
+
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="view-switch" role="navigation" aria-label="Switch between customer site and manager portal">
+      <span class="vs-label">View</span>
+      <a class="vs-btn${onStaff ? '' : ' active'}" href="/"
+         ${onStaff ? '' : 'aria-current="page"'}>${eyeIcon}Customer</a>
+      <a class="vs-btn staff${onStaff ? ' active' : ''}" href="/admin"
+         ${onStaff ? 'aria-current="page"' : ''}>${deskIcon}Manager</a>
+    </div>`);
 }
 
 /** Brief message at the bottom of the screen. */
