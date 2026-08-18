@@ -27,12 +27,14 @@ const NAV = [
 ];
 
 /**
- * Render the demo banner, header and footer into the page.
- * @param {{active?: string, banner?: string}} opts
+ * Render the header and footer into the page.
+ *
+ * `banner` shows a notice strip across the top — closures, holiday hours, that sort of
+ * thing. Off unless a page asks for it.
+ *
+ * @param {{active?: string, banner?: string, chrome?: 'customer'|'staff'}} opts
  */
 export function mountShell({ active = '', banner = '', chrome = 'customer' } = {}) {
-  const bannerText = banner
-    || 'Booking demo for Lasertopia · real rates, hours &amp; packages · checkout is simulated (no real charge)';
 
   // Inline favicon — a laser-burst dot in the brand colours. Saves a request and a 404.
   const favicon = 'data:image/svg+xml,' + encodeURIComponent(
@@ -59,7 +61,7 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
       }).join('');
 
   document.body.insertAdjacentHTML('afterbegin', `
-    <div class="demo-banner"><b>PROTOTYPE</b> — ${bannerText}</div>
+    ${banner ? `<div class="demo-banner">${esc(banner)}</div>` : ''}
     <header>
       <div class="wrap nav">
         <a class="brand" href="/">
@@ -79,7 +81,6 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
         <a href="/manage">Find my booking</a> ·
         <a href="/hours">Hours</a>
       </div>`}
-      <div style="margin-top:10px;font-size:12px;opacity:.7">Booking prototype</div>
       <a class="powered" href="${VOLTRIS_URL}" target="_blank" rel="noopener noreferrer"
          aria-label="Powered by Voltris Booking — opens voltrisbooking.com in a new tab">
         <span class="pb-label">Powered by</span>
@@ -87,31 +88,6 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
       </a>
     </footer>`);
 
-  mountViewSwitch();
-}
-
-/**
- * Bottom-right switch between what a customer sees and what the front desk sees.
- *
- * Returning to the customer side goes to `/` rather than the previous page, because the
- * staff view has no customer-side counterpart to go "back" to.
- */
-function mountViewSwitch() {
-  const onStaff = location.pathname.startsWith('/admin');
-
-  const eyeIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-    stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
-  const deskIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-    stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 10h18M8 18v2M16 18v2"/></svg>`;
-
-  document.body.insertAdjacentHTML('beforeend', `
-    <div class="view-switch" role="navigation" aria-label="Switch between customer and staff view">
-      <span class="vs-label">View</span>
-      <a class="vs-btn${onStaff ? '' : ' active'}" href="/"
-         ${onStaff ? '' : 'aria-current="page"'}>${eyeIcon}Customer</a>
-      <a class="vs-btn staff${onStaff ? ' active' : ''}" href="/admin"
-         ${onStaff ? 'aria-current="page"' : ''}>${deskIcon}Admin</a>
-    </div>`);
 }
 
 /** Brief message at the bottom of the screen. */

@@ -1,11 +1,14 @@
-# Lasertopia — Booking Demo
+# Lasertopia — Booking System
 
-A booking prototype for **Lasertopia Inc.** (Unit #5 – 1140 Waverley St, Winnipeg) covering both
-sides of the system: customers booking a laser tag game, and the front desk watching those
-bookings land on their game sheet.
+The booking system for **Lasertopia Inc.** (Unit #5 – 1140 Waverley St, Winnipeg), covering both
+sides: customers booking a laser tag game, and the front desk working the game sheet.
 
-Rates, hours, special hours and event packages are the **real ones** from lasertopia.ca.
-Checkout is simulated — there's no Stripe and no database yet.
+Rates, hours, special hours, party rooms and event packages are the real published ones.
+Bookings persist in Postgres via Supabase.
+
+> **Not launched yet.** Two things are deliberately held back until go-live: Stripe refuses
+> live keys, and `/admin` has no sign-in. See the go-live checklist at the bottom before
+> putting this in front of customers.
 
 ## Run it
 
@@ -159,8 +162,9 @@ lib/arena.js        Hours, sessions, capacity, pricing, party slots and held gam
                     The single source of truth — the server imports it AND the browser
                     loads the same file, so the price and the rules a customer sees
                     can't drift from what the server enforces.
-lib/demo-store.js   In-memory bookings and parties, with each date seeded deterministically
-                    so the arena looks realistically busy and identical on every visit.
+lib/demo-store.js   In-memory store — starts empty, keeps only what is booked. The
+                    fallback for local work and the unit tests.
+lib/supabase.js     Database connection, and the guard rails on which key is which.
 lib/api-app.js      The JSON API as an Express app, shared by both runtimes below.
 lib/arena.test.js   Unit tests for all of the above.
 server.js           Local dev: the API app + static pages.
@@ -173,7 +177,8 @@ and a walk-in added on `/admin` takes seats away from `/`.
 
 ## Card payments (Stripe test mode)
 
-Out of the box the checkout is **simulated** — no keys needed, the demo works end to end.
+Without Stripe keys no card is taken: the customer reserves the game time and pays at the
+desk. Nothing pretends to be a card payment.
 Add Stripe test keys and the same checkout takes real test cards instead.
 
 The flow is **Stripe Checkout**: clicking Pay sends the customer to Stripe's own hosted
@@ -328,3 +333,19 @@ By design, for this stage:
 Vercel runs each API call in its own short-lived process, so the in-memory store **won't share
 state between requests** in production. That shared live state is exactly what Supabase will
 take over — it's the next piece of work, not a surprise.
+
+## Go-live checklist
+
+Everything below is deliberate, and each one is a decision rather than an oversight. Work
+through it before the first real customer books.
+
+| # | What | Why it is not done yet |
+|---|---|---|
+| 1 | **Staff sign-in on `/admin`** | Anyone with the URL can read every customer's name, phone and email. Harmless while the database is empty; a breach the moment it is not. Supabase Auth is already connected. |
+| 2 | **Stop falling back to the in-memory store** | If `SUPABASE_URL` goes missing in production the site quietly serves an empty arena and accepts bookings that vanish. Make missing database config a hard startup failure. |
+| 3 | **Allow live Stripe keys** | `lib/payments.js` refuses `sk_live_` on purpose so a real card cannot be charged mid-build. Relax it, and add a webhook for refunds, disputes and delayed payment methods. |
+| 4 | **Store waivers** | `/waiver` shows a confirmation and saves nothing. Needs a table, and a way for the desk to look one up on arrival. |
+| 5 | **Auto-refund the paid-but-unseated case** | If the last seats go while a customer is on Stripe's page they are told to ring the desk. It should refund automatically. |
+| 6 | **Schedule the reminders** | Day-before messages are a button on the game sheet so they can be demonstrated. Move to a cron. |
+| 7 | **Supabase plan and backups** | Free projects pause after inactivity and back up thinly. Confirm the plan before launch. |
+| 8 | **Answer the open questions** | The five items above under *Still to confirm with Lasertopia* still shape party bookings. |

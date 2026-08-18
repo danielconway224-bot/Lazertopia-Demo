@@ -168,8 +168,6 @@
     font-size: 12.5px; margin: 18px 0 12px; padding-top: 16px; border-top: 1px solid var(--border);
   }
   .sim-badge svg { width: 15px; height: 15px; }
-  .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-  .card-row .input { margin-top: 0; }
 
   .modal.conf { text-align: center; }
   .modal.conf .recap, .modal.conf .note-box { text-align: left; }
@@ -284,27 +282,21 @@
     <div id="stripe-mode" style="display:none">
       <div class="sim-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Secure payment by <b style="color:var(--muted);margin-left:2px">Stripe</b> · test mode
+        Secure payment by <b style="color:var(--muted);margin-left:2px">Stripe</b>
       </div>
       <div class="note-box" style="font-size:13px">
         You'll be taken to Stripe's secure payment page to enter your card, then brought
         straight back here to your confirmation.
         <br><br>
-        <b>Test card:</b> 4242 4242 4242 4242 · any future expiry · any CVC · any postcode.
-        No real money moves.
       </div>
     </div>
 
-    <!-- Fallback when no keys are set, so the demo always works -->
+    <!-- Cards not configured on this server. Reserving without payment is a development
+         convenience only; it must never be reachable in production. -->
     <div id="sim-mode" style="display:none">
-      <div class="sim-badge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Card payment — <b style="color:var(--muted);margin-left:2px">simulated for this demo</b>
-      </div>
-      <input class="input" placeholder="Card number" value="4242 4242 4242 4242" />
-      <div class="card-row">
-        <input class="input" placeholder="MM / YY" value="12 / 34" />
-        <input class="input" placeholder="CVC" value="123" />
+      <div class="note-box warn" style="font-size:13px">
+        <b>Card payments are not switched on for this server.</b><br>
+        Your game time will be reserved and the front desk will take payment on arrival.
       </div>
     </div>
 
@@ -706,7 +698,7 @@ $('#cb-continue').onclick = () => {
   $('#sim-mode').style.display = stripeReady ? 'none' : 'block';
   $('#pay-btn').innerHTML = stripeReady
     ? `Continue to payment · ${money(priced.totalCents)}`
-    : `Pay <span id="pay-amt">${money(priced.totalCents)}</span>`;
+    : `Reserve · ${money(priced.totalCents)} at the desk`;
   $('#pay-overlay').classList.add('show');
   setStep(3);
 };
@@ -799,11 +791,11 @@ $('#conf-done').onclick = async () => {
 };
 
 /* ------------------------------------------------------------------ *
- * Stripe Checkout (test mode)
+ * Stripe Checkout
  *
  * The card is taken on Stripe's own hosted page. The server decides whether cards are
- * live — it holds the secret key — and if it says no, the simulated form runs instead so
- * the demo never breaks on a missing key.
+ * live — it holds the secret key — and if it says no, the customer reserves the time and
+ * pays at the desk instead. No card is ever taken by this page.
  * ------------------------------------------------------------------ */
 let stripeReady = false;
 

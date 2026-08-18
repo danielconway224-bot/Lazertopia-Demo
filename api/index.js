@@ -5,7 +5,7 @@
 //
 // Heads up: each Vercel invocation may run in a fresh process, so the in-memory
 // booking store in lib/demo-store.js is NOT reliably shared between requests in
-// production. Dates still seed deterministically (the arena always looks the same),
+// production. The in-memory fallback starts empty and keeps nothing between requests,
 // but bookings made during a session can vanish on a cold start. Durable shared
 // state is what Supabase will provide — see the README.
 
