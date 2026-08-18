@@ -1,2 +1,14 @@
+# Never upload secrets to a build. `.env` alone is an exact match and misses
+# variants like .env.local or .env.backup, so match the whole family and
+# re-admit only the committed template.
 .env
+.env.*
+!.env.example
+
 node_modules
+
+# Local-only tooling and working files.
+.claude
+supabase/.temp
+tools/
+*.log
