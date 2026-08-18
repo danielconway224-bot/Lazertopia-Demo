@@ -6,10 +6,12 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test lib/arena.test.js"
+    "test": "node --test lib/arena.test.js",
+    "check-db": "node tools/check-db.js"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
+    "@supabase/supabase-js": "^2.112.3",
     "dotenv": "^17.4.2",
     "express": "^4.19.2",
     "stripe": "^22.4.0",
