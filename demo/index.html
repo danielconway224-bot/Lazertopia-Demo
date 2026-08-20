@@ -519,7 +519,7 @@ function renderSessions() {
     const tag = s.past ? '<span class="tag past">STARTED</span>'
       : s.held ? '<span class="tag party">PARTIES</span>'
       : s.blocked ? '<span class="tag">CLOSED</span>'
-      : s.cutoff ? '<span class="tag call">CALL US</span>'
+      : s.cutoff ? '<span class="tag call">CALL TO BOOK</span>'
       : s.seatsLeft === 0 ? '<span class="tag">FULL</span>' : '';
     // Held and cut-off slots get a route forward rather than a flat no — both are still
     // sellable, just not through the website.
