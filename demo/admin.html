@@ -399,6 +399,36 @@
   .sheet-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: var(--dim); margin-bottom: 16px; align-items: center; }
   .sheet-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .sheet-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  /* ---------- Parties ---------- */
+  .pty {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 13px;
+    padding: 17px 19px; margin-bottom: 12px;
+  }
+  .pty.split { border-color: rgba(249,161,27,.45); }
+  .pty-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 13px; }
+  .pty-when { font-family: 'Space Grotesk'; font-weight: 700; font-size: 16px; }
+  .pty-when small { display: block; font-family: 'Raleway'; font-weight: 500; font-size: 12.5px; color: var(--dim); margin-top: 2px; }
+  .pty-code { font-family: 'Space Grotesk'; font-weight: 700; font-size: 12.5px; color: var(--cyan); }
+  .pty-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 13px 22px; }
+  .pty-f .k {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim);
+    font-weight: 700; margin-bottom: 3px;
+  }
+  .pty-f .v { font-size: 13.5px; line-height: 1.45; }
+  .pty-f .v b { font-family: 'Space Grotesk'; }
+  .pty-warn {
+    margin-top: 13px; padding: 10px 13px; border-radius: 9px; font-size: 12.5px; line-height: 1.5;
+    background: rgba(249,161,27,.10); border: 1px solid rgba(249,161,27,.35); color: #f4cd91;
+  }
+  .pty-chip {
+    display: inline-block; font-size: 11.5px; padding: 3px 9px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--border); margin: 0 5px 5px 0;
+  }
+  .dep { font-family: 'Space Grotesk'; font-size: 10px; font-weight: 800; letter-spacing: .09em;
+         padding: 3px 8px; border-radius: 999px; border: 1px solid; }
+  .dep.due  { color: var(--orange); border-color: rgba(249,161,27,.45); background: rgba(249,161,27,.10); }
+  .dep.paid { color: var(--ok); border-color: rgba(53,208,127,.45); background: rgba(53,208,127,.12); }
 </style>
 </head>
 <body>
@@ -414,6 +444,7 @@
       <button class="tab" data-tab="gamesheet" role="tab">Game sheet</button>
       <button class="tab" data-tab="bookings"  role="tab">Bookings</button>
       <button class="tab" data-tab="customers" role="tab">Customers</button>
+      <button class="tab" data-tab="parties"   role="tab">Parties</button>
       <button class="tab" data-tab="calendar"  role="tab">Calendar</button>
       <button class="tab" data-tab="notes"     role="tab">Notes</button>
       <button class="tab" data-tab="settings"  role="tab">Settings</button>
@@ -555,6 +586,23 @@
   <div class="count-line" id="cu-count"></div>
   <div class="table-scroll"><table class="ptable" id="cu-table"></table></div>
   <div class="pager" id="cu-pager"></div>
+</section>
+
+<!-- ============================== PARTIES ============================== -->
+<section class="tabp" id="tp-parties">
+  <div class="panel-head">
+    <div>
+      <h2>Parties</h2>
+      <div class="sub">Every booked party, with everything the desk needs on the day.</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="nav-sq" id="pty-prev" aria-label="Previous month">‹</button>
+      <div class="cur" id="pty-label" style="min-width:150px;text-align:center"></div>
+      <button class="nav-sq" id="pty-next" aria-label="Next month">›</button>
+    </div>
+  </div>
+  <div class="pcal" id="pty-cal"><div class="loading">Loading…</div></div>
+  <div style="margin-top:24px" id="pty-list"></div>
 </section>
 
 <!-- ============================== CALENDAR ============================== -->
@@ -727,10 +775,58 @@
   </div>
 </div>
 
+<!-- Staff booking modal -->
+<div class="overlay" id="nb-overlay">
+  <div class="modal">
+    <button class="modal-close" id="nb-close" aria-label="Close">✕</button>
+    <h3>New booking</h3>
+    <div class="sub">Taken at the desk or over the phone. Counts as a walk-in.</div>
+
+    <label class="fld" for="nb-date" style="margin-top:16px">Date</label>
+    <input class="input" id="nb-date" type="date" />
+
+    <label class="fld" style="margin-top:14px">Game time</label>
+    <div id="nb-times"><div class="loading" style="padding:12px">Pick a date…</div></div>
+
+    <div class="row2" style="margin-top:14px">
+      <div>
+        <label class="fld" for="nb-players">Players</label>
+        <input class="input" id="nb-players" type="number" min="1" max="25" value="4" />
+      </div>
+      <div>
+        <label class="fld" for="nb-games">Games each</label>
+        <select class="input" id="nb-games">
+          <option value="1">1 game</option>
+          <option value="2">2 games</option>
+          <option value="3">3 games</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="fld" for="nb-name" style="margin-top:14px">Name</label>
+    <input class="input" id="nb-name" placeholder="Booking name" />
+
+    <div class="row2" style="margin-top:14px">
+      <div>
+        <label class="fld" for="nb-phone">Phone</label>
+        <input class="input" id="nb-phone" type="tel" placeholder="204-555-0142" />
+      </div>
+      <div>
+        <label class="fld" for="nb-email">Email (optional)</label>
+        <input class="input" id="nb-email" type="email" placeholder="you@example.com" />
+      </div>
+    </div>
+
+    <div class="note-box" id="nb-total" style="margin-top:16px"></div>
+    <div class="err" id="nb-error"></div>
+    <button class="btn btn-primary btn-block" id="nb-save" style="margin-top:14px">Save booking</button>
+  </div>
+</div>
+
 <script type="module">
 import {
   ARENA, PACKAGES, EVENT_PACKAGES, hoursFor, sessionSpan, priceBooking,
-  ageCompatible, isoDate, parseISO, fmtTime, money, arenaToday,
+  ageCompatible, isoDate, parseISO, fmtTime, money, arenaToday, gamesInSlot,
 } from '/lib/arena.js';
 import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
 
@@ -1448,7 +1544,7 @@ load();
  * The tab is kept in the URL hash so a refresh, or a bookmark, comes back where you were.
  * ==================================================================== */
 
-const TABS = ['dashboard', 'gamesheet', 'bookings', 'customers', 'calendar', 'notes', 'settings', 'help'];
+const TABS = ['dashboard', 'gamesheet', 'bookings', 'customers', 'parties', 'calendar', 'notes', 'settings', 'help'];
 const loaded = new Set(['dashboard', 'gamesheet']);
 
 // The date bar drives both the dashboard and the game sheet, and means nothing on the rest.
@@ -1463,7 +1559,7 @@ function showTab(name) {
 
   if (!loaded.has(name)) {
     loaded.add(name);
-    ({ bookings: loadBookings, customers: loadCustomers, calendar: loadCalendar,
+    ({ bookings: loadBookings, customers: loadCustomers, parties: loadParties, calendar: loadCalendar,
        notes: loadNotes, settings: loadSettings, help: renderHelp }[name] || (() => {}))();
   }
 }
@@ -1587,7 +1683,7 @@ $('#bf-search').oninput = (e) => {
 ['range', 'kind', 'paid'].forEach((k) => {
   $(`#bf-${k}`).onchange = (e) => { bkState[k] = e.target.value; bkState.offset = 0; loadBookings(); };
 });
-$('#bk-new').onclick = () => { showTab('gamesheet'); toast('Use + Walk-in on the game sheet to take a booking.'); };
+$('#bk-new').onclick = () => openNewBooking();
 
 /* ==================================================================== *
  * Customers
@@ -1965,6 +2061,258 @@ function renderHelp() {
         gets fixed before the site goes live to customers.</li>
     </ul>`;
 }
+
+
+/* ==================================================================== *
+ * Parties
+ *
+ * The desk needs the whole record on the morning of a party: which rooms, how many
+ * pizzas, which add-ons, whether the deposit is in, and whether the group is too big to
+ * play in one go. So this shows everything rather than a summary you have to click into.
+ * ==================================================================== */
+
+let ptyMonth = null;
+let ptyCfg = { partyRoomSlots: {}, addOns: [], depositCents: 5000, splitAbove: 25 };
+
+const ADDON_NAME = {
+  'qbix': 'Q-BIX 5D',
+  'arcade-5up': '5-Up Arcade Card',
+  'arcade-time': '45-min Arcade Time Play',
+};
+
+async function loadParties() {
+  if (!ptyMonth) {
+    const t = parseISO(arenaToday());
+    ptyMonth = new Date(t.getFullYear(), t.getMonth(), 1);
+  }
+  const cal = $('#pty-cal');
+  const list = $('#pty-list');
+  cal.innerHTML = '<div class="loading">Loading…</div>';
+  list.innerHTML = '';
+
+  const y = ptyMonth.getFullYear(), m = ptyMonth.getMonth();
+  const days = new Date(y, m + 1, 0).getDate();
+  const from = isoDate(new Date(y, m, 1));
+  const to = isoDate(new Date(y, m, days));
+  $('#pty-label').textContent = ptyMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  let data;
+  try {
+    data = await api(`/api/staff/parties?from=${from}&to=${to}`);
+  } catch (e) {
+    cal.innerHTML = `<div class="empty-note">${esc(e.message)}</div>`;
+    return;
+  }
+  ptyCfg = { ...ptyCfg, ...data };
+
+  const byDate = new Map();
+  for (const p of data.rows) {
+    if (!byDate.has(p.dateISO)) byDate.set(p.dateISO, []);
+    byDate.get(p.dateISO).push(p);
+  }
+
+  /* ---- Month grid ---- */
+  const today = arenaToday();
+  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  let html = DOW.map((d) => `<div class="dow">${d}</div>`).join('');
+  for (let i = 0; i < new Date(y, m, 1).getDay(); i++) html += '<div class="pcell empty"></div>';
+
+  for (let day = 1; day <= days; day++) {
+    const iso = isoDate(new Date(y, m, day));
+    const list_ = byDate.get(iso) || [];
+    const slots = ptyCfg.partyRoomSlots[new Date(y, m, day).getDay()] || [];
+    const cls = ['pcell'];
+    if (iso === today) cls.push('today');
+    if (!slots.length) cls.push('closed');
+
+    html += `<div class="${cls.join(' ')}"${list_.length ? ` data-pday="${iso}"` : ''}>
+      <div class="d">${day}</div>
+      <div class="figs">${
+        !slots.length ? 'No parties'
+        : list_.length ? list_.map((p) => `<b>${fmtTime(p.slotStart)}</b> ${esc((p.name || '').split(' ')[0])}`).join('<br>')
+        : `<span style="opacity:.5">${slots.length} slot${slots.length > 1 ? 's' : ''} free</span>`}</div>
+    </div>`;
+  }
+  cal.innerHTML = html;
+
+  cal.querySelectorAll('[data-pday]').forEach((el) => {
+    el.onclick = () => {
+      const card = document.getElementById(`pty-${el.dataset.pday}`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  });
+
+  /* ---- Full detail, one card per party ---- */
+  if (!data.rows.length) {
+    list.innerHTML = `<div class="panel"><div class="empty-note">No parties booked in ${$('#pty-label').textContent}.</div></div>`;
+    return;
+  }
+
+  const f = (k, v) => `<div class="pty-f"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+
+  list.innerHTML = `<h2 style="font-size:16px;margin-bottom:12px">${data.rows.length} part${data.rows.length === 1 ? 'y' : 'ies'} this month</h2>`
+    + data.rows.map((p) => {
+      const rooms = (p.rooms || []);
+      const roomText = rooms.length
+        ? `<b>${p.positions}</b> room${p.positions > 1 ? 's' : ''} · ${rooms.join(' + ')} guests`
+        : '—';
+      // A party's games come from its slot and are NOT consecutive — Saturday 1–3 plays
+      // 1:15 and 1:45. Counting forward from the start time invents times it never had.
+      const slotGames = gamesInSlot(p.dateISO, p.slotStart);
+      const games = slotGames.length ? slotGames.map(fmtTime).join(', ') : 'To be confirmed';
+      const addons = (p.addOns || []).length
+        ? p.addOns.map((a) => `<span class="pty-chip">${esc(ADDON_NAME[a] || a)}</span>`).join('')
+        : '<span style="color:var(--dim)">None</span>';
+      const dep = p.depositState === 'paid'
+        ? `<span class="dep paid">DEPOSIT IN</span>`
+        : `<span class="dep due">DEPOSIT DUE</span>`;
+
+      return `<div class="pty${p.splitGroups > 1 ? ' split' : ''}" id="pty-${p.dateISO}">
+        <div class="pty-top">
+          <div class="pty-when">${esc(longDate(p.dateISO))} · ${fmtTime(p.slotStart)} – ${fmtTime(p.slotEnd)}
+            <small>${esc(p.packageName || 'Party')} · booked ${p.createdAt ? esc(longDate(p.createdAt.slice(0, 10))) : '—'}</small>
+          </div>
+          <div style="text-align:right">
+            <div class="pty-code">${esc(p.code)}</div>
+            <div style="margin-top:5px">${dep} <span style="color:var(--dim);font-size:11.5px">${money(p.depositCents ?? ptyCfg.depositCents)}</span></div>
+          </div>
+        </div>
+
+        <div class="pty-grid">
+          ${f('Guest of honour', `${esc(p.name || '—')}${p.age != null ? ` · turning <b>${p.age}</b>` : ''}${p.ageOverride ? ' <span style="color:var(--orange)">(age rule overridden)</span>' : ''}`)}
+          ${f('Contact', `${esc(p.phone || '—')}${p.email ? `<br><span style="color:var(--dim)">${esc(p.email)}</span>` : ''}`)}
+          ${f('Guests', `<b>${p.players}</b>`)}
+          ${f('Rooms', roomText)}
+          ${f('Laser tag', games)}
+          ${f('Pizzas included', p.pizzas != null ? `<b>${p.pizzas}</b> large 1-topping` : '—')}
+          ${f('Add-ons', addons)}
+          ${f('Package total', `<b>${money(p.totalCents)}</b> <span style="color:var(--dim);font-size:11.5px">before tax</span>`)}
+        </div>
+
+        ${p.splitGroups > 1 ? `<div class="pty-warn">
+          <b>${p.players} guests — too many for one game.</b> The arena holds ${ARENA.capacity} at a time,
+          so this party plays as <b>2 groups</b>. Plan the rotation before they arrive.
+        </div>` : ''}
+
+        ${p.note ? `<div style="margin-top:12px;font-size:12.5px;color:var(--dim)">${esc(p.note)}</div>` : ''}
+      </div>`;
+    }).join('');
+}
+
+$('#pty-prev').onclick = () => { ptyMonth = new Date(ptyMonth.getFullYear(), ptyMonth.getMonth() - 1, 1); loadParties(); };
+$('#pty-next').onclick = () => { ptyMonth = new Date(ptyMonth.getFullYear(), ptyMonth.getMonth() + 1, 1); loadParties(); };
+
+/* ==================================================================== *
+ * New booking, from the desk
+ * ==================================================================== */
+
+let nbSessions = [];
+let nbPick = null;
+
+function openNewBooking() {
+  $('#nb-error').textContent = '';
+  $('#nb-name').value = '';
+  $('#nb-phone').value = '';
+  $('#nb-email').value = '';
+  $('#nb-players').value = '4';
+  $('#nb-games').value = '1';
+  $('#nb-date').value = state.date || arenaToday();
+  nbPick = null;
+  $('#nb-overlay').classList.add('show');
+  loadNbTimes();
+}
+
+async function loadNbTimes() {
+  const host = $('#nb-times');
+  const date = $('#nb-date').value;
+  if (!date) { host.innerHTML = '<div class="loading" style="padding:12px">Pick a date…</div>'; return; }
+  if (hoursFor(date).closed) {
+    nbSessions = [];
+    host.innerHTML = '<div class="note-box bad" style="font-size:13px">Closed that day.</div>';
+    nbUpdateTotal();
+    return;
+  }
+
+  host.innerHTML = '<div class="loading" style="padding:12px">Loading…</div>';
+  try {
+    const d = await api(`/api/staff/sheet?date=${encodeURIComponent(date)}`);
+    nbSessions = d.sessions;
+  } catch (e) {
+    host.innerHTML = `<div class="note-box bad" style="font-size:13px">${esc(e.message)}</div>`;
+    return;
+  }
+  if (nbPick != null && !nbSessions.some((x) => x.startMin === nbPick)) nbPick = null;
+  renderNbTimes();
+}
+
+function renderNbTimes() {
+  const players = Math.max(1, Number($('#nb-players').value) || 1);
+  // The desk can seat people in a game that has already started, and in a party-held slot
+  // if it is going spare — neither is true for the public site.
+  $('#nb-times').innerHTML = `<div class="sessions" style="max-height:190px;overflow-y:auto">${nbSessions.map((sn) => {
+    const tight = sn.seatsLeft < players;
+    const cls = ['sess'];
+    if (sn.startMin === nbPick) cls.push('sel');
+    if (sn.past) cls.push('gone');
+    if (sn.held) cls.push('held');
+    if (sn.blocked || tight) cls.push('gone');
+    return `<button class="${cls.join(' ')}"${sn.blocked || tight ? ' disabled' : ` data-nbt="${sn.startMin}"`}>
+      <div class="t">${fmtTime(sn.startMin)}</div>
+      <div class="s">${sn.blocked ? 'Closed' : `${sn.seatsLeft} left${sn.held ? ' · held' : ''}${sn.past ? ' · started' : ''}`}</div>
+    </button>`;
+  }).join('')}</div>`;
+
+  $('#nb-times').querySelectorAll('[data-nbt]').forEach((b) => {
+    b.onclick = () => { nbPick = Number(b.dataset.nbt); renderNbTimes(); nbUpdateTotal(); };
+  });
+}
+
+function nbUpdateTotal() {
+  const priced = priceBooking({ players: $('#nb-players').value, games: $('#nb-games').value });
+  const el = $('#nb-total');
+  if (!priced.ok) { el.className = 'note-box bad'; el.textContent = priced.error; return; }
+  el.className = 'note-box';
+  el.innerHTML = `<b style="font-size:17px">${money(priced.totalCents)}</b> · ${money(priced.perPersonCents)} per player`
+    + (nbPick != null ? `<br>${fmtTime(nbPick)} on ${esc(longDate($('#nb-date').value))}` : '<br><span style="color:var(--dim)">Pick a game time above</span>')
+    + (priced.group ? '<br><span style="color:var(--orange)">Group booking — 12+ players</span>' : '');
+}
+
+$('#nb-date').onchange = () => { loadNbTimes(); nbUpdateTotal(); };
+$('#nb-players').oninput = () => { renderNbTimes(); nbUpdateTotal(); };
+$('#nb-games').onchange = nbUpdateTotal;
+$('#nb-close').onclick = () => $('#nb-overlay').classList.remove('show');
+$('#nb-overlay').onclick = (e) => { if (e.target === $('#nb-overlay')) $('#nb-overlay').classList.remove('show'); };
+
+$('#nb-save').onclick = async () => {
+  const err = $('#nb-error');
+  err.textContent = '';
+  if (nbPick == null) { err.textContent = 'Pick a game time.'; return; }
+  if (!$('#nb-name').value.trim()) { err.textContent = 'Enter a name for the booking.'; $('#nb-name').focus(); return; }
+
+  const btn = $('#nb-save');
+  btn.disabled = true;
+  try {
+    const res = await jsonPost('/api/staff/walkin', {
+      dateISO: $('#nb-date').value,
+      startMin: nbPick,
+      players: Number($('#nb-players').value),
+      games: Number($('#nb-games').value),
+      name: $('#nb-name').value.trim(),
+      phone: $('#nb-phone').value.trim(),
+      email: $('#nb-email').value.trim(),
+    });
+    $('#nb-overlay').classList.remove('show');
+    toast(`Booked ${res.booking.code} — ${res.booking.players} players at ${fmtTime(res.booking.startMin)}.`);
+    // Whatever is on screen should reflect it immediately.
+    if (loaded.has('bookings')) loadBookings();
+    if ($('#nb-date').value === state.date) load();
+  } catch (e) {
+    err.textContent = e.message;
+    loadNbTimes();
+  } finally {
+    btn.disabled = false;
+  }
+};
 
 /* ---------- Open on the tab the URL asks for ---------- */
 showTab(location.hash.slice(1) || 'dashboard');
