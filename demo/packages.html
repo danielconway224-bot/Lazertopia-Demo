@@ -200,6 +200,7 @@
     <div class="note-box" id="bk-total" style="margin-top:16px"></div>
     <div class="err" id="bk-error"></div>
     <button class="btn btn-orange btn-block" id="bk-save" style="margin-top:16px">Request this party</button>
+    <div id="bk-paynote" style="font-size:11.5px;color:var(--dim);margin-top:9px;text-align:center;line-height:1.5"></div>
   </div>
 </div>
 
@@ -207,12 +208,9 @@
 <div class="overlay" id="ok-overlay">
   <div class="modal conf">
     <div class="check"><svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-    <h3>Party requested</h3>
+    <h3 id="ok-title">Party requested</h3>
     <div class="code" id="ok-code"></div>
-    <div style="color:var(--muted);font-size:14px;line-height:1.6">
-      We've pencilled you in. The front desk will call to confirm the details and take your
-      <b>$50 non-refundable deposit</b>.
-    </div>
+    <div style="color:var(--muted);font-size:14px;line-height:1.6" id="ok-lede"></div>
     <div class="recap" id="ok-recap"></div>
     <div class="note-box warn" id="ok-split" style="margin-top:14px;text-align:left;display:none">
       Your group is larger than the arena holds at once, so we'll split you into two groups
@@ -237,7 +235,8 @@ import {
 import { mountShell, hydrateConfig, $, esc, toast, api, jsonPost, longDate, mountDateField } from '/assets/shell.js';
 
 mountShell({ active: '/packages' });
-await hydrateConfig();
+const cfg = await hydrateConfig();
+const stripeReady = !!(cfg && cfg.stripeEnabled);
 
 let current = null;   // package being booked
 
@@ -305,6 +304,14 @@ function openBooking(id) {
   dateField.set(isoDate(d));
 
   updateTotal();
+  // The label has to match what the button does. With cards live it takes the deposit;
+  // without them it is a request and the desk rings back.
+  $('#bk-save').textContent = stripeReady
+    ? `Pay ${money(ARENA.partyDepositCents)} deposit and book`
+    : 'Request this party';
+  $('#bk-paynote').innerHTML = stripeReady
+    ? `Stripe takes the card on the next page, then brings you straight back here. The deposit is <b>non-refundable</b> — the rest is settled at the venue.`
+    : '';
   $('#bk-overlay').classList.add('show');
   loadSlots();
 }
@@ -550,30 +557,78 @@ $('#bk-save').onclick = async () => {
   if (!$('#bk-name').value.trim())  { err.textContent = 'Please enter a name for the booking.'; $('#bk-name').focus(); return; }
   if (!$('#bk-phone').value.trim()) { err.textContent = 'Please enter a phone number so we can confirm.'; $('#bk-phone').focus(); return; }
 
+  const payload = {
+    dateISO: dateField.value(),
+    slotStart: pickedSlot,
+    age: Number($('#bk-age').value),
+    packageId: current.id,
+    guests: Number($('#bk-guests').value),
+    name: $('#bk-name').value.trim(),
+    phone: $('#bk-phone').value.trim(),
+    ...extras(),
+  };
+
   btn.disabled = true;
+  const label = btn.textContent;
   try {
-    const res = await jsonPost('/api/party', {
-      dateISO: dateField.value(),
-      slotStart: pickedSlot,
-      age: Number($('#bk-age').value),
-      packageId: current.id,
-      guests: Number($('#bk-guests').value),
-      name: $('#bk-name').value.trim(),
-      phone: $('#bk-phone').value.trim(),
-      ...extras(),
-    });
+    if (stripeReady) {
+      // Hand off to Stripe. The party is NOT created yet — it is created on the way back,
+      // once Stripe confirms the deposit arrived, so an abandoned payment leaves the room
+      // free rather than holding it for someone who never paid.
+      btn.textContent = 'Taking you to Stripe…';
+      const { url } = await jsonPost('/api/party-checkout-session', { ...payload, origin: location.origin });
+      window.location.assign(url);
+      return;                       // leaving the page; don't re-enable
+    }
+    const res = await jsonPost('/api/party', payload);
     showOk(res.booking, res.price);
   } catch (e) {
     err.textContent = e.message;
-    // Someone may have taken the spot while the form was open — refresh the board.
+    btn.textContent = label;
+    // Someone may have taken the room while the form was open — refresh the board.
     if (e.status === 409) await loadSlots();
   } finally {
     btn.disabled = false;
   }
 };
 
+/* ---------- Back from Stripe ----------
+ * The server rebuilds the party from Stripe's copy of the session, so a tampered URL
+ * cannot conjure a booking. The only thing handed over is the session id. */
+async function resumeFromDeposit() {
+  const params = new URLSearchParams(location.search);
+  const outcome = params.get('deposit');
+  if (!outcome) return;
+
+  const sessionId = params.get('session_id');
+  history.replaceState({}, '', location.pathname);   // a refresh must not look like a fresh return
+
+  if (outcome === 'cancelled') {
+    toast('Deposit cancelled — nothing was charged, and the party time is still free.');
+    return;
+  }
+  if (outcome !== 'success' || !sessionId) return;
+
+  try {
+    const res = await jsonPost('/api/confirm-party-checkout', { sessionId });
+    current = EVENT_PACKAGES.find((p) => p.id === res.booking.packageId) || current;
+    daySlots = [];
+    showOk(res.booking, res.price);
+  } catch (e) {
+    // Includes the paid-but-unbooked case, which has to be loud rather than swallowed.
+    toast(e.message);
+  }
+}
+
 function showOk(booking, priced) {
   $('#ok-code').textContent = booking.code;
+  const paid = booking.depositState === 'paid';
+  $('#ok-title').textContent = paid ? 'Party booked' : 'Party requested';
+  $('#ok-lede').innerHTML = paid
+    ? `Your <b>${money(booking.depositCents ?? ARENA.partyDepositCents)} deposit is paid</b> and the room is held.
+       The front desk will call to run through the details.`
+    : `We've pencilled you in. The front desk will call to confirm the details and take your
+       <b>${money(ARENA.partyDepositCents)} non-refundable deposit</b>.`;
   const slot = daySlots.find((s) => s.start === booking.slotStart);
   const games = slot && slot.games.length ? slot.games.map(fmtTime).join(' and ') : null;
 
@@ -601,6 +656,8 @@ function showOk(booking, priced) {
 $('#ok-done').onclick = () => $('#ok-overlay').classList.remove('show');
 $('#bk-close').onclick = () => $('#bk-overlay').classList.remove('show');
 $('#bk-overlay').onclick = (e) => { if (e.target === $('#bk-overlay')) $('#bk-overlay').classList.remove('show'); };
+
+resumeFromDeposit();
 </script>
 </body>
 </html>

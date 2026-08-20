@@ -2443,8 +2443,14 @@ async function loadParties() {
         ? p.addOns.map((a) => `<span class="pty-chip">${esc(ADDON_NAME[a] || a)}</span>`).join('')
         : '<span style="color:var(--dim)">None</span>';
       const dep = p.depositState === 'paid'
-        ? `<span class="dep paid">DEPOSIT IN</span>`
+        ? `<span class="dep paid">DEPOSIT PAID</span>`
         : `<span class="dep due">DEPOSIT DUE</span>`;
+
+      // Extra pizzas and wings, priced with tax already in — kept on their own line for
+      // exactly that reason, and previously not shown at all.
+      const food = (p.food || []).length
+        ? p.food.map((f) => `<span class="pty-chip">${f.qty} × ${esc(f.name)}</span>`).join('')
+        : '<span style="color:var(--dim)">None</span>';
 
       return `<div class="pty${p.splitGroups > 1 ? ' split' : ''}" id="pty-${p.dateISO}">
         <div class="pty-top">
@@ -2465,7 +2471,13 @@ async function loadParties() {
           ${f('Laser tag', games)}
           ${f('Pizzas included', p.pizzas != null ? `<b>${p.pizzas}</b> large 1-topping` : '—')}
           ${f('Add-ons', addons)}
+          ${f('Extra food', food)}
           ${f('Package total', `<b>${money(p.totalCents)}</b> <span style="color:var(--dim);font-size:11.5px">before tax</span>`)}
+          ${p.foodCents ? f('Extra food total', `<b>${money(p.foodCents)}</b> <span style="color:var(--dim);font-size:11.5px">tax included</span>`) : ''}
+          ${f('Deposit', p.depositState === 'paid'
+              ? `<span style="color:var(--ok)">${money(p.depositCents ?? ptyCfg.depositCents)} paid</span>`
+              : `<span style="color:var(--amber)">${money(p.depositCents ?? ptyCfg.depositCents)} due</span>`)}
+          ${f('Booked', p.createdAt ? esc(longDate(p.createdAt.slice(0, 10))) : '—')}
         </div>
 
         ${p.splitGroups > 1 ? `<div class="pty-warn">
