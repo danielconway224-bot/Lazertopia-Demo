@@ -365,6 +365,40 @@
   .pcell .fill i.high { background: var(--danger); }
   .pcell .figs { font-size: 11px; color: var(--dim); line-height: 1.3; }
   .pcell .figs b { color: var(--muted); font-family: 'Space Grotesk'; }
+
+  /* ---------- Game sheet, grouped by hour ---------- */
+  .hourblock { margin-bottom: 20px; }
+  .hourhead {
+    display: flex; align-items: baseline; gap: 12px; padding: 0 4px 8px;
+    border-bottom: 1px solid var(--border); margin-bottom: 9px;
+  }
+  .hourhead .hr {
+    font-family: 'Space Grotesk'; font-weight: 800; font-size: 15px; letter-spacing: -.01em;
+  }
+  .hourhead .sum { font-size: 12px; color: var(--dim); }
+  .hourhead .sum b { color: var(--muted); font-family: 'Space Grotesk'; }
+
+  /* An empty game is the common case and should take the least ink — the eye needs to
+     land on the games that actually have people in them. */
+  .game.quiet { padding: 9px 16px; opacity: .55; }
+  .game.quiet .cap .bar { display: none; }
+  .game.quiet:hover { opacity: 1; }
+  .game.quiet .acts { opacity: 0; transition: opacity .12s; }
+  .game.quiet:hover .acts { opacity: 1; }
+  @media (hover: none) { .game.quiet .acts { opacity: 1; } }
+
+  .game.now { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 22px var(--cyan-glow); opacity: 1; }
+  .game.next { border-color: var(--border-lit); }
+  .nowtag {
+    font-family: 'Space Grotesk'; font-size: 9px; font-weight: 800; letter-spacing: .1em;
+    padding: 2px 7px; border-radius: 999px; margin-left: 8px; white-space: nowrap;
+  }
+  .nowtag.now  { background: var(--cyan); color: #04121a; }
+  .nowtag.next { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border-lit); }
+
+  .sheet-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: var(--dim); margin-bottom: 16px; align-items: center; }
+  .sheet-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sheet-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 </style>
 </head>
 <body>
@@ -376,7 +410,8 @@
       <span class="who" id="who"></span>
     </div>
     <nav class="tabs" id="tabs" role="tablist">
-      <button class="tab on" data-tab="gamesheet" role="tab">Game sheet</button>
+      <button class="tab on" data-tab="dashboard" role="tab">Dashboard</button>
+      <button class="tab" data-tab="gamesheet" role="tab">Game sheet</button>
       <button class="tab" data-tab="bookings"  role="tab">Bookings</button>
       <button class="tab" data-tab="customers" role="tab">Customers</button>
       <button class="tab" data-tab="calendar"  role="tab">Calendar</button>
@@ -385,12 +420,8 @@
       <button class="tab" data-tab="help"      role="tab">Help</button>
     </nav>
   </div>
-</div>
-
-<div class="wrap stack">
-
-<section class="tabp on" id="tp-gamesheet">
-  <div class="toolbar">
+  <div class="wrap" id="datebar" style="padding-bottom:16px">
+    <div class="toolbar" style="margin-bottom:0">
     <div class="date-nav">
       <button class="nav-sq" id="prev-day" aria-label="Previous day">‹</button>
       <div class="cur" id="cur-date"></div>
@@ -402,7 +433,12 @@
       <button class="btn btn-ghost btn-sm" id="refresh">Refresh</button>
     </div>
   </div>
+  </div>
+</div>
 
+<div class="wrap stack">
+
+<section class="tabp on" id="tp-dashboard">
   <div class="stats" id="stats"></div>
 
   <div class="panel viz" id="analytics-panel" style="margin-bottom:18px">
@@ -448,6 +484,10 @@
     <div id="party-board"><div class="loading">Loading…</div></div>
   </div>
 
+</section>
+
+<!-- ============================== GAME SHEET ============================== -->
+<section class="tabp" id="tp-gamesheet">
   <div id="sheet"><div class="loading">Loading the game sheet…</div></div>
 </section>
 
@@ -1020,30 +1060,45 @@ function renderSheet() {
     return;
   }
 
-  host.innerHTML = `<div class="games">${state.sheet.sessions.map((s) => {
+  // Which game is on right now, and which is next — the two the desk cares about most.
+  const today = arenaToday();
+  const isToday = state.date === today;
+  const upcoming = state.sheet.sessions.filter((x) => !x.past);
+  const nextMin = isToday && upcoming.length ? upcoming[0].startMin : null;
+  const past = state.sheet.sessions.filter((x) => x.past);
+  const nowMin = isToday && past.length ? past[past.length - 1].startMin : null;
+
+  const row = (s) => {
     const pct = Math.round((s.taken / s.capacity) * 100);
     const barCls = pct >= 80 ? 'high' : pct >= 50 ? 'mid' : '';
+    const busy = s.taken > 0;
+
     const cls = ['game'];
     if (s.past) cls.push('past');
     if (s.blocked) cls.push('blocked');
     else if (s.held) cls.push('heldrow');
     else if (s.taken >= ARENA.minPlayers) cls.push('busy');
+    // Empty, open, nothing to say — let it recede so the booked games carry the page.
+    if (!busy && !s.blocked && !s.held) cls.push('quiet');
+    if (s.startMin === nowMin) cls.push('now');
+    else if (s.startMin === nextMin) cls.push('next');
 
     const chips = s.bookings.length
       ? s.bookings.map((b) => groupChip(b)).join('')
-      : `<span class="empty-slot">${s.past ? 'No one played' : s.held ? 'Held for parties — not on the public page' : 'Open — no bookings yet'}</span>`;
+      : `<span class="empty-slot">${s.past ? 'No one played' : s.held ? 'Held for parties — not on the public page' : 'Open'}</span>`;
 
     const runs = s.taken >= ARENA.minPlayers;
-    const sub = s.blocked ? 'closed' : s.held ? 'held' : runs ? 'runs' : `needs ${ARENA.minPlayers - s.taken}`;
+    const sub = s.blocked ? 'closed' : s.held ? 'held' : runs ? 'runs' : busy ? `needs ${ARENA.minPlayers - s.taken}` : '';
 
-    // "Release" opens a party-held time to the public; "Hold" takes a public one back.
-    // Wording differs for a slot the desk held itself, where releasing is really an undo.
+    const tag = s.startMin === nowMin ? '<span class="nowtag now">ON NOW</span>'
+      : s.startMin === nextMin ? '<span class="nowtag next">NEXT</span>' : '';
+
     const holdBtn = s.held
       ? `<button class="btn btn-ghost btn-sm" data-release="${s.startMin}">${s.heldByDefault ? 'Release' : 'Un-hold'}</button>`
       : `<button class="btn btn-ghost btn-sm" data-hold="${s.startMin}">Hold</button>`;
 
     return `<div class="${cls.join(' ')}">
-      <div class="time">${fmtTime(s.startMin)}<small>${sub}</small></div>
+      <div class="time">${fmtTime(s.startMin)}${tag}${sub ? `<small>${sub}</small>` : ''}</div>
       <div class="cap">
         <div class="cap-top">
           <span><b>${s.taken}</b> / ${s.capacity}</span>
@@ -1058,7 +1113,37 @@ function renderSheet() {
         ${s.blocked ? '' : `<button class="btn btn-ghost btn-sm" data-block="${s.startMin}">Close</button>`}
       </div>
     </div>`;
-  }).join('')}</div>`;
+  };
+
+  // Grouped by the hour, so eleven identical rows read as "2 PM: quiet" at a glance
+  // rather than as eleven separate things to check.
+  const hours = new Map();
+  for (const sn of state.sheet.sessions) {
+    const h = Math.floor(sn.startMin / 60);
+    if (!hours.has(h)) hours.set(h, []);
+    hours.get(h).push(sn);
+  }
+
+  const hourLabel = (h) => `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+
+  host.innerHTML = `
+    <div class="sheet-legend">
+      <span><i style="background:var(--cyan)"></i> Booked</span>
+      <span><i style="background:rgba(255,224,0,.5)"></i> Held for parties</span>
+      <span><i style="background:rgba(255,91,91,.5)"></i> Closed</span>
+      <span style="margin-left:auto">Hover a quiet game for its controls</span>
+    </div>
+    ${[...hours.entries()].map(([h, list]) => {
+      const players = list.reduce((t, x) => t + x.taken, 0);
+      const games = list.filter((x) => x.taken >= ARENA.minPlayers).length;
+      return `<div class="hourblock">
+        <div class="hourhead">
+          <span class="hr">${hourLabel(h)}</span>
+          <span class="sum">${players ? `<b>${players}</b> player${players === 1 ? '' : 's'} · <b>${games}</b> game${games === 1 ? '' : 's'} running` : 'Nothing booked'}</span>
+        </div>
+        <div class="games">${list.map(row).join('')}</div>
+      </div>`;
+    }).join('')}`;
 
   host.querySelectorAll('[data-walkin]').forEach((b) => { b.onclick = () => openWalkin(Number(b.dataset.walkin)); });
   host.querySelectorAll('[data-block]').forEach((b) => { b.onclick = () => openBlock(Number(b.dataset.block)); });
@@ -1265,8 +1350,10 @@ function findBooking(id) {
   return null;
 }
 
-function openDetail(id) {
-  const b = findBooking(id);
+function openDetail(idOrBooking) {
+  // From the game sheet this is an id to look up in today's rows; from the Bookings tab it
+  // is a whole record for some other date, which findBooking would never see.
+  const b = typeof idOrBooking === 'object' ? idOrBooking : findBooking(idOrBooking);
   if (!b) return;
   state.detail = b;
 
@@ -1361,14 +1448,18 @@ load();
  * The tab is kept in the URL hash so a refresh, or a bookmark, comes back where you were.
  * ==================================================================== */
 
-const TABS = ['gamesheet', 'bookings', 'customers', 'calendar', 'notes', 'settings', 'help'];
-const loaded = new Set(['gamesheet']);
+const TABS = ['dashboard', 'gamesheet', 'bookings', 'customers', 'calendar', 'notes', 'settings', 'help'];
+const loaded = new Set(['dashboard', 'gamesheet']);
+
+// The date bar drives both the dashboard and the game sheet, and means nothing on the rest.
+const DATED_TABS = ['dashboard', 'gamesheet'];
 
 function showTab(name) {
-  if (!TABS.includes(name)) name = 'gamesheet';
+  if (!TABS.includes(name)) name = 'dashboard';
   document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
   document.querySelectorAll('.tabp').forEach((p) => p.classList.toggle('on', p.id === `tp-${name}`));
   if (location.hash.slice(1) !== name) history.replaceState({}, '', `#${name}`);
+  $('#datebar').style.display = DATED_TABS.includes(name) ? '' : 'none';
 
   if (!loaded.has(name)) {
     loaded.add(name);
@@ -1520,6 +1611,11 @@ async function loadCustomers() {
     return;
   }
 
+  if (data.error) {
+    $('#cu-count').textContent = '';
+    table.innerHTML = `<tbody>${emptyRow(6, data.error)}</tbody>`;
+    return;
+  }
   cuRows = data.rows;
   const { total } = data;
   $('#cu-count').textContent = total === 0
@@ -1871,7 +1967,7 @@ function renderHelp() {
 }
 
 /* ---------- Open on the tab the URL asks for ---------- */
-showTab(location.hash.slice(1) || 'gamesheet');
+showTab(location.hash.slice(1) || 'dashboard');
 </script>
 </body>
 </html>
