@@ -273,18 +273,123 @@
   .detail-line:last-of-type { border-bottom: none; }
   .detail-line .k { color: var(--dim); }
   .detail-line .v { font-weight: 600; text-align: right; }
+
+  /* ---------- Portal tabs ---------- */
+  .portal-head { border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+  .portal-head .wrap { padding-top: 20px; }
+  .portal-title { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .portal-title h1 { font-size: 25px; }
+  .portal-title .who { font-size: 12.5px; color: var(--dim); }
+
+  .tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13.5px;
+    color: var(--dim); background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 11px 15px; cursor: pointer; white-space: nowrap; transition: .14s;
+  }
+  .tab:hover { color: var(--white); }
+  .tab.on { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .tabp { display: none; }
+  .tabp.on { display: block; }
+
+  /* ---------- Portal tables ---------- */
+  .ptable { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .ptable th {
+    text-align: left; font-family: 'Space Grotesk'; font-size: 10.5px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+    padding: 0 12px 9px; border-bottom: 1px solid var(--border-lit); white-space: nowrap;
+  }
+  .ptable td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ptable tr:last-child td { border-bottom: none; }
+  .ptable tbody tr { transition: background .12s; }
+  .ptable tbody tr:hover { background: var(--near-black); }
+  .ptable td.n, .ptable th.n { text-align: right; white-space: nowrap; }
+  .ptable .ref { font-family: 'Space Grotesk'; font-weight: 700; color: var(--cyan); cursor: pointer; }
+  .ptable .sub2 { color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .ptable .due { color: var(--danger); font-weight: 700; }
+  .ptable .paid { color: var(--ok); }
+  .table-scroll { overflow-x: auto; }
+
+  .filters { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  @media (max-width: 820px) { .filters { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .filters { grid-template-columns: 1fr; } }
+  .filters .fld { margin-bottom: 6px; }
+
+  .count-line { font-size: 13px; color: var(--dim); margin-bottom: 14px; }
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 16px; }
+
+  /* ---------- Notes ---------- */
+  .note { display: flex; gap: 12px; align-items: flex-start; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .note:last-child { border-bottom: none; }
+  .note input[type=checkbox] { margin-top: 3px; accent-color: var(--cyan); flex-shrink: 0; width: 16px; height: 16px; }
+  .note .body { flex: 1; font-size: 14px; line-height: 1.55; min-width: 0; overflow-wrap: anywhere; }
+  .note.done .body { text-decoration: line-through; color: var(--dim); }
+  .note .meta { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
+  .note .del { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 15px; padding: 0 4px; }
+  .note .del:hover { color: var(--danger); }
+
+  /* ---------- Settings ---------- */
+  .setgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .setrow { display: flex; justify-content: space-between; gap: 14px; font-size: 13.5px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .setrow:last-child { border-bottom: none; }
+  .setrow .k { color: var(--dim); }
+  .setrow .v { font-weight: 600; text-align: right; font-family: 'Space Grotesk'; }
+  .where-set { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: var(--dim); }
+
+  /* ---------- Help ---------- */
+  .help h3 { font-size: 16px; margin: 22px 0 8px; }
+  .help h3:first-child { margin-top: 0; }
+  .help p, .help li { color: var(--muted); font-size: 14px; line-height: 1.65; }
+  .help ul { margin: 0 0 4px 18px; }
+  .help li { margin-bottom: 7px; }
+  .help b { color: var(--white); }
+
+  /* ---------- Calendar (portal) ---------- */
+  .pcal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .pcal .dow { font-size: 10.5px; color: var(--dim); text-align: center; text-transform: uppercase; letter-spacing: .07em; padding-bottom: 4px; }
+  .pcell {
+    min-height: 78px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--near-black); padding: 7px 8px; cursor: pointer; transition: .13s;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .pcell:hover { border-color: var(--cyan); }
+  .pcell.empty { background: transparent; border: none; cursor: default; }
+  .pcell.closed { background: repeating-linear-gradient(45deg,#101018,#101018 4px,#0a0a10 4px,#0a0a10 8px); cursor: default; }
+  .pcell.today { border-color: var(--border-lit); }
+  .pcell .d { font-family: 'Space Grotesk'; font-weight: 700; font-size: 13.5px; }
+  .pcell.today .d { color: var(--cyan); }
+  .pcell .fill { height: 4px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: auto; }
+  .pcell .fill i { display: block; height: 100%; background: var(--cyan); }
+  .pcell .fill i.mid { background: var(--orange); }
+  .pcell .fill i.high { background: var(--danger); }
+  .pcell .figs { font-size: 11px; color: var(--dim); line-height: 1.3; }
+  .pcell .figs b { color: var(--muted); font-family: 'Space Grotesk'; }
 </style>
 </head>
 <body>
 
-<div class="wrap hero" style="padding-bottom:0">
-  <div class="eyebrow">Front desk</div>
-  <h1>Game <span class="hi">sheet</span></h1>
-  <p>Every 15-minute game for the day, who's in it, and how many seats are left.
-     Walk-ins and blocks here update the public booking page immediately.</p>
+<div class="portal-head">
+  <div class="wrap">
+    <div class="portal-title">
+      <h1>Manager <span class="hi">portal</span></h1>
+      <span class="who" id="who"></span>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist">
+      <button class="tab on" data-tab="gamesheet" role="tab">Game sheet</button>
+      <button class="tab" data-tab="bookings"  role="tab">Bookings</button>
+      <button class="tab" data-tab="customers" role="tab">Customers</button>
+      <button class="tab" data-tab="calendar"  role="tab">Calendar</button>
+      <button class="tab" data-tab="notes"     role="tab">Notes</button>
+      <button class="tab" data-tab="settings"  role="tab">Settings</button>
+      <button class="tab" data-tab="help"      role="tab">Help</button>
+    </nav>
+  </div>
 </div>
 
 <div class="wrap stack">
+
+<section class="tabp on" id="tp-gamesheet">
   <div class="toolbar">
     <div class="date-nav">
       <button class="nav-sq" id="prev-day" aria-label="Previous day">‹</button>
@@ -344,6 +449,148 @@
   </div>
 
   <div id="sheet"><div class="loading">Loading the game sheet…</div></div>
+</section>
+
+<!-- ============================== BOOKINGS ============================== -->
+<section class="tabp" id="tp-bookings">
+  <div class="panel-head">
+    <div>
+      <h2>Bookings</h2>
+      <div class="sub">Every booking, online and at the desk. Click one for full details.</div>
+    </div>
+    <button class="btn btn-primary btn-sm" id="bk-new">+ Book now</button>
+  </div>
+  <div class="filters">
+    <div>
+      <label class="fld" for="bf-search">Search</label>
+      <input class="input" id="bf-search" placeholder="Name, email, phone or code" />
+    </div>
+    <div>
+      <label class="fld" for="bf-range">Dates</label>
+      <select class="input" id="bf-range">
+        <option value="upcoming">Upcoming</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="all">All time</option>
+      </select>
+    </div>
+    <div>
+      <label class="fld" for="bf-kind">Source</label>
+      <select class="input" id="bf-kind">
+        <option value="all">All</option>
+        <option value="online">Online</option>
+        <option value="walkin">Walk-in</option>
+        <option value="party">Party</option>
+      </select>
+    </div>
+    <div>
+      <label class="fld" for="bf-paid">Payment</label>
+      <select class="input" id="bf-paid">
+        <option value="all">All</option>
+        <option value="paid">Paid in full</option>
+        <option value="due">Balance due</option>
+      </select>
+    </div>
+  </div>
+  <div class="count-line" id="bf-count"></div>
+  <div class="table-scroll"><table class="ptable" id="bf-table"></table></div>
+  <div class="pager" id="bf-pager"></div>
+</section>
+
+<!-- ============================== CUSTOMERS ============================== -->
+<section class="tabp" id="tp-customers">
+  <div class="panel-head">
+    <div>
+      <h2>Customers</h2>
+      <div class="sub">Grouped by phone number, so repeat visitors show as one person.</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="cu-csv">Download CSV</button>
+  </div>
+  <div class="filters" style="grid-template-columns:2fr 1fr">
+    <div>
+      <label class="fld" for="cu-search">Search</label>
+      <input class="input" id="cu-search" placeholder="Name, email or phone" />
+    </div>
+  </div>
+  <div class="count-line" id="cu-count"></div>
+  <div class="table-scroll"><table class="ptable" id="cu-table"></table></div>
+  <div class="pager" id="cu-pager"></div>
+</section>
+
+<!-- ============================== CALENDAR ============================== -->
+<section class="tabp" id="tp-calendar">
+  <div class="panel-head">
+    <div>
+      <h2>Calendar</h2>
+      <div class="sub">How full each day is. Click a day to open it on the game sheet.</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="nav-sq" id="cal-prev" aria-label="Previous month">‹</button>
+      <div class="cur" id="cal-label" style="min-width:150px;text-align:center"></div>
+      <button class="nav-sq" id="cal-next" aria-label="Next month">›</button>
+    </div>
+  </div>
+  <div class="stats" id="cal-stats" style="margin-bottom:16px"></div>
+  <div class="pcal" id="cal-grid"><div class="loading">Loading…</div></div>
+  <div class="cal-key" style="margin-top:14px">
+    <span><i style="background:var(--cyan)"></i> Under 60 players</span>
+    <span><i style="background:var(--orange)"></i> 60+</span>
+    <span><i style="background:var(--danger)"></i> 120+</span>
+    <span><i style="background:var(--border-lit)"></i> Closed</span>
+  </div>
+</section>
+
+<!-- ============================== NOTES ============================== -->
+<section class="tabp" id="tp-notes">
+  <div class="panel-head">
+    <div>
+      <h2>Notes</h2>
+      <div class="sub">Shared reminders for the team and whoever is building this.</div>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:16px">
+    <label class="fld" for="nt-body">New note</label>
+    <textarea class="input" id="nt-body" rows="2" placeholder="What needs doing, or what should the desk know?"></textarea>
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center">
+      <select class="input" id="nt-kind" style="width:auto">
+        <option value="dev">For the developer</option>
+        <option value="ops">For the front desk</option>
+      </select>
+      <input class="input" id="nt-author" placeholder="Your name (optional)" style="width:auto;flex:1;min-width:140px" />
+      <button class="btn btn-primary btn-sm" id="nt-add">Add note</button>
+    </div>
+    <div class="err" id="nt-error"></div>
+  </div>
+  <div class="panel"><div id="nt-list"><div class="loading">Loading…</div></div></div>
+</section>
+
+<!-- ============================== SETTINGS ============================== -->
+<section class="tabp" id="tp-settings">
+  <div class="panel-head">
+    <div>
+      <h2>Settings</h2>
+      <div class="sub">What the system is currently running on.</div>
+    </div>
+  </div>
+  <div class="note-box warn" style="margin-bottom:16px">
+    <b>Read-only for now.</b> These values live in <code>lib/arena.js</code> and change with a
+    deploy, not from this page. Making them editable means moving them into the database
+    first — worth doing, but it is a deliberate piece of work rather than a form.
+  </div>
+  <div id="set-body"><div class="loading">Loading…</div></div>
+</section>
+
+<!-- ============================== HELP ============================== -->
+<section class="tabp" id="tp-help">
+  <div class="panel-head">
+    <div>
+      <h2>Help</h2>
+      <div class="sub">A quick guide to running the portal.</div>
+    </div>
+  </div>
+  <div class="panel help" id="help-body"></div>
+</section>
+
 </div>
 
 <!-- Walk-in modal -->
@@ -1105,6 +1352,526 @@ document.addEventListener('keydown', (e) => {
 });
 
 load();
+
+/* ==================================================================== *
+ * Manager portal — tabs
+ *
+ * Each tab loads on first open rather than up front: the game sheet is what the desk
+ * actually stares at all day, and it should not wait on four other queries to render.
+ * The tab is kept in the URL hash so a refresh, or a bookmark, comes back where you were.
+ * ==================================================================== */
+
+const TABS = ['gamesheet', 'bookings', 'customers', 'calendar', 'notes', 'settings', 'help'];
+const loaded = new Set(['gamesheet']);
+
+function showTab(name) {
+  if (!TABS.includes(name)) name = 'gamesheet';
+  document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === name));
+  document.querySelectorAll('.tabp').forEach((p) => p.classList.toggle('on', p.id === `tp-${name}`));
+  if (location.hash.slice(1) !== name) history.replaceState({}, '', `#${name}`);
+
+  if (!loaded.has(name)) {
+    loaded.add(name);
+    ({ bookings: loadBookings, customers: loadCustomers, calendar: loadCalendar,
+       notes: loadNotes, settings: loadSettings, help: renderHelp }[name] || (() => {}))();
+  }
+}
+
+document.querySelectorAll('.tab').forEach((b) => { b.onclick = () => showTab(b.dataset.tab); });
+addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+
+/* ---------- Shared helpers ---------- */
+
+const KIND_LABEL = { online: 'Online', walkin: 'Walk-in', party: 'Party', block: 'Blocked' };
+
+/** 'YYYY-MM-DD' + minutes -> 'Sat, Aug 22, 2026, 7:15pm'. */
+function whenLabel(dateISO, startMin) {
+  const d = parseISO(dateISO);
+  if (!d) return dateISO;
+  const day = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  return `${day}, ${fmtTime(startMin)}`;
+}
+
+function emptyRow(cols, message) {
+  return `<tr><td colspan="${cols}" style="text-align:center;padding:40px 20px;color:var(--dim)">${esc(message)}</td></tr>`;
+}
+
+/* ==================================================================== *
+ * Bookings
+ * ==================================================================== */
+
+const bkState = { search: '', range: 'upcoming', kind: 'all', paid: 'all', offset: 0, limit: 50 };
+
+function bkRange() {
+  const today = arenaToday();
+  if (bkState.range === 'upcoming') return { from: today, to: null };
+  if (bkState.range === 'all') return { from: null, to: null };
+  const days = Number(bkState.range);
+  const d = parseISO(today);
+  d.setDate(d.getDate() - days);
+  return { from: isoDate(d), to: today };
+}
+
+async function loadBookings() {
+  const table = $('#bf-table');
+  table.innerHTML = `<tbody>${emptyRow(7, 'Loading…')}</tbody>`;
+
+  const { from, to } = bkRange();
+  const q = new URLSearchParams({ limit: String(bkState.limit), offset: String(bkState.offset) });
+  if (bkState.search) q.set('search', bkState.search);
+  if (from) q.set('from', from);
+  if (to) q.set('to', to);
+  if (bkState.kind !== 'all') q.set('kind', bkState.kind);
+  if (bkState.paid !== 'all') q.set('paid', bkState.paid);
+
+  let data;
+  try {
+    data = await api(`/api/staff/bookings?${q}`);
+  } catch (e) {
+    table.innerHTML = `<tbody>${emptyRow(7, e.message)}</tbody>`;
+    return;
+  }
+
+  const { rows, total } = data;
+  $('#bf-count').textContent = total === 0
+    ? 'No bookings match those filters.'
+    : `${total} booking${total === 1 ? '' : 's'}${bkState.search ? ` matching “${bkState.search}”` : ''}`;
+
+  table.innerHTML = `
+    <thead><tr>
+      <th>Reference</th><th>Customer</th><th>Session</th>
+      <th class="n">Players</th><th class="n">Total</th><th class="n">Paid</th><th class="n">Balance</th>
+    </tr></thead>
+    <tbody>${rows.length ? rows.map((b) => {
+      const owing = Math.max(0, b.totalCents - b.paidCents);
+      return `<tr>
+        <td>
+          <span class="ref" data-code="${esc(b.code)}">${esc(b.code)}</span>
+          ${b.kind !== 'online' ? `<div class="sub2">${esc(KIND_LABEL[b.kind] || b.kind)}</div>` : ''}
+        </td>
+        <td>${esc(b.name || '—')}<div class="sub2">${esc(b.email || b.phone || '')}</div></td>
+        <td>${esc(whenLabel(b.dateISO, b.startMin))}
+          <div class="sub2">${b.games} game${b.games > 1 ? 's' : ''}${b.packageName ? ` · ${esc(b.packageName)}` : ''}</div></td>
+        <td class="n">${b.players}</td>
+        <td class="n">${money(b.totalCents)}</td>
+        <td class="n">${money(b.paidCents)}</td>
+        <td class="n">${owing > 0 ? `<span class="due">${money(owing)}</span>` : '<span class="paid">Paid in full</span>'}</td>
+      </tr>`;
+    }).join('') : emptyRow(7, 'No bookings match those filters.')}</tbody>`;
+
+  // Reuse the game sheet's existing detail modal rather than building a second one.
+  table.querySelectorAll('[data-code]').forEach((el) => {
+    el.onclick = () => openByCode(el.dataset.code);
+  });
+
+  const pages = Math.ceil(total / bkState.limit);
+  const page = Math.floor(bkState.offset / bkState.limit) + 1;
+  $('#bf-pager').innerHTML = pages > 1 ? `
+    <button class="btn btn-ghost btn-sm" id="bf-prev"${page === 1 ? ' disabled' : ''}>‹ Newer</button>
+    <span style="font-size:13px;color:var(--dim)">Page ${page} of ${pages}</span>
+    <button class="btn btn-ghost btn-sm" id="bf-next"${page >= pages ? ' disabled' : ''}>Older ›</button>` : '';
+  if (pages > 1) {
+    $('#bf-prev').onclick = () => { bkState.offset = Math.max(0, bkState.offset - bkState.limit); loadBookings(); };
+    $('#bf-next').onclick = () => { bkState.offset += bkState.limit; loadBookings(); };
+  }
+}
+
+/** Open a booking's detail modal by its code. */
+async function openByCode(code) {
+  try {
+    const { booking } = await api(`/api/booking/${encodeURIComponent(code)}`);
+    openDetail(booking);
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
+let bfTimer = null;
+$('#bf-search').oninput = (e) => {
+  bkState.search = e.target.value;
+  bkState.offset = 0;
+  clearTimeout(bfTimer);
+  bfTimer = setTimeout(loadBookings, 300);
+};
+['range', 'kind', 'paid'].forEach((k) => {
+  $(`#bf-${k}`).onchange = (e) => { bkState[k] = e.target.value; bkState.offset = 0; loadBookings(); };
+});
+$('#bk-new').onclick = () => { showTab('gamesheet'); toast('Use + Walk-in on the game sheet to take a booking.'); };
+
+/* ==================================================================== *
+ * Customers
+ * ==================================================================== */
+
+const cuState = { search: '', offset: 0, limit: 100 };
+let cuRows = [];
+
+async function loadCustomers() {
+  const table = $('#cu-table');
+  table.innerHTML = `<tbody>${emptyRow(6, 'Loading…')}</tbody>`;
+
+  const q = new URLSearchParams({ limit: String(cuState.limit), offset: String(cuState.offset) });
+  if (cuState.search) q.set('search', cuState.search);
+
+  let data;
+  try {
+    data = await api(`/api/staff/customers?${q}`);
+  } catch (e) {
+    table.innerHTML = `<tbody>${emptyRow(6, e.message)}</tbody>`;
+    return;
+  }
+
+  cuRows = data.rows;
+  const { total } = data;
+  $('#cu-count').textContent = total === 0
+    ? 'No customers yet — they appear here as soon as bookings come in.'
+    : `${total.toLocaleString()} customer${total === 1 ? '' : 's'}${total > cuState.limit ? ` · showing ${cuState.offset + 1}–${Math.min(total, cuState.offset + cuRows.length)}` : ''}`;
+
+  table.innerHTML = `
+    <thead><tr>
+      <th>Customer</th><th>Contact</th>
+      <th class="n">Bookings</th><th class="n">Players brought</th><th class="n">Paid to date</th><th>Last visit</th>
+    </tr></thead>
+    <tbody>${cuRows.length ? cuRows.map((c) => `
+      <tr>
+        <td>${esc(c.name)}</td>
+        <td>${esc(c.email || '—')}<div class="sub2">${esc(c.phone || '')}</div></td>
+        <td class="n">${c.bookings}</td>
+        <td class="n">${c.guestsBrought}</td>
+        <td class="n">${money(c.paidCents)}</td>
+        <td>${c.lastVisit ? esc(longDate(c.lastVisit)) : '—'}</td>
+      </tr>`).join('') : emptyRow(6, 'No customers yet — they appear here as soon as bookings come in.')}</tbody>`;
+
+  const pages = Math.ceil(total / cuState.limit);
+  const page = Math.floor(cuState.offset / cuState.limit) + 1;
+  $('#cu-pager').innerHTML = pages > 1 ? `
+    <button class="btn btn-ghost btn-sm" id="cu-prev"${page === 1 ? ' disabled' : ''}>‹ Previous</button>
+    <span style="font-size:13px;color:var(--dim)">Page ${page} of ${pages}</span>
+    <button class="btn btn-ghost btn-sm" id="cu-next"${page >= pages ? ' disabled' : ''}>Next ›</button>` : '';
+  if (pages > 1) {
+    $('#cu-prev').onclick = () => { cuState.offset = Math.max(0, cuState.offset - cuState.limit); loadCustomers(); };
+    $('#cu-next').onclick = () => { cuState.offset += cuState.limit; loadCustomers(); };
+  }
+}
+
+let cuTimer = null;
+$('#cu-search').oninput = (e) => {
+  cuState.search = e.target.value;
+  cuState.offset = 0;
+  clearTimeout(cuTimer);
+  cuTimer = setTimeout(loadCustomers, 300);
+};
+
+$('#cu-csv').onclick = () => {
+  if (!cuRows.length) return toast('Nothing to export yet.');
+  const esc2 = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [
+    ['Name', 'Email', 'Phone', 'Bookings', 'Players brought', 'Paid to date', 'First visit', 'Last visit'].join(','),
+    ...cuRows.map((c) => [c.name, c.email, c.phone, c.bookings, c.guestsBrought,
+      (c.paidCents / 100).toFixed(2), c.firstVisit, c.lastVisit].map(esc2).join(',')),
+  ].join('\n');
+
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `lasertopia-customers-${arenaToday()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+/* ==================================================================== *
+ * Calendar
+ *
+ * A month at a glance, built from the analytics endpoint — it already returns one row per
+ * day. The bar is scaled to the busiest day in the month rather than to capacity: what a
+ * manager wants from this view is "which days are quiet", and against a theoretical
+ * maximum of 25 players x 35 games every day would look empty.
+ * ==================================================================== */
+
+let calMonth = null;
+
+async function loadCalendar() {
+  if (!calMonth) {
+    const t = parseISO(arenaToday());
+    calMonth = new Date(t.getFullYear(), t.getMonth(), 1);
+  }
+  const grid = $('#cal-grid');
+  grid.innerHTML = '<div class="loading">Loading…</div>';
+
+  const year = calMonth.getFullYear(), month = calMonth.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const last = isoDate(new Date(year, month, daysInMonth));
+  $('#cal-label').textContent = calMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  let data;
+  try {
+    data = await api(`/api/staff/analytics?date=${last}&days=${daysInMonth}`);
+  } catch (e) {
+    grid.innerHTML = `<div class="empty-note">${esc(e.message)}</div>`;
+    return;
+  }
+
+  const byDate = new Map(data.days.map((d) => [d.date, d]));
+  const busiest = Math.max(1, ...data.days.map((d) => d.players));
+  const today = arenaToday();
+
+  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  let html = DOW.map((d) => `<div class="dow">${d}</div>`).join('');
+  for (let i = 0; i < new Date(year, month, 1).getDay(); i++) html += '<div class="pcell empty"></div>';
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const iso = isoDate(new Date(year, month, day));
+    const d = byDate.get(iso);
+    const cls = ['pcell'];
+    if (iso === today) cls.push('today');
+    if (d && d.closed) cls.push('closed');
+
+    if (d && d.closed) {
+      html += `<div class="${cls.join(' ')}"><div class="d">${day}</div><div class="figs">Closed</div></div>`;
+      continue;
+    }
+    // Width is relative to the busiest day, so a quiet month still shows shape. Colour is
+    // ABSOLUTE, because scaling it too would paint a single four-player booking bright red
+    // on the only day anything was booked — which is the opposite of what it means.
+    const pct = d ? Math.max(4, Math.round((d.players / busiest) * 100)) : 0;
+    const bar = !d ? '' : d.players >= 120 ? 'high' : d.players >= 60 ? 'mid' : '';
+    html += `<div class="${cls.join(' ')}" data-date="${iso}">
+      <div class="d">${day}</div>
+      <div class="figs">${d && d.players ? `<b>${d.players}</b> players<br><b>${d.bookings}</b> booking${d.bookings === 1 ? '' : 's'}` : '—'}</div>
+      <div class="fill"><i class="${bar}" style="width:${pct}%"></i></div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('[data-date]').forEach((el) => {
+    el.onclick = () => {
+      $('#date-input').value = el.dataset.date;
+      $('#date-input').dispatchEvent(new Event('change'));
+      showTab('gamesheet');
+    };
+  });
+
+  const t = data.totals;
+  $('#cal-stats').innerHTML = `
+    <div class="stat cy"><div class="k">Month revenue</div><div class="v">${money(t.revenueCents)}</div></div>
+    <div class="stat"><div class="k">Players</div><div class="v">${t.players}</div></div>
+    <div class="stat"><div class="k">Bookings</div><div class="v">${t.bookings}</div></div>
+    <div class="stat or"><div class="k">Average open day</div><div class="v">${money(t.avgPerOpenDayCents)}</div></div>`;
+}
+
+$('#cal-prev').onclick = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); loadCalendar(); };
+$('#cal-next').onclick = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); loadCalendar(); };
+
+/* ==================================================================== *
+ * Notes
+ * ==================================================================== */
+
+async function loadNotes() {
+  const host = $('#nt-list');
+  let data;
+  try {
+    data = await api('/api/staff/notes');
+  } catch (e) {
+    host.innerHTML = `<div class="empty-note">${esc(e.message)}</div>`;
+    return;
+  }
+
+  const warning = data.durable ? '' : `
+    <div class="note-box warn" style="margin-bottom:14px">
+      Notes are being kept in memory and will disappear when the server restarts — the
+      database is not connected on this server.
+    </div>`;
+
+  host.innerHTML = warning + (data.notes.length ? data.notes.map((n) => `
+    <div class="note${n.done ? ' done' : ''}">
+      <input type="checkbox" data-done="${n.id}"${n.done ? ' checked' : ''} aria-label="Mark done" />
+      <div class="body">${esc(n.body)}
+        <div class="meta">${n.kind === 'ops' ? 'Front desk' : 'Developer'}${n.author ? ` · ${esc(n.author)}` : ''} · ${esc(longDate(n.createdAt.slice(0, 10)))}</div>
+      </div>
+      <button class="del" data-del="${n.id}" aria-label="Delete note">✕</button>
+    </div>`).join('') : '<div class="empty-note">No notes yet.</div>');
+
+  host.querySelectorAll('[data-done]').forEach((el) => {
+    el.onchange = async () => {
+      try { await jsonPost(`/api/staff/notes/${el.dataset.done}/done`, { done: el.checked }); loadNotes(); }
+      catch (e) { toast(e.message); }
+    };
+  });
+  host.querySelectorAll('[data-del]').forEach((el) => {
+    el.onclick = async () => {
+      try {
+        const r = await fetch(`/api/staff/notes/${el.dataset.del}`, { method: 'DELETE' });
+        if (!r.ok) throw new Error((await r.json()).error || 'Could not delete that note.');
+        loadNotes();
+      } catch (e) { toast(e.message); }
+    };
+  });
+}
+
+$('#nt-add').onclick = async () => {
+  const err = $('#nt-error');
+  err.textContent = '';
+  const body = $('#nt-body').value.trim();
+  if (!body) { err.textContent = 'Write something first.'; return; }
+  try {
+    await jsonPost('/api/staff/notes', { body, kind: $('#nt-kind').value, author: $('#nt-author').value.trim() });
+    $('#nt-body').value = '';
+    loadNotes();
+  } catch (e) { err.textContent = e.message; }
+};
+
+/* ==================================================================== *
+ * Settings
+ * ==================================================================== */
+
+async function loadSettings() {
+  const host = $('#set-body');
+  let cfg;
+  try {
+    cfg = await api('/api/config');
+  } catch (e) {
+    host.innerHTML = `<div class="empty-note">${esc(e.message)}</div>`;
+    return;
+  }
+
+  const a = cfg.arena;
+  const row = (k, v) => `<div class="setrow"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  const yn = (b) => (b ? '<span style="color:var(--ok)">On</span>' : '<span style="color:var(--dim)">Off</span>');
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  host.innerHTML = `
+    <div class="setgrid">
+      <div class="panel">
+        <h2 style="font-size:15px;margin-bottom:10px">The arena</h2>
+        ${row('Players per game', a.capacity)}
+        ${row('Minimum to run a game', a.minPlayers)}
+        ${row('A game every', `${a.sessionStepMin} min`)}
+        ${row('Last game before close', `${a.lastGameBeforeCloseMin} min`)}
+        ${row('Online booking closes', `${a.onlineCutoffMin} min before`)}
+        <div class="where-set" style="margin-top:10px">ARENA in lib/arena.js</div>
+      </div>
+
+      <div class="panel">
+        <h2 style="font-size:15px;margin-bottom:10px">Groups &amp; parties</h2>
+        ${row('Group size', `${a.groupMinPlayers}+ players`)}
+        ${row('Group notice', `${a.groupNoticeHours} hours`)}
+        ${row('Group discount', a.groupDiscountPct ? `${a.groupDiscountPct}%` : 'Not set')}
+        ${row('Party age spread', `${a.partyAgeSpreadYears} years`)}
+        ${row('Max guests online', a.maxPartyGuestsOnline)}
+        ${row('Max guests by phone', a.maxPartyGuests)}
+        ${row('Party deposit', money(a.partyDepositCents))}
+        ${row('Change notice', `${a.partyChangeNoticeDays} days`)}
+      </div>
+
+      <div class="panel">
+        <h2 style="font-size:15px;margin-bottom:10px">Prices</h2>
+        ${cfg.packages.map((pk) => row(`${pk.games} game${pk.games > 1 ? 's' : ''}`, `${money(pk.cents)} per player`)).join('')}
+        <div style="height:9px"></div>
+        ${cfg.eventPackages.map((pk) => row(pk.name, `${money(pk.cents)} · +${money(pk.extraGuestCents)} each`)).join('')}
+        <div class="where-set" style="margin-top:10px">Before tax</div>
+      </div>
+
+      <div class="panel">
+        <h2 style="font-size:15px;margin-bottom:10px">Opening hours</h2>
+        ${[1, 2, 3, 4, 5, 6, 0].map((d) => {
+          const [o, c] = cfg.weeklyHours[d];
+          return row(DAYS[d], `${fmtTime(o)} – ${fmtTime(c)}`);
+        }).join('')}
+      </div>
+
+      <div class="panel">
+        <h2 style="font-size:15px;margin-bottom:10px">Connections</h2>
+        ${row('Database', cfg.store.durable
+          ? '<span style="color:var(--ok)">Postgres</span>'
+          : '<span style="color:var(--danger)">In memory — not saved</span>')}
+        ${row('Card payments', yn(cfg.stripeEnabled))}
+        ${row('Text messages', yn(cfg.messaging.sms.enabled))}
+        ${row('Email', yn(cfg.messaging.email.enabled))}
+        ${row('Timezone', 'America/Winnipeg')}
+        <div class="where-set" style="margin-top:10px">Set with environment variables</div>
+      </div>
+
+      <div class="panel">
+        <h2 style="font-size:15px;margin-bottom:10px">Special hours</h2>
+        ${Object.keys(cfg.specialHours).length
+          ? Object.entries(cfg.specialHours).slice(0, 8).map(([d, h]) =>
+              row(longDate(d), h.closed ? 'Closed' : `${fmtTime(h.open)} – ${fmtTime(h.close)}`)).join('')
+          : '<div style="color:var(--dim);font-size:13px">None set.</div>'}
+      </div>
+    </div>`;
+}
+
+/* ==================================================================== *
+ * Help
+ * ==================================================================== */
+
+function renderHelp() {
+  $('#help-body').innerHTML = `
+    <h3>Your day</h3>
+    <ul>
+      <li><b>Game sheet</b> is the page you live on. Every 15-minute game for one day, who is
+        in it, and how many seats are left. Use the arrows or the date box to move around.</li>
+      <li><b>Calendar</b> shows a whole month at a glance so you can see which days are quiet.
+        Click any day to open it on the game sheet.</li>
+    </ul>
+
+    <h3>Taking a booking</h3>
+    <ul>
+      <li><b>+ Walk-in</b> on a game adds someone at the desk. It takes seats away from the
+        public booking page straight away.</li>
+      <li>You can add a walk-in to a game that has <b>already started</b> — the website cannot.</li>
+      <li>Online booking closes <b>90 minutes</b> before each game so seats are kept for people
+        at the door. Those games show as <b>Call us</b> on the website, and you can still fill
+        them from here.</li>
+    </ul>
+
+    <h3>Party times</h3>
+    <ul>
+      <li>Certain games are <b>held for birthday parties</b> and do not appear as bookable
+        online. They show dashed on the game sheet.</li>
+      <li><b>Release</b> opens a held game to the public when no party has taken it.
+        <b>Hold</b> takes a normally-public game off the website for a party.</li>
+      <li>Parties book a <b>2-hour room slot</b>, not a game time. Each slot has its own rooms —
+        most hold 14 guests, and a bigger party takes two. Parties sharing a slot are matched
+        within 2 years of age.</li>
+    </ul>
+
+    <h3>Finding things</h3>
+    <ul>
+      <li><b>Bookings</b> lists everything, online and at the desk. Search by name, email,
+        phone or booking code, and filter by date, source or payment.</li>
+      <li>A red <b>balance</b> means money is still owing — collect it when they arrive.</li>
+      <li><b>Customers</b> groups bookings by phone number, so a family who has been six times
+        shows as one person rather than six bookings.</li>
+      <li>Click any <b>booking code</b> to open the full details, resend the confirmation, or
+        cancel it.</li>
+    </ul>
+
+    <h3>Messages</h3>
+    <ul>
+      <li>Every booking triggers a confirmation text and email. The <b>Messages</b> panel on
+        the game sheet shows everything that has gone out.</li>
+      <li><b>Send reminders</b> texts everyone booked for a day. It is a button rather than
+        automatic, so you choose the moment.</li>
+      <li>If a message says <b>simulated</b>, it was composed but not really sent — the texting
+        account is not connected on this server.</li>
+    </ul>
+
+    <h3>Notes</h3>
+    <p>Shared reminders. Mark a note <b>for the front desk</b> and the whole team sees it; mark
+      it <b>for the developer</b> to flag something that needs building or fixing. Tick it off
+      when it is done.</p>
+
+    <h3>Things worth knowing</h3>
+    <ul>
+      <li>Everything runs on <b>Winnipeg time</b>, whatever the computer you are on says.</li>
+      <li>Prices are shown <b>before tax</b>; tax is added at the till.</li>
+      <li>There is <b>no sign-in yet</b> — anyone with this address can see this page. That
+        gets fixed before the site goes live to customers.</li>
+    </ul>`;
+}
+
+/* ---------- Open on the tab the URL asks for ---------- */
+showTab(location.hash.slice(1) || 'gamesheet');
 </script>
 </body>
 </html>
