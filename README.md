@@ -344,6 +344,7 @@ through it before the first real customer books.
 | 1 | **Staff sign-in on `/admin`** | Anyone with the URL can read every customer's name, phone and email. Harmless while the database is empty; a breach the moment it is not. Supabase Auth is already connected. |
 | 1b | **Remove the manager-portal shortcut** | `SHOW_MANAGER_SHORTCUT` in `demo/assets/shell.js` puts a Customer/Manager toggle in the corner of every page, which advertises `/admin` to customers. Set it to `false` — or leave it, once item 1 makes the link harmless. |
 | 2 | **Stop falling back to the in-memory store** | If `SUPABASE_URL` goes missing in production the site quietly serves an empty arena and accepts bookings that vanish. Make missing database config a hard startup failure. |
+| 2b | **Settings are editable, so guard them** | Prices, hours and the booking cutoff can now be changed from the portal and reach the customer site immediately. That is the point — and it is also why staff sign-in (item 1) matters more than it did. |
 | 3 | **Allow live Stripe keys** | `lib/payments.js` refuses `sk_live_` on purpose so a real card cannot be charged mid-build. Relax it, and add a webhook for refunds, disputes and delayed payment methods. |
 | 4 | **Store waivers** | `/waiver` shows a confirmation and saves nothing. Needs a table, and a way for the desk to look one up on arrival. |
 | 5 | **Auto-refund the paid-but-unseated case** | If the last seats go while a customer is on Stripe's page they are told to ring the desk. It should refund automatically. |

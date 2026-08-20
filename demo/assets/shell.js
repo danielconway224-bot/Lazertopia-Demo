@@ -1,7 +1,9 @@
 // Shared page shell — header, footer, and the small helpers every page uses.
 // Imported as an ES module so pages can also pull from /lib/arena.js directly.
 
-import { ARENA, arenaToday, parseISO } from '/lib/arena.js';
+import {
+  ARENA, PACKAGES, EVENT_PACKAGES, WEEKLY_HOURS, SPECIAL_HOURS, arenaToday, parseISO,
+} from '/lib/arena.js';
 
 export const $  = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -128,6 +130,36 @@ function mountViewSwitch() {
       <a class="vs-btn staff${onStaff ? ' active' : ''}" href="/admin"
          ${onStaff ? 'aria-current="page"' : ''}>${deskIcon}Manager</a>
     </div>`);
+}
+
+/**
+ * Pull configuration the manager has changed into the objects the pages already import.
+ *
+ * arena.js ships the published defaults, and the browser gets that file directly — so
+ * without this a price edited in the portal would keep showing the old figure until the
+ * next deploy. Mutating in place rather than re-exporting, because every page has already
+ * imported these bindings by the time this runs.
+ *
+ * Failure is deliberately quiet: the defaults are correct, just possibly stale, and a
+ * booking page that refuses to render because a settings fetch failed is far worse.
+ */
+export async function hydrateConfig() {
+  try {
+    const cfg = await api('/api/config');
+    Object.assign(ARENA, cfg.arena);
+
+    PACKAGES.length = 0;
+    PACKAGES.push(...cfg.packages);
+    EVENT_PACKAGES.length = 0;
+    EVENT_PACKAGES.push(...cfg.eventPackages);
+
+    Object.assign(WEEKLY_HOURS, cfg.weeklyHours);
+    for (const k of Object.keys(SPECIAL_HOURS)) delete SPECIAL_HOURS[k];
+    Object.assign(SPECIAL_HOURS, cfg.specialHours);
+    return cfg;
+  } catch (_) {
+    return null;
+  }
 }
 
 /** Brief message at the bottom of the screen. */

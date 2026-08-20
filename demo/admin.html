@@ -493,6 +493,36 @@
   .rep-empty { text-align: center; padding: 46px 20px; color: var(--dim); font-size: 14px; line-height: 1.6; }
   .fillbar { height: 9px; border-radius: 999px; background: var(--near-black); border: 1px solid var(--border); overflow: hidden; }
   .fillbar i { display: block; height: 100%; background: var(--cyan); }
+
+  /* ---------- Settings form ---------- */
+  .setform { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+  .setfield { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .setfield:last-child { border-bottom: none; }
+  .setfield label { font-size: 13.5px; color: var(--muted); flex: 1; min-width: 0; }
+  .setfield label small { display: block; color: var(--dim); font-size: 11.5px; margin-top: 2px; line-height: 1.4; }
+  .setfield .ctl { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+  .setfield input, .setfield select {
+    width: 92px; background: var(--near-black); border: 1px solid var(--border); color: var(--white);
+    border-radius: 8px; padding: 8px 10px; font-size: 13.5px; font-family: 'Space Grotesk', sans-serif;
+    text-align: right;
+  }
+  .setfield input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan); }
+  .setfield input.wide { width: 120px; }
+  .setfield .unit { font-size: 12px; color: var(--dim); min-width: 46px; }
+  .setfield input[type=time] { width: 118px; text-align: left; font-family: 'Raleway', sans-serif; }
+
+  .savebar {
+    position: sticky; bottom: 0; z-index: 20; margin-top: 20px;
+    background: rgba(12,12,19,.96); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border-lit); padding: 14px 0;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .savebar .msg { font-size: 13px; color: var(--dim); flex: 1; min-width: 160px; }
+  .sh-row { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .sh-row:last-of-type { border-bottom: none; }
+  .sh-row input[type=date] { width: 140px; text-align: left; font-family: 'Raleway', sans-serif; }
+  .sh-row .drop { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 15px; padding: 0 4px; }
+  .sh-row .drop:hover { color: var(--danger); }
 </style>
 </head>
 <body>
@@ -737,15 +767,20 @@
   <div class="panel-head">
     <div>
       <h2>Settings</h2>
-      <div class="sub">What the system is currently running on.</div>
+      <div class="sub">Prices, hours and rules. Changes reach the customer site straight away.</div>
     </div>
   </div>
-  <div class="note-box warn" style="margin-bottom:16px">
-    <b>Read-only for now.</b> These values live in <code>lib/arena.js</code> and change with a
-    deploy, not from this page. Making them editable means moving them into the database
-    first — worth doing, but it is a deliberate piece of work rather than a form.
+  <div class="note-box" style="margin-bottom:16px" id="set-note">
+    Changes here take effect straight away, on the customer site as well as this one.
+    <b>Reset to published</b> puts any section back to the figures Lasertopia gave us.
   </div>
   <div id="set-body"><div class="loading">Loading…</div></div>
+  <div class="savebar" id="set-savebar" style="display:none">
+    <span class="msg" id="set-msg"></span>
+    <button class="btn btn-ghost btn-sm" id="set-reset">Reset to published</button>
+    <button class="btn btn-primary btn-sm" id="set-save">Save changes</button>
+  </div>
+  <div class="err" id="set-error"></div>
 </section>
 
 <!-- ============================== HELP ============================== -->
@@ -930,7 +965,7 @@ import {
   ARENA, PACKAGES, EVENT_PACKAGES, hoursFor, sessionSpan, priceBooking,
   ageCompatible, isoDate, parseISO, fmtTime, money, arenaToday, gamesInSlot,
 } from '/lib/arena.js';
-import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
+import { mountShell, hydrateConfig, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
 
 mountShell({
   active: '/admin',
@@ -1591,6 +1626,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') document.querySelectorAll('.overlay.show').forEach((o) => o.classList.remove('show'));
 });
 
+await hydrateConfig();
 load();
 
 /* ==================================================================== *
@@ -1972,82 +2008,268 @@ $('#nt-add').onclick = async () => {
  * Settings
  * ==================================================================== */
 
+let setState = null;
+let setDefaults = null;
+let setDirty = false;
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const toHhmm = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const fromHhmm = (v) => {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '').trim());
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+};
+
 async function loadSettings() {
   const host = $('#set-body');
-  let cfg;
+  let d;
   try {
-    cfg = await api('/api/config');
+    d = await api('/api/staff/settings');
   } catch (e) {
-    host.innerHTML = `<div class="empty-note">${esc(e.message)}</div>`;
+    host.innerHTML = `<div class="rep-empty">${esc(e.message)}</div>`;
     return;
   }
-
-  const a = cfg.arena;
-  const row = (k, v) => `<div class="setrow"><span class="k">${k}</span><span class="v">${v}</span></div>`;
-  const yn = (b) => (b ? '<span style="color:var(--ok)">On</span>' : '<span style="color:var(--dim)">Off</span>');
-  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-  host.innerHTML = `
-    <div class="setgrid">
-      <div class="panel">
-        <h2 style="font-size:15px;margin-bottom:10px">The arena</h2>
-        ${row('Players per game', a.capacity)}
-        ${row('Minimum to run a game', a.minPlayers)}
-        ${row('A game every', `${a.sessionStepMin} min`)}
-        ${row('Last game before close', `${a.lastGameBeforeCloseMin} min`)}
-        ${row('Online booking closes', `${a.onlineCutoffMin} min before`)}
-        <div class="where-set" style="margin-top:10px">ARENA in lib/arena.js</div>
-      </div>
-
-      <div class="panel">
-        <h2 style="font-size:15px;margin-bottom:10px">Groups &amp; parties</h2>
-        ${row('Group size', `${a.groupMinPlayers}+ players`)}
-        ${row('Group notice', `${a.groupNoticeHours} hours`)}
-        ${row('Group discount', a.groupDiscountPct ? `${a.groupDiscountPct}%` : 'Not set')}
-        ${row('Party age spread', `${a.partyAgeSpreadYears} years`)}
-        ${row('Max guests online', a.maxPartyGuestsOnline)}
-        ${row('Max guests by phone', a.maxPartyGuests)}
-        ${row('Party deposit', money(a.partyDepositCents))}
-        ${row('Change notice', `${a.partyChangeNoticeDays} days`)}
-      </div>
-
-      <div class="panel">
-        <h2 style="font-size:15px;margin-bottom:10px">Prices</h2>
-        ${cfg.packages.map((pk) => row(`${pk.games} game${pk.games > 1 ? 's' : ''}`, `${money(pk.cents)} per player`)).join('')}
-        <div style="height:9px"></div>
-        ${cfg.eventPackages.map((pk) => row(pk.name, `${money(pk.cents)} · +${money(pk.extraGuestCents)} each`)).join('')}
-        <div class="where-set" style="margin-top:10px">Before tax</div>
-      </div>
-
-      <div class="panel">
-        <h2 style="font-size:15px;margin-bottom:10px">Opening hours</h2>
-        ${[1, 2, 3, 4, 5, 6, 0].map((d) => {
-          const [o, c] = cfg.weeklyHours[d];
-          return row(DAYS[d], `${fmtTime(o)} – ${fmtTime(c)}`);
-        }).join('')}
-      </div>
-
-      <div class="panel">
-        <h2 style="font-size:15px;margin-bottom:10px">Connections</h2>
-        ${row('Database', cfg.store.durable
-          ? '<span style="color:var(--ok)">Postgres</span>'
-          : '<span style="color:var(--danger)">In memory — not saved</span>')}
-        ${row('Card payments', yn(cfg.stripeEnabled))}
-        ${row('Text messages', yn(cfg.messaging.sms.enabled))}
-        ${row('Email', yn(cfg.messaging.email.enabled))}
-        ${row('Timezone', 'America/Winnipeg')}
-        <div class="where-set" style="margin-top:10px">Set with environment variables</div>
-      </div>
-
-      <div class="panel">
-        <h2 style="font-size:15px;margin-bottom:10px">Special hours</h2>
-        ${Object.keys(cfg.specialHours).length
-          ? Object.entries(cfg.specialHours).slice(0, 8).map(([d, h]) =>
-              row(longDate(d), h.closed ? 'Closed' : `${fmtTime(h.open)} – ${fmtTime(h.close)}`)).join('')
-          : '<div style="color:var(--dim);font-size:13px">None set.</div>'}
-      </div>
-    </div>`;
+  setState = JSON.parse(JSON.stringify(d.current));
+  setDefaults = d.defaults;
+  setDirty = false;
+  renderSettings();
+  $('#set-savebar').style.display = 'flex';
+  $('#set-msg').textContent = Object.keys(d.saved || {}).length
+    ? 'Some values have been changed from the published figures.'
+    : 'Running on the published figures.';
 }
+
+function markDirty() {
+  setDirty = true;
+  $('#set-msg').textContent = 'Unsaved changes.';
+}
+
+/** A number field bound to a dotted path in setState. */
+function numField(label, hint, path, opts = {}) {
+  const { unit = '', money: isMoney = false, step = 1 } = opts;
+  const raw = path.split('.').reduce((o, k) => o?.[k], setState);
+  const shown = isMoney ? (raw / 100).toFixed(2) : raw;
+  return `<div class="setfield">
+    <label>${label}${hint ? `<small>${hint}</small>` : ''}</label>
+    <div class="ctl">
+      ${isMoney ? '<span class="unit" style="min-width:0">$</span>' : ''}
+      <input type="number" step="${step}" min="0" value="${shown}"
+             data-num="${path}"${isMoney ? ' data-money="1"' : ''} />
+      ${unit ? `<span class="unit">${unit}</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderSettings() {
+  const card = (title, body, resetKey) => `<div class="panel">
+    <div class="panel-head" style="margin-bottom:10px">
+      <div><h2 style="font-size:15px">${title}</h2></div>
+      ${resetKey ? `<button class="btn btn-ghost btn-sm" data-sreset="${resetKey}">Reset</button>` : ''}
+    </div>${body}</div>`;
+
+  $('#set-body').innerHTML = `<div class="setform">
+    ${card('The arena', [
+      numField('Players per game', 'How many the arena holds at once', 'arena.capacity'),
+      numField('Minimum to run a game', 'Below this a game will not run', 'arena.minPlayers'),
+      numField('A game every', 'Minutes between game start times', 'arena.sessionStepMin', { unit: 'min' }),
+      numField('Last game before close', '', 'arena.lastGameBeforeCloseMin', { unit: 'min' }),
+      numField('Online booking closes', 'Before the game starts. 0 sells right up to it.', 'arena.onlineCutoffMin', { unit: 'min' }),
+    ].join(''), 'arena')}
+
+    ${card('Groups', [
+      numField('Group size', 'At or above this a booking counts as a group', 'arena.groupMinPlayers'),
+      numField('Group notice', 'How far ahead a group must book', 'arena.groupNoticeHours', { unit: 'hours' }),
+      numField('Group discount', 'Percent off. 0 means standard rates.', 'arena.groupDiscountPct', { unit: '%' }),
+    ].join(''), 'group')}
+
+    ${card('Parties', [
+      numField('Age spread', 'Parties sharing a slot stay within this', 'arena.partyAgeSpreadYears', { unit: 'years' }),
+      numField('Max guests online', 'Above this the site says to call', 'arena.maxPartyGuestsOnline'),
+      numField('Max guests by phone', '', 'arena.maxPartyGuests'),
+      numField('Split for laser tag above', 'Larger groups play in two goes', 'arena.partySplitAbove'),
+      numField('Deposit', 'Non-refundable, taken to confirm', 'arena.partyDepositCents', { money: true, step: '0.01' }),
+      numField('Change notice', 'Before the deposit is forfeited', 'arena.partyChangeNoticeDays', { unit: 'days' }),
+    ].join(''), 'party')}
+
+    ${card('Laser tag prices', setState.packages.map((p, i) => `
+      <div class="setfield">
+        <label>${p.games} game${p.games > 1 ? 's' : ''}<small>Per player, before tax</small></label>
+        <div class="ctl"><span class="unit" style="min-width:0">$</span>
+          <input type="number" step="0.01" min="0" value="${(p.cents / 100).toFixed(2)}"
+                 data-num="packages.${i}.cents" data-money="1" />
+        </div>
+      </div>`).join(''), 'packages')}
+
+    ${card('Party packages', setState.eventPackages.map((p, i) => `
+      <div class="setfield">
+        <label>${esc(p.name)}<small>Base price, ${p.guests} guests</small></label>
+        <div class="ctl"><span class="unit" style="min-width:0">$</span>
+          <input type="number" step="0.01" min="0" value="${(p.cents / 100).toFixed(2)}"
+                 data-num="eventPackages.${i}.cents" data-money="1" /></div>
+      </div>
+      <div class="setfield">
+        <label style="padding-left:14px;color:var(--dim)">…each extra guest</label>
+        <div class="ctl"><span class="unit" style="min-width:0">$</span>
+          <input type="number" step="0.01" min="0" value="${(p.extraGuestCents / 100).toFixed(2)}"
+                 data-num="eventPackages.${i}.extraGuestCents" data-money="1" /></div>
+      </div>`).join(''), 'eventPackages')}
+
+    ${card('Opening hours', [1, 2, 3, 4, 5, 6, 0].map((day) => {
+      const [o, c] = setState.weeklyHours[day];
+      return `<div class="setfield">
+        <label>${DAY_NAMES[day]}</label>
+        <div class="ctl">
+          <input type="time" value="${toHhmm(o)}" data-hours="${day}.0" />
+          <span class="unit" style="min-width:0">–</span>
+          <input type="time" value="${toHhmm(c)}" data-hours="${day}.1" />
+        </div>
+      </div>`;
+    }).join(''), 'weeklyHours')}
+
+    ${card('Special hours', `
+      <div style="font-size:12px;color:var(--dim);margin-bottom:8px;line-height:1.5">
+        Dated exceptions that beat the weekly pattern. Clear both times to close the day.
+      </div>
+      <div id="sh-list">${Object.entries(setState.specialHours)
+        .sort(([x], [y]) => (x < y ? -1 : 1)).map(([date, e]) => `
+        <div class="sh-row">
+          <input type="date" value="${date}" data-sh="date" data-key="${date}" />
+          <input type="time" value="${e.hours ? toHhmm(e.hours[0]) : ''}" data-sh="open" data-key="${date}" />
+          <span class="unit" style="min-width:0">–</span>
+          <input type="time" value="${e.hours ? toHhmm(e.hours[1]) : ''}" data-sh="close" data-key="${date}" />
+          <button class="drop" data-shdrop="${date}" aria-label="Remove">✕</button>
+        </div>`).join('') || '<div style="color:var(--dim);font-size:13px;padding:6px 0">None set.</div>'}</div>
+      <button class="btn btn-ghost btn-sm" id="sh-add" style="margin-top:10px">+ Add a date</button>`, 'specialHours')}
+
+    ${card('Connections', `
+      <div class="setfield"><label>Database</label><div class="ctl" style="font-size:13px">${
+        setStoreLabel()}</div></div>
+      <div style="font-size:11.5px;color:var(--dim);margin-top:8px;line-height:1.5">
+        Connections are set with environment variables, not from this page.
+      </div>`)}
+  </div>`;
+
+  bindSettings();
+}
+
+function setStoreLabel() {
+  return '<span style="color:var(--ok)">Postgres</span>';
+}
+
+function bindSettings() {
+  $('#set-body').querySelectorAll('[data-num]').forEach((el) => {
+    el.oninput = () => {
+      const parts = el.dataset.num.split('.');
+      const value = el.dataset.money ? Math.round(Number(el.value) * 100) : Number(el.value);
+      if (!Number.isFinite(value)) return;
+      let o = setState;
+      for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+      o[parts[parts.length - 1]] = value;
+      markDirty();
+    };
+  });
+
+  $('#set-body').querySelectorAll('[data-hours]').forEach((el) => {
+    el.onchange = () => {
+      const [day, idx] = el.dataset.hours.split('.');
+      const v = fromHhmm(el.value);
+      if (v == null) return;
+      setState.weeklyHours[day][Number(idx)] = v;
+      markDirty();
+    };
+  });
+
+  $('#set-body').querySelectorAll('[data-sh]').forEach((el) => {
+    el.onchange = () => {
+      const key = el.dataset.key;
+      const entry = setState.specialHours[key];
+      if (!entry) return;
+      if (el.dataset.sh === 'date') {
+        // Re-key rather than edit in place: the date IS the key.
+        delete setState.specialHours[key];
+        setState.specialHours[el.value] = entry;
+        markDirty();
+        renderSettings();
+        return;
+      }
+      const o = fromHhmm($(`[data-sh="open"][data-key="${key}"]`).value);
+      const c = fromHhmm($(`[data-sh="close"][data-key="${key}"]`).value);
+      entry.hours = (o != null && c != null && c > o) ? [o, c] : null;
+      entry.note = entry.hours ? 'Special hours' : 'Closed';
+      markDirty();
+    };
+  });
+
+  $('#set-body').querySelectorAll('[data-shdrop]').forEach((el) => {
+    el.onclick = () => { delete setState.specialHours[el.dataset.shdrop]; markDirty(); renderSettings(); };
+  });
+
+  const add = $('#sh-add');
+  if (add) add.onclick = () => {
+    const d = parseISO(arenaToday());
+    d.setDate(d.getDate() + 7);
+    setState.specialHours[isoDate(d)] = { hours: [12 * 60, 21 * 60], note: 'Special hours' };
+    markDirty();
+    renderSettings();
+  };
+
+  $('#set-body').querySelectorAll('[data-sreset]').forEach((el) => {
+    el.onclick = () => {
+      const k = el.dataset.sreset;
+      const D = setDefaults;
+      const groups = {
+        arena: ['capacity', 'minPlayers', 'sessionStepMin', 'lastGameBeforeCloseMin', 'onlineCutoffMin'],
+        group: ['groupMinPlayers', 'groupNoticeHours', 'groupDiscountPct'],
+        party: ['partyAgeSpreadYears', 'maxPartyGuestsOnline', 'maxPartyGuests', 'partySplitAbove',
+                'partyDepositCents', 'partyChangeNoticeDays'],
+      };
+      if (groups[k]) for (const f of groups[k]) setState.arena[f] = D.arena[f];
+      else if (D[k] !== undefined) setState[k] = JSON.parse(JSON.stringify(D[k]));
+      markDirty();
+      renderSettings();
+    };
+  });
+}
+
+$('#set-save').onclick = async () => {
+  const btn = $('#set-save');
+  const err = $('#set-error');
+  err.textContent = '';
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/staff/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings: {
+        arena: setState.arena,
+        packages: setState.packages.map((p) => ({ games: p.games, cents: p.cents })),
+        eventPackages: setState.eventPackages.map((p) => ({ id: p.id, cents: p.cents, extraGuestCents: p.extraGuestCents })),
+        weeklyHours: setState.weeklyHours,
+        specialHours: setState.specialHours,
+      } }),
+    });
+    if (!r.ok) throw new Error((await r.json()).error);
+    setDirty = false;
+    $('#set-msg').textContent = 'Saved.';
+    toast('Settings saved — the customer site is using them now.');
+    // Everything on this page was drawn from the old figures.
+    await hydrateConfig();
+    await load();
+  } catch (e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+$('#set-reset').onclick = () => {
+  setState = JSON.parse(JSON.stringify(setDefaults));
+  markDirty();
+  renderSettings();
+  $('#set-msg').textContent = 'Reset to the published figures — not saved yet.';
+};
+
+// Leaving with unsaved edits loses them silently otherwise.
+addEventListener('beforeunload', (e) => { if (setDirty) { e.preventDefault(); e.returnValue = ''; } });
 
 /* ==================================================================== *
  * Help

@@ -105,9 +105,10 @@
 
 <script type="module">
 import { PACKAGES, money } from '/lib/arena.js';
-import { mountShell, $ } from '/assets/shell.js';
+import { mountShell, hydrateConfig, $ } from '/assets/shell.js';
 
 mountShell({ active: '/rates' });
+await hydrateConfig();
 
 const single = PACKAGES[0].cents;   // the 1-game price, used to show what a bundle saves
 

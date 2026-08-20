@@ -88,9 +88,10 @@
 
 <script type="module">
 import { WEEKLY_HOURS, SPECIAL_HOURS, ARENA, hoursFor, isoDate, parseISO, fmtTime } from '/lib/arena.js';
-import { mountShell, $, esc, longDate } from '/assets/shell.js';
+import { mountShell, hydrateConfig, $, esc, longDate } from '/assets/shell.js';
 
 mountShell({ active: '/hours' });
+await hydrateConfig();
 
 const now = new Date();
 const todayISO = isoDate(now);

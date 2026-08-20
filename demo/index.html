@@ -329,9 +329,12 @@ import {
   hoursFor, sessionSpan, priceBooking, groupNoticeOk,
   isoDate, parseISO, fmtTime, money, arenaToday,
 } from '/lib/arena.js';
-import { mountShell, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
+import { mountShell, hydrateConfig, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
 
 mountShell({ active: '/' });
+
+// Prices, hours and rules a manager has changed, before anything is drawn.
+await hydrateConfig();
 
 // Winnipeg's today — a customer browsing from another timezone (or the UTC server) must
 // still see the arena's calendar, not their own.

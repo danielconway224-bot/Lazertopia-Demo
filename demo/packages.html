@@ -234,9 +234,10 @@ import {
   EXTRA_PIZZAS, PIZZA_TOPPINGS, WINGS, WING_SAUCES,
   hoursFor, priceEventPackage, addOnsFor, isoDate, parseISO, fmtTime, money, validAge, arenaToday,
 } from '/lib/arena.js';
-import { mountShell, $, esc, toast, api, jsonPost, longDate, mountDateField } from '/assets/shell.js';
+import { mountShell, hydrateConfig, $, esc, toast, api, jsonPost, longDate, mountDateField } from '/assets/shell.js';
 
 mountShell({ active: '/packages' });
+await hydrateConfig();
 
 let current = null;   // package being booked
 
