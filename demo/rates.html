@@ -6,24 +6,24 @@
 <title>Lasertopia — Rates &amp; Pricing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/assets/lasertopia.css" />
 <style>
   .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
   .price {
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 0;
     padding: 26px 22px; text-align: center; position: relative; transition: .16s;
   }
-  .price:hover { border-color: var(--cyan); box-shadow: 0 0 26px rgba(41,171,226,.16); transform: translateY(-2px); }
+  .price:hover { border-color: var(--amber); transform: translateY(-2px); }
   .price.best { border-color: var(--orange); }
-  .price.best:hover { border-color: var(--orange); box-shadow: 0 0 26px rgba(249,161,27,.2); }
+  .price.best:hover { border-color: var(--orange); }
   .price .flag {
     position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-    background: var(--orange); color: #1a1200; font-family: 'Space Grotesk'; font-size: 10px;
+    background: var(--orange); color: #1a1200; font-family: var(--ui); font-size: 10px;
     font-weight: 800; letter-spacing: .11em; padding: 4px 11px; border-radius: 999px; white-space: nowrap;
   }
-  .price .n { font-family: 'Space Grotesk'; font-size: 13px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); }
-  .price .p { font-family: 'Space Grotesk'; font-size: 42px; font-weight: 800; color: var(--cyan); margin: 10px 0 4px; letter-spacing: -.03em; }
+  .price .n { font-family: var(--ui); font-size: 13px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); }
+  .price .p { font-family: var(--ui); font-size: 42px; font-weight: 800; color: var(--amber); margin: 10px 0 4px; letter-spacing: -.03em; }
   .price.best .p { color: var(--orange); }
   .price .per { font-size: 12.5px; color: var(--dim); }
   .price .save { font-size: 12.5px; color: var(--ok); font-weight: 600; margin-top: 8px; min-height: 18px; }
@@ -33,7 +33,7 @@
 
   .fact { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; color: var(--muted); line-height: 1.6; }
   .fact:last-child { border-bottom: none; }
-  .fact .ic { color: var(--cyan); font-size: 15px; flex-shrink: 0; line-height: 1.5; }
+  .fact .ic { color: var(--amber); font-size: 15px; flex-shrink: 0; line-height: 1.5; }
   .fact b { color: var(--white); }
 
   .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }

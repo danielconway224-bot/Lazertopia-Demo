@@ -6,7 +6,7 @@
 <title>Lasertopia — Participant Waiver</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/assets/lasertopia.css" />
 <style>
   .narrow { max-width: 700px; margin: 0 auto; }
@@ -21,7 +21,7 @@
   /* The legal text. Scrolls in its own box so the form stays reachable, but the box is
      tall enough that nobody can pretend they were not shown it. */
   .terms {
-    background: var(--near-black); border: 1px solid var(--border); border-radius: 12px;
+    background: var(--near-black); border: 1px solid var(--border); border-radius: 0;
     padding: 20px 22px; max-height: 380px; overflow-y: auto; scrollbar-width: thin;
   }
   .terms::-webkit-scrollbar { width: 8px; display: block; }
@@ -35,23 +35,23 @@
   .terms li { font-size: 12.8px; color: var(--muted); line-height: 1.65; }
   .terms .validity {
     margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);
-    font-size: 12.5px; color: var(--cyan); font-style: italic;
+    font-size: 12.5px; color: var(--amber); font-style: italic;
   }
   .gap {
     display: inline-block; background: rgba(249,161,27,.14); color: var(--orange);
-    border: 1px dashed rgba(249,161,27,.5); border-radius: 5px; padding: 0 5px;
+    border: 1px dashed rgba(249,161,27,.5); border-radius: 0; padding: 0 5px;
     font-size: 11px; font-weight: 700; letter-spacing: .04em;
   }
 
   .check-row {
     display: flex; gap: 11px; align-items: flex-start; padding: 12px 14px;
-    background: var(--near-black); border: 1px solid var(--border); border-radius: 10px;
+    background: var(--near-black); border: 1px solid var(--border); border-radius: 0;
     cursor: pointer; transition: .13s;
   }
   .check-row + .check-row { margin-top: 8px; }
   .check-row:hover { border-color: var(--border-lit); }
-  .check-row.on { border-color: var(--cyan); background: rgba(41,171,226,.08); }
-  .check-row input { margin-top: 2px; accent-color: var(--cyan); width: 17px; height: 17px; flex-shrink: 0; }
+  .check-row.on { border-color: var(--amber); background: rgba(41,171,226,.08); }
+  .check-row input { margin-top: 2px; accent-color: var(--amber); width: 17px; height: 17px; flex-shrink: 0; }
   .check-row span { font-size: 14px; line-height: 1.5; }
 
   .guard-note {

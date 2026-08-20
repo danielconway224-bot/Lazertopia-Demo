@@ -1,29 +1,63 @@
-/* Lasertopia — shared shell: palette, header, panels, buttons, forms, footer.
-   Page-specific layout lives in each page; anything reused lives here. */
+/* Lasertopia design system.
+ *
+ * The look is a RUN SHEET, not a dashboard. A laser tag day is a column of times with
+ * things happening against them, and the interface says so.
+ *
+ * Four rules, and everything else follows from them:
+ *
+ *   1. No shadowed cards. Separation comes from hairline rules and background shifts.
+ *      A shadow says "this floats above the page"; nothing here floats.
+ *   2. Sharp corners. Rounding is reserved for status pills, where the shape IS the
+ *      meaning — a pill reads as a label rather than a container.
+ *   3. Archivo for interface text, IBM Plex Mono for every time, count and dollar figure.
+ *      Numbers that line up vertically can be scanned; numbers that don't, can't.
+ *   4. Amber is the signal colour and is spent sparingly: what is happening NOW, the money,
+ *      and the one action on the page. If everything is amber, nothing is.
+ */
 
 :root {
-  --black:      #07070C;
-  --near-black: #0C0C13;
-  --surface:    #14141E;
-  --surface-2:  #1C1C29;
-  --border:     #2A2A3B;
-  --border-lit: #3A3A52;
+  /* Surfaces, darkest first. Each step is a background shift, not a shadow. */
+  --bg:         #0B0D11;
+  --panel:      #11141A;
+  --panel-2:    #161A21;
+  --inset:      #0D1015;
 
-  --white: #FFFFFF;
-  --muted: #B4B4C6;
-  --dim:   #7B7B92;
+  /* Hairlines do the work shadows used to. */
+  --hairline:   #232936;
+  --hairline-2: #2E3542;
 
-  --cyan:      #29ABE2;
-  --cyan-dim:  #1B7FA8;
-  --cyan-glow: rgba(41, 171, 226, .35);
-  --orange:     #F9A11B;
-  --orange-dim: #C87C0E;
-  --yellow:     #FFE000;
+  --text:       #E4E7EB;
+  --muted:      #9BA5B4;
+  --dim:        #6B7688;
 
-  --danger: #FF5B5B;
-  --ok:     #35D07F;
+  /* Signal. Amber is the only colour that means "look here". */
+  --amber:      #F0A93C;
+  --amber-2:    #FFC163;
+  --amber-dim:  #8A6420;
+  --amber-wash: rgba(240, 169, 60, .10);
 
-  --radius: 14px;
+  --error:      #E86A5C;
+  --ok:         #4FB783;
+  --cyan:       #4FA8D8;   /* brand secondary, used for links and information only */
+
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ui:   'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Kept so older rules referencing them still resolve to something sane. */
+  --black: var(--bg);
+  --near-black: var(--inset);
+  --surface: var(--panel);
+  --surface-2: var(--panel-2);
+  --border: var(--hairline);
+  --border-lit: var(--hairline-2);
+  --white: var(--text);
+  --orange: var(--amber);
+  --orange-dim: var(--amber-dim);
+  --yellow: var(--amber-2);
+  --danger: var(--error);
+  --cyan-dim: #2E6E93;
+  --cyan-glow: rgba(240, 169, 60, .22);
+  --radius: 0px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,333 +67,360 @@
 html, body { height: 100%; }
 
 body {
-  background:
-    radial-gradient(1100px 520px at 78% -12%, rgba(41,171,226,.16) 0%, transparent 60%),
-    radial-gradient(900px 460px at 12% 8%, rgba(249,161,27,.10) 0%, transparent 58%),
-    var(--black);
-  background-attachment: fixed;
-  color: var(--white);
-  font-family: 'Raleway', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--ui);
+  font-size: 15px;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-h1, h2, h3, .display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.015em; }
+/* Every time, count and dollar figure. Tabular so columns of numbers line up. */
+.mono, .num, time { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+h1, h2, h3, .display {
+  font-family: var(--ui);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.15;
+}
 a { color: inherit; }
 
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+@media (max-width: 700px) { .wrap { padding: 0 18px; } }
 
-/* ---------- Demo banner ---------- */
+/* ---------- Notice strip ---------- */
 .demo-banner {
-  background: linear-gradient(90deg, var(--orange), #ffb43f);
-  color: #1a1200;
+  background: var(--amber);
+  color: #17120A;
   text-align: center;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: .02em;
-  padding: 7px 16px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 8px 16px;
 }
-.demo-banner b { font-weight: 800; letter-spacing: .1em; }
+.demo-banner b { font-weight: 700; }
 
 /* ---------- Header ---------- */
 header {
-  border-bottom: 1px solid var(--border);
-  background: rgba(7,7,12,.82);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--bg);
   position: sticky; top: 0; z-index: 30;
 }
 /* row-reverse puts the logo on the right while keeping it first in the DOM, where a
    logo-links-home belongs for screen readers and keyboard order. */
 .nav {
   display: flex; flex-direction: row-reverse; align-items: center; justify-content: space-between;
-  gap: 16px; min-height: 116px; padding: 8px 0; flex-wrap: wrap;
+  gap: 16px; min-height: 84px; padding: 10px 0; flex-wrap: wrap;
 }
-
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
 /* The source PNG carries a lot of transparent space around the burst, so the box has to be
-   noticeably taller than the wordmark itself to read at a sensible size. Negative margins
-   claw back some of that padding so the header doesn't balloon to match — but not so much
-   that the artwork paints outside the header and over the page below. */
-.brand img { height: 112px; width: auto; display: block; margin: -12px 0; }
-.brand-fallback { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -.02em; white-space: nowrap; }
-.brand-fallback .a { color: var(--orange); }
+   taller than the wordmark to read at a sensible size. Negative margins claw some back. */
+.brand img { height: 78px; width: auto; display: block; margin: -12px 0; }
+.brand-fallback { font-family: var(--ui); font-weight: 800; font-size: 20px; letter-spacing: -.02em; white-space: nowrap; }
+.brand-fallback .a { color: var(--amber); }
 .brand-fallback .b { color: var(--cyan); }
 
-.nav-links { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nav-links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
 .nav-link {
-  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 12.5px;
-  color: var(--muted); text-decoration: none; padding: 8px 14px; border-radius: 999px;
-  border: 1px solid transparent; transition: .15s; white-space: nowrap;
+  font-family: var(--ui); font-weight: 600; font-size: 13.5px;
+  color: var(--muted); text-decoration: none; padding: 9px 14px;
+  border-bottom: 2px solid transparent; transition: color .12s, border-color .12s;
+  white-space: nowrap;
 }
-.nav-link:hover { color: var(--white); border-color: var(--border-lit); }
-.nav-link.active { color: var(--cyan); border-color: var(--cyan); }
-.nav-link.cta { background: var(--cyan); color: #04121a; border-color: var(--cyan); }
-.nav-link.cta:hover { background: #4fc0f0; color: #04121a; }
+.nav-link:hover { color: var(--text); }
+.nav-link.active { color: var(--amber); border-bottom-color: var(--amber); }
+.nav-link.cta {
+  color: #17120A; background: var(--amber); border-bottom-color: var(--amber);
+  font-weight: 700; padding: 9px 16px;
+}
+.nav-link.cta:hover { background: var(--amber-2); color: #17120A; }
 
-/* Replaces the customer nav on staff pages — says where you are, links nowhere. */
+/* Says where you are on staff pages; links nowhere. */
 .staff-badge {
-  font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 11px;
-  letter-spacing: .16em; text-transform: uppercase; color: var(--orange);
-  border: 1px solid rgba(249,161,27,.45); background: rgba(249,161,27,.10);
-  padding: 9px 16px; border-radius: 999px; white-space: nowrap;
+  font-family: var(--mono); font-weight: 500; font-size: 11px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--amber);
+  border: 1px solid var(--amber-dim); background: transparent;
+  padding: 7px 14px; white-space: nowrap;
 }
-@media (max-width: 760px) {
-  /* Stacked on small screens: logo on top, nav beneath, both centred. */
-  .nav { flex-direction: column; justify-content: center; gap: 6px; min-height: 0; padding: 8px 0; }
+@media (max-width: 780px) {
+  .nav { flex-direction: column; justify-content: center; gap: 4px; min-height: 0; padding: 10px 0; }
   .nav-links { justify-content: center; }
-  .brand img { height: 92px; margin: -10px 0; }
+  .brand img { height: 66px; margin: -10px 0; }
 }
-@media (max-width: 640px) { .nav-link { padding: 7px 11px; font-size: 12px; } .brand img { height: 78px; margin: -8px 0; } }
+@media (max-width: 620px) { .nav-link { padding: 8px 11px; font-size: 12.5px; } .brand img { height: 58px; } }
 
 /* ---------- Hero ---------- */
-.hero { padding: 34px 0 4px; }
-.eyebrow { color: var(--cyan); font-weight: 800; font-size: 11.5px; letter-spacing: .2em; text-transform: uppercase; }
-.hero h1 { font-size: 34px; margin: 10px 0 8px; }
-.hero h1 .hi { color: var(--orange); }
-.hero p { color: var(--muted); max-width: 620px; font-size: 15px; line-height: 1.6; }
-@media (max-width: 640px) { .hero h1 { font-size: 27px; } }
-
-/* ---------- Panels ---------- */
-.panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px;
+.hero { padding: 40px 0 8px; }
+.eyebrow {
+  font-family: var(--mono); color: var(--amber); font-weight: 500; font-size: 11.5px;
+  letter-spacing: .18em; text-transform: uppercase;
 }
-.panel + .panel { margin-top: 18px; }
-.panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-.panel h2 { font-size: 18px; margin-bottom: 5px; }
+.hero h1 { font-size: 42px; margin: 12px 0 10px; }
+.hero h1 .hi { color: var(--amber); }
+.hero p { color: var(--muted); max-width: 620px; font-size: 15px; line-height: 1.65; }
+@media (max-width: 700px) { .hero { padding: 26px 0 4px; } .hero h1 { font-size: 30px; } }
+
+/* ---------- Panels ----------
+   A panel is a background shift with a hairline, never a floating card. */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  padding: 24px;
+}
+.panel + .panel { margin-top: 16px; }
+.panel-head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+.panel h2 { font-size: 17px; margin-bottom: 4px; }
 .panel .sub { color: var(--dim); font-size: 13px; }
-.stack { padding: 22px 0 40px; }
+.stack { padding: 24px 0 56px; }
 
 /* ---------- Steps ---------- */
-.steps { display: flex; gap: 8px; margin: 24px 0 2px; flex-wrap: wrap; align-items: center; }
+.steps { display: flex; gap: 6px; margin: 26px 0 2px; flex-wrap: wrap; align-items: center; }
 .step { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); }
 .step .dot {
-  width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border);
-  display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: var(--dim);
+  width: 22px; height: 22px; border: 1px solid var(--hairline-2);
+  display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--dim);
 }
-.step.active { color: var(--white); }
-.step.active .dot { background: var(--cyan); color: #04121a; border-color: var(--cyan); box-shadow: 0 0 14px var(--cyan-glow); }
-.step.done .dot { background: var(--surface-2); color: var(--cyan); border-color: var(--cyan); }
-.step .sep { color: var(--border-lit); margin: 0 3px; }
+.step.active { color: var(--text); }
+.step.active .dot { background: var(--amber); color: #17120A; border-color: var(--amber); }
+.step.done .dot { color: var(--amber); border-color: var(--amber-dim); }
+.step .sep { color: var(--hairline-2); margin: 0 2px; }
 
-/* ---------- Buttons ---------- */
+/* ---------- Buttons ----------
+   Sharp, flat, no shadow. One amber button per view. */
 .btn {
-  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px;
-  border-radius: 11px; padding: 12px 20px; border: 1px solid transparent;
-  cursor: pointer; transition: .15s; text-decoration: none; display: inline-flex;
-  align-items: center; justify-content: center; gap: 8px; line-height: 1;
+  font-family: var(--ui); font-weight: 700; font-size: 14px;
+  padding: 12px 20px; border: 1px solid transparent;
+  cursor: pointer; transition: background .12s, border-color .12s, color .12s;
+  text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; line-height: 1; letter-spacing: -.01em;
 }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
-.btn-primary { background: var(--cyan); color: #04121a; }
-.btn-primary:hover:not(:disabled) { background: #4fc0f0; box-shadow: 0 0 22px var(--cyan-glow); }
-.btn-orange { background: var(--orange); color: #1a1200; }
-.btn-orange:hover:not(:disabled) { background: #ffb43f; box-shadow: 0 0 22px rgba(249,161,27,.35); }
-.btn-ghost { background: transparent; color: var(--muted); border-color: var(--border-lit); }
-.btn-ghost:hover:not(:disabled) { color: var(--white); border-color: var(--cyan); }
+.btn:disabled { opacity: .38; cursor: not-allowed; }
+.btn-primary { background: var(--amber); color: #17120A; border-color: var(--amber); }
+.btn-primary:hover:not(:disabled) { background: var(--amber-2); border-color: var(--amber-2); }
+.btn-orange { background: var(--amber); color: #17120A; border-color: var(--amber); }
+.btn-orange:hover:not(:disabled) { background: var(--amber-2); border-color: var(--amber-2); }
+.btn-ghost { background: transparent; color: var(--muted); border-color: var(--hairline-2); }
+.btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
 .btn-block { width: 100%; }
-.btn-sm { padding: 8px 13px; font-size: 12.5px; border-radius: 9px; }
+.btn-sm { padding: 8px 13px; font-size: 12.5px; }
 
-/* Bigger hit areas on phones and tablets. Anything under ~40px is fiddly with a thumb, and
-   the small secondary buttons (Release, Hold, Close, +Walk-in) are exactly the ones staff
-   will be tapping on a tablet at the front desk.
-   Width is the primary signal because it's deterministic; the pointer query is a comma'd
-   fallback so touch laptops get the same treatment at any width. */
+/* Bigger hit areas on phones and tablets. Anything under ~44px is fiddly with a thumb, and
+   the small secondary buttons are exactly the ones staff tap on a tablet at the desk. */
 @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
   .btn { min-height: 44px; }
   .btn-sm { min-height: 40px; padding: 10px 14px; }
   .input, select.input { min-height: 44px; }
   .nav-link { padding: 11px 15px; }
-  .modal-close { width: 38px; height: 38px; }
-  .cal-btn, .nav-sq { width: 42px; height: 42px; }
+  .modal-close { width: 40px; height: 40px; }
+  .cal-btn, .nav-sq { width: 44px; height: 44px; }
 }
 
 /* ---------- Forms ---------- */
 .input, select.input, textarea.input {
-  width: 100%; background: var(--near-black); border: 1px solid var(--border);
-  color: var(--white); border-radius: 10px; padding: 12px 14px; font-size: 14.5px;
-  font-family: 'Raleway', system-ui, sans-serif; transition: .15s;
+  width: 100%; background: var(--inset); border: 1px solid var(--hairline);
+  color: var(--text); padding: 12px 14px; font-size: 14.5px;
+  font-family: var(--ui); transition: border-color .12s;
 }
 .input::placeholder { color: var(--dim); }
-.input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 16px var(--cyan-glow); }
+.input:focus { outline: none; border-color: var(--amber); }
 .input + .input { margin-top: 10px; }
+input[type=number].input, input[type=date].input, input[type=time].input { font-family: var(--mono); }
 select.input { appearance: none; cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237B7B92' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7688' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; background-size: 17px; padding-right: 38px; }
-.fld { display: block; font-size: 11.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim); font-weight: 700; margin-bottom: 7px; }
+.fld {
+  display: block; font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .14em; color: var(--dim); font-weight: 500; margin-bottom: 8px;
+}
 
 /* ---------- Notes & badges ---------- */
 .note-box {
-  background: rgba(41,171,226,.09); border: 1px solid rgba(41,171,226,.34);
-  color: #a9dcf3; border-radius: 12px; padding: 13px 16px; font-size: 14px; line-height: 1.55;
+  background: var(--panel-2); border: 1px solid var(--hairline); border-left: 2px solid var(--cyan);
+  color: var(--muted); padding: 14px 16px; font-size: 14px; line-height: 1.6;
 }
-.note-box.warn { background: rgba(249,161,27,.10); border-color: rgba(249,161,27,.38); color: #f4cd91; }
-.note-box.bad  { background: rgba(255,91,91,.10); border-color: rgba(255,91,91,.38); color: #ffb0b0; }
+.note-box b { color: var(--text); }
+.note-box.warn { border-left-color: var(--amber); }
+.note-box.bad  { border-left-color: var(--error); color: #F0B4AC; }
 
+/* Pills are the one place rounding is allowed — the shape says "label", not "container". */
 .badge {
-  display: inline-flex; align-items: center; gap: 5px; font-family: 'Space Grotesk', sans-serif;
-  font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
-  padding: 3px 8px; border-radius: 999px; border: 1px solid;
+  display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);
+  font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid;
 }
-.badge.group  { color: var(--orange); border-color: rgba(249,161,27,.55); background: rgba(249,161,27,.12); }
-.badge.party  { color: var(--yellow); border-color: rgba(255,224,0,.5);  background: rgba(255,224,0,.10); }
-.badge.walkin { color: var(--muted);  border-color: var(--border-lit);   background: var(--surface-2); }
-.badge.online { color: var(--cyan);   border-color: rgba(41,171,226,.5); background: rgba(41,171,226,.12); }
-.badge.block  { color: var(--danger); border-color: rgba(255,91,91,.5);  background: rgba(255,91,91,.10); }
+.badge.group  { color: var(--amber); border-color: var(--amber-dim); }
+.badge.party  { color: var(--amber-2); border-color: var(--amber-dim); }
+.badge.walkin { color: var(--muted); border-color: var(--hairline-2); }
+.badge.online { color: var(--cyan); border-color: #2E6E93; }
+.badge.block  { color: var(--error); border-color: #7A3830; }
 
 /* ---------- Modals ---------- */
 .overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.78); backdrop-filter: blur(4px);
+  position: fixed; inset: 0; background: rgba(5, 7, 10, .82);
   display: none; align-items: center; justify-content: center; z-index: 60; padding: 20px;
   overflow-y: auto;
 }
 .overlay.show { display: flex; }
 .modal {
-  background: var(--surface); border: 1px solid var(--border-lit); border-radius: 18px;
-  padding: 26px; width: 100%; max-width: 460px; position: relative; margin: auto;
-  box-shadow: 0 24px 70px rgba(0,0,0,.6);
+  background: var(--panel); border: 1px solid var(--hairline-2);
+  padding: 28px; width: 100%; max-width: 480px; position: relative; margin: auto;
 }
-.modal h3 { font-size: 21px; margin-bottom: 5px; }
-.modal .sub { color: var(--dim); font-size: 13.5px; margin-bottom: 18px; }
+.modal h3 { font-size: 22px; margin-bottom: 6px; }
+.modal .sub {
+  font-family: var(--mono); color: var(--dim); font-size: 11.5px; text-transform: uppercase;
+  letter-spacing: .1em; margin-bottom: 20px;
+}
 .modal-close {
-  position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border-radius: 9px;
-  background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
-  cursor: pointer; font-size: 15px; line-height: 1; transition: .15s;
+  position: absolute; top: 14px; right: 14px; width: 34px; height: 34px;
+  background: transparent; border: 1px solid var(--hairline); color: var(--muted);
+  cursor: pointer; font-size: 15px; line-height: 1; transition: .12s;
 }
-.modal-close:hover { color: var(--white); border-color: var(--cyan); }
+.modal-close:hover { color: var(--text); border-color: var(--muted); }
 
-.recap { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 14px; display: grid; gap: 9px; }
+.recap { border-top: 1px solid var(--hairline); margin-top: 18px; padding-top: 16px; display: grid; gap: 10px; }
 .recap .row { display: flex; justify-content: space-between; gap: 14px; font-size: 14px; }
 .recap .row .k { color: var(--dim); }
-.recap .row .v { font-weight: 600; text-align: right; }
-.recap .row.tot { border-top: 1px solid var(--border); padding-top: 11px; margin-top: 3px; font-size: 16px; }
-.recap .row.tot .v { color: var(--cyan); font-family: 'Space Grotesk'; font-weight: 700; }
+.recap .row .v { font-family: var(--mono); font-weight: 500; text-align: right; }
+.recap .row.tot {
+  border-top: 1px solid var(--hairline); padding-top: 13px; margin-top: 4px;
+  font-size: 15px; align-items: baseline;
+}
+.recap .row.tot .v { color: var(--amber); font-size: 21px; font-weight: 600; }
 
-.err { color: var(--danger); font-size: 13.5px; margin-top: 10px; line-height: 1.5; min-height: 0; }
+.err { color: var(--error); font-size: 13.5px; margin-top: 12px; line-height: 1.55; min-height: 0; }
 .err:empty { margin-top: 0; }
 
 /* ---------- Toast ---------- */
 .toast {
   position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 130%);
-  background: var(--surface-2); border: 1px solid var(--border-lit); color: var(--white);
-  padding: 13px 20px; border-radius: 12px; font-size: 14px; z-index: 90; max-width: 90vw;
-  box-shadow: 0 16px 44px rgba(0,0,0,.55); transition: transform .3s cubic-bezier(.4,0,.2,1);
+  background: var(--panel-2); border: 1px solid var(--hairline-2); border-left: 2px solid var(--amber);
+  color: var(--text); padding: 14px 20px; font-size: 14px; z-index: 90; max-width: 90vw;
+  transition: transform .26s cubic-bezier(.4,0,.2,1);
 }
 .toast.show { transform: translate(-50%, 0); }
 
 /* ---------- Footer ---------- */
 footer {
-  border-top: 1px solid var(--border); margin-top: 48px; padding: 26px 24px 34px;
-  text-align: center; color: var(--dim); font-size: 13px; line-height: 1.7;
+  border-top: 1px solid var(--hairline); margin-top: 56px; padding: 30px 28px 40px;
+  text-align: center; color: var(--dim); font-size: 13px; line-height: 1.8;
 }
 footer a { color: var(--muted); text-decoration: none; }
-footer a:hover { color: var(--cyan); }
-footer .ft-brand { color: var(--muted); font-weight: 600; }
-/* Footer links sit in running text, so they only need padding out on touch-sized screens. */
+footer a:hover { color: var(--amber); }
+footer .ft-brand { color: var(--text); font-weight: 600; letter-spacing: -.01em; }
 @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
   footer a { display: inline-block; padding: 9px 3px; }
   footer { line-height: 1.5; }
 }
 
-/* Powered by Voltris Booking.
-   The supplied lockup sets "Voltris" in black, which would be invisible on this near-black
-   footer, so it sits on a light plate — the standard treatment for a dark-text logo on a
-   dark surface, and it keeps their brand colours exactly as drawn rather than inverting
-   or recolouring them. */
+/* Powered by Voltris Booking. The supplied lockup sets "Voltris" in black, invisible on this
+   background, so it sits on a light plate — the standard treatment for a dark-text logo on a
+   dark surface, keeping their brand colours as drawn rather than inverting them. */
 .powered {
-  display: inline-flex; align-items: center; gap: 13px; margin-top: 22px;
-  padding: 9px 9px 9px 19px; border: 1px solid var(--border); border-radius: 999px;
-  text-decoration: none; transition: .16s; background: rgba(255,255,255,.02);
+  display: inline-flex; align-items: center; gap: 13px; margin-top: 24px;
+  padding: 8px 8px 8px 18px; border: 1px solid var(--hairline);
+  text-decoration: none; transition: border-color .14s;
 }
-.powered:hover { border-color: var(--border-lit); background: rgba(255,255,255,.05); }
+.powered:hover { border-color: var(--hairline-2); }
 .powered .pb-label {
-  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--dim); font-weight: 700; white-space: nowrap;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dim); white-space: nowrap;
 }
-.powered .pb-plate {
-  display: inline-flex; align-items: center; background: #fff;
-  border-radius: 999px; padding: 7px 16px; transition: box-shadow .16s;
-}
-.powered:hover .pb-plate { box-shadow: 0 0 18px rgba(255,255,255,.22); }
+.powered .pb-plate { display: inline-flex; align-items: center; background: #fff; padding: 7px 16px; }
 .powered .pb-plate img { height: 17px; width: auto; display: block; }
-
 @media (max-width: 480px) {
-  .powered { padding: 7px 7px 7px 15px; gap: 10px; }
+  .powered { padding: 6px 6px 6px 14px; gap: 10px; }
   .powered .pb-plate { padding: 6px 13px; }
   .powered .pb-plate img { height: 15px; }
-  .powered .pb-label { font-size: 10px; }
+  .powered .pb-label { font-size: 9.5px; }
 }
 
 /* ---------- Loading ---------- */
-.loading { color: var(--dim); font-size: 14px; padding: 26px; text-align: center; }
+.loading {
+  font-family: var(--mono); color: var(--dim); font-size: 12.5px; padding: 28px;
+  text-align: center; letter-spacing: .08em; text-transform: uppercase;
+}
 
 /* ---------- Calendar ----------
    Shared by the booking page's inline calendar and the party page's pop-up, so a day cell
    looks and behaves the same wherever a date gets picked. */
-.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.cal-title { font-family: 'Space Grotesk'; font-weight: 700; font-size: 19px; }
-.cal-nav { display: flex; gap: 8px; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.cal-title { font-family: var(--ui); font-weight: 700; font-size: 19px; letter-spacing: -.02em; }
+.cal-nav { display: flex; gap: 6px; }
 .cal-btn {
-  width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
-  background: var(--near-black); color: var(--white); cursor: pointer; font-size: 17px;
-  display: grid; place-items: center; transition: .15s;
+  width: 36px; height: 36px; border: 1px solid var(--hairline);
+  background: transparent; color: var(--text); cursor: pointer; font-size: 16px;
+  display: grid; place-items: center; transition: .12s;
 }
-.cal-btn:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
-.cal-btn:disabled { opacity: .28; cursor: not-allowed; }
+.cal-btn:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+.cal-btn:disabled { opacity: .25; cursor: not-allowed; }
 
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
-.cal-dow { font-size: 10.5px; color: var(--dim); text-align: center; padding-bottom: 5px; text-transform: uppercase; letter-spacing: .07em; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow {
+  font-family: var(--mono); font-size: 10px; color: var(--dim); text-align: center;
+  padding-bottom: 8px; text-transform: uppercase; letter-spacing: .12em;
+}
 .cal-day {
-  height: 54px; position: relative; display: grid; place-items: center; border-radius: 11px;
-  border: 1px solid var(--border); background: var(--near-black); cursor: pointer;
-  font-family: 'Space Grotesk'; font-weight: 700; font-size: 15px; color: var(--white);
-  transition: border-color .12s, background .12s, color .12s, box-shadow .12s, height .4s cubic-bezier(.4,0,.2,1);
+  height: 52px; position: relative; display: grid; place-items: center;
+  border: 1px solid var(--hairline); background: var(--inset); cursor: pointer;
+  font-family: var(--mono); font-size: 14px; color: var(--text);
+  transition: border-color .1s, background .1s, color .1s, height .35s cubic-bezier(.4,0,.2,1);
 }
 .cal-day.empty { background: transparent; border: none; cursor: default; }
-.cal-day.past { opacity: .22; cursor: not-allowed; }
-.cal-day.closed { color: var(--dim); background: repeating-linear-gradient(45deg,#101018,#101018 4px,#0a0a10 4px,#0a0a10 8px); cursor: not-allowed; }
-.cal-day.today:not(.sel) { border-color: var(--border-lit); color: var(--cyan); }
-.cal-day.sel { background: var(--cyan); border-color: var(--cyan); color: #04121a; box-shadow: 0 0 20px var(--cyan-glow); }
-.cal-day:hover:not(.sel):not(.past):not(.empty):not(.closed) { border-color: var(--cyan); }
+.cal-day.past { opacity: .2; cursor: not-allowed; }
+.cal-day.closed {
+  color: var(--dim); cursor: not-allowed;
+  background: repeating-linear-gradient(45deg, #0F1218, #0F1218 4px, #0B0D11 4px, #0B0D11 8px);
+}
+.cal-day.today:not(.sel) { border-color: var(--amber-dim); color: var(--amber); }
+.cal-day.sel { background: var(--amber); border-color: var(--amber); color: #17120A; font-weight: 600; }
+.cal-day:hover:not(.sel):not(.past):not(.empty):not(.closed) { border-color: var(--amber); }
 /* Dot marking a day whose hours differ from the usual weekly pattern */
-.cal-day .mark { position: absolute; bottom: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--orange); }
-.cal-day.sel .mark { background: #04121a; }
-.cal-day.closed .mark { background: var(--danger); }
+.cal-day .mark { position: absolute; bottom: 6px; width: 4px; height: 4px; background: var(--amber); }
+.cal-day.sel .mark { background: #17120A; }
+.cal-day.closed .mark { background: var(--error); }
 
-.cal-key { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 11.5px; color: var(--dim); }
-.cal-key span { display: inline-flex; align-items: center; gap: 6px; }
-.cal-key i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.cal-key {
+  display: flex; gap: 18px; flex-wrap: wrap; margin-top: 16px;
+  font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .04em;
+}
+.cal-key span { display: inline-flex; align-items: center; gap: 7px; }
+.cal-key i { width: 8px; height: 8px; display: inline-block; }
 
 /* ---------- Pop-up calendar (date field) ---------- */
 .datefield { position: relative; }
 .datefield-btn {
-  width: 100%; background: var(--near-black); border: 1px solid var(--border); color: var(--white);
-  border-radius: 10px; padding: 12px 14px; font-size: 14.5px; font-family: 'Raleway', sans-serif;
-  text-align: left; cursor: pointer; transition: .15s; display: flex; align-items: center;
-  justify-content: space-between; gap: 10px; min-height: 46px;
+  width: 100%; background: var(--inset); border: 1px solid var(--hairline); color: var(--text);
+  padding: 12px 14px; font-size: 14.5px; font-family: var(--ui);
+  text-align: left; cursor: pointer; transition: border-color .12s; display: flex;
+  align-items: center; justify-content: space-between; gap: 10px; min-height: 46px;
 }
-.datefield-btn:hover { border-color: var(--border-lit); }
-.datefield-btn.open { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan), 0 0 16px var(--cyan-glow); }
+.datefield-btn:hover { border-color: var(--hairline-2); }
+.datefield-btn.open { border-color: var(--amber); }
 .datefield-btn .placeholder { color: var(--dim); }
 .datefield-btn svg { width: 17px; height: 17px; stroke: var(--dim); flex-shrink: 0; }
-.datefield-btn.open svg, .datefield-btn:hover svg { stroke: var(--cyan); }
+.datefield-btn.open svg, .datefield-btn:hover svg { stroke: var(--amber); }
 
 .calpop {
-  position: absolute; z-index: 70; top: calc(100% + 8px); left: 0; width: 330px; max-width: 92vw;
-  background: var(--surface); border: 1px solid var(--border-lit); border-radius: 14px;
-  padding: 16px; box-shadow: 0 18px 50px rgba(0,0,0,.6); display: none;
+  position: absolute; z-index: 70; top: calc(100% + 6px); left: 0; width: 330px; max-width: 92vw;
+  background: var(--panel); border: 1px solid var(--hairline-2);
+  padding: 18px; display: none;
 }
 .calpop.show { display: block; }
-.calpop.drop-up { top: auto; bottom: calc(100% + 8px); }
+.calpop.drop-up { top: auto; bottom: calc(100% + 6px); }
 .calpop.align-right { left: auto; right: 0; }
-.calpop .cal-day { height: 38px; font-size: 14px; border-radius: 9px; }
-.calpop .cal-grid { gap: 5px; }
+.calpop .cal-day { height: 38px; font-size: 13px; }
+.calpop .cal-grid { gap: 3px; }
 .calpop .cal-title { font-size: 16px; }
-.calpop .cal-btn { width: 32px; height: 32px; font-size: 15px; }
-.calpop .cal-head { margin-bottom: 12px; }
-.calpop .cal-key { margin-top: 12px; font-size: 11px; gap: 12px; }
+.calpop .cal-btn { width: 32px; height: 32px; font-size: 14px; }
+.calpop .cal-head { margin-bottom: 14px; }
+.calpop .cal-key { margin-top: 14px; font-size: 10.5px; gap: 12px; }
 
 /* On a phone the popover becomes a centred sheet — anchoring a 330px panel to a field in a
    narrow modal leaves it half off-screen. */
@@ -371,38 +432,31 @@ footer .ft-brand { color: var(--muted); font-weight: 600; }
   .calpop.drop-up { top: 50%; bottom: auto; }
   .calpop .cal-day { height: 42px; }
 }
-.calpop-backdrop {
-  position: fixed; inset: 0; z-index: 69; background: rgba(0,0,0,.45); display: none;
-}
+.calpop-backdrop { position: fixed; inset: 0; z-index: 69; background: rgba(5,7,10,.55); display: none; }
 .calpop-backdrop.show { display: block; }
 @media (min-width: 561px) { .calpop-backdrop { background: transparent; } }
 
-/* ---------- Customer / staff view switch ---------- */
-/* Fixed bottom-right on every page. This is a demo affordance — it's how you show both
-   halves of the system without typing URLs — so it sits above everything else. */
+/* ---------- Customer / manager switch ----------
+   Fixed bottom-right. A build-time convenience — see SHOW_MANAGER_SHORTCUT in shell.js. */
 .view-switch {
   position: fixed; right: 20px; bottom: 20px; z-index: 80;
-  display: flex; align-items: center; gap: 4px;
-  background: rgba(16,16,24,.94); border: 1px solid var(--border-lit);
-  border-radius: 999px; padding: 5px 6px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 30px rgba(0,0,0,.55);
-  font-family: 'Space Grotesk', sans-serif;
-  transition: bottom .32s cubic-bezier(.4,0,.2,1);
+  display: flex; align-items: center; gap: 2px;
+  background: var(--panel); border: 1px solid var(--hairline-2);
+  padding: 5px 6px; font-family: var(--ui);
+  transition: bottom .3s cubic-bezier(.4,0,.2,1);
 }
 .view-switch .vs-label {
-  font-size: 9.5px; letter-spacing: .15em; text-transform: uppercase;
-  color: var(--dim); padding: 0 7px 0 8px; font-weight: 700; white-space: nowrap;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dim); padding: 0 8px; white-space: nowrap;
 }
 .view-switch .vs-btn {
-  font-size: 12.5px; font-weight: 700; color: var(--muted); text-decoration: none;
-  padding: 7px 14px; border-radius: 999px; transition: .15s; white-space: nowrap;
+  font-size: 12.5px; font-weight: 600; color: var(--muted); text-decoration: none;
+  padding: 7px 13px; transition: .12s; white-space: nowrap;
   display: inline-flex; align-items: center; gap: 6px;
 }
-.view-switch .vs-btn:hover { color: var(--white); }
-.view-switch .vs-btn.active { background: var(--cyan); color: #04121a; }
-/* Staff view gets the orange treatment, so it's obvious at a glance you're in the back end */
-.view-switch .vs-btn.active.staff { background: var(--orange); color: #1a1200; }
+.view-switch .vs-btn:hover { color: var(--text); }
+.view-switch .vs-btn.active { background: var(--amber); color: #17120A; }
+.view-switch .vs-btn.active.staff { background: var(--amber); color: #17120A; }
 .view-switch .vs-btn svg { width: 13px; height: 13px; }
 
 /* The booking page's sticky checkout bar slides up over this corner. The bar measures itself
@@ -410,15 +464,11 @@ footer .ft-brand { color: var(--muted); font-weight: 600; }
    fixed offset would break the moment the bar wrapped to another line. */
 body:has(.checkbar.show) .view-switch { bottom: calc(var(--checkbar-h, 92px) + 14px); }
 
-/* Bigger hit area on touch-sized screens. Declared here, after the base .vs-btn rule, so it
-   actually wins — same specificity means source order decides. */
 @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
-  .view-switch .vs-btn { padding: 12px 16px; }
+  .view-switch .vs-btn { padding: 12px 15px; }
 }
-
 @media (max-width: 560px) {
   .view-switch { right: 12px; bottom: 12px; padding: 4px 5px; }
   .view-switch .vs-label { display: none; }
-  .view-switch .vs-btn { padding: 12px 14px; font-size: 12.5px; }
   body:has(.checkbar.show) .view-switch { bottom: calc(var(--checkbar-h, 84px) + 12px); }
 }
