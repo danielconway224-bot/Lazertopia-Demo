@@ -48,14 +48,14 @@
   .games { display: grid; gap: 9px; }
   .game {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 13px 16px; display: grid; grid-template-columns: 92px 150px 1fr auto; gap: 16px;
+    padding: 13px 16px; display: grid; grid-template-columns: 104px 150px 1fr auto; gap: 16px;
     align-items: center; transition: .14s;
   }
   /* Narrow layout: time and capacity share the top row, then the groups and the buttons each
      get the full width. Every child needs an explicit column or it silently lands back in
      the 78px time column — which is what was crushing the booking chips. */
   @media (max-width: 860px) {
-    .game { grid-template-columns: 84px 1fr; row-gap: 12px; column-gap: 14px; padding: 14px; }
+    .game { grid-template-columns: 104px 1fr; row-gap: 12px; column-gap: 14px; padding: 14px; }
     .game .time { grid-column: 1; }
     .game .cap { grid-column: 2; }
     .game .groups { grid-column: 1 / -1; }
@@ -391,7 +391,8 @@
   .game.next { border-color: var(--border-lit); }
   .nowtag {
     font-family: 'Space Grotesk'; font-size: 9px; font-weight: 800; letter-spacing: .1em;
-    padding: 2px 7px; border-radius: 999px; margin-left: 8px; white-space: nowrap;
+    padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+    display: block; width: fit-content; margin-top: 5px;
   }
   .nowtag.now  { background: var(--cyan); color: #04121a; }
   .nowtag.next { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border-lit); }
@@ -429,6 +430,23 @@
          padding: 3px 8px; border-radius: 999px; border: 1px solid; }
   .dep.due  { color: var(--orange); border-color: rgba(249,161,27,.45); background: rgba(249,161,27,.10); }
   .dep.paid { color: var(--ok); border-color: rgba(53,208,127,.45); background: rgba(53,208,127,.12); }
+
+  /* ---------- Party schedule editor ---------- */
+  .slotedit { border: 1px solid var(--border); border-radius: 11px; padding: 14px; margin-bottom: 10px; background: var(--near-black); }
+  .slotedit.gone { opacity: .4; }
+  .slotedit-top { display: flex; gap: 10px; align-items: center; margin-bottom: 11px; flex-wrap: wrap; }
+  .slotedit-top .input { width: auto; padding: 8px 10px; font-size: 13.5px; }
+  .slotedit-top .to { color: var(--dim); font-size: 13px; }
+  .slotedit .drop { margin-left: auto; background: none; border: none; color: var(--dim); cursor: pointer; font-size: 15px; padding: 0 4px; }
+  .slotedit .drop:hover { color: var(--danger); }
+  .slotedit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 620px) { .slotedit-row { grid-template-columns: 1fr; } }
+  .slotedit .hint { font-size: 11.5px; color: var(--dim); margin-top: 4px; line-height: 1.4; }
+  .edited-tag {
+    font-family: 'Space Grotesk'; font-size: 9px; font-weight: 800; letter-spacing: .1em;
+    color: var(--orange); border: 1px solid rgba(249,161,27,.45); background: rgba(249,161,27,.10);
+    padding: 2px 7px; border-radius: 999px;
+  }
 </style>
 </head>
 <body>
@@ -461,6 +479,7 @@
     </div>
     <div style="display:flex;gap:9px;align-items:center">
       <input class="input" type="date" id="date-input" style="width:auto;padding:9px 12px;font-size:13.5px" />
+      <button class="btn btn-ghost btn-sm" id="msg-remind">Send reminders</button>
       <button class="btn btn-ghost btn-sm" id="refresh">Refresh</button>
     </div>
   </div>
@@ -490,27 +509,13 @@
     <div id="an-body"><div class="loading">Loading revenue…</div></div>
   </div>
 
-  <div class="panel" id="msg-panel" style="margin-bottom:18px">
-    <div class="panel-head">
-      <div>
-        <h2>Messages</h2>
-        <div class="sub" id="msg-sub">Texts and emails the system has sent</div>
-      </div>
-      <div class="an-toolbar">
-        <button class="btn btn-ghost btn-sm" id="msg-remind">Send tomorrow's reminders</button>
-        <button class="btn btn-ghost btn-sm" id="msg-refresh">Refresh</button>
-      </div>
-    </div>
-    <div id="msg-status"></div>
-    <div id="msg-list"><div class="loading">Loading messages…</div></div>
-  </div>
-
   <div class="panel" id="party-panel" style="margin-bottom:18px">
     <div class="panel-head">
       <div>
         <h2>Party rooms</h2>
-        <div class="sub">2-hour slots · two parties each, matched within <span id="age-spread">2</span> years of age</div>
+        <div class="sub">2-hour slots · rooms vary by slot · ages matched within <span id="age-spread">2</span> years</div>
       </div>
+      <button class="btn btn-ghost btn-sm" id="ps-edit">Edit this day's schedule</button>
     </div>
     <div id="party-board"><div class="loading">Loading…</div></div>
   </div>
@@ -775,6 +780,28 @@
   </div>
 </div>
 
+<!-- Party schedule editor -->
+<div class="overlay" id="ps-overlay">
+  <div class="modal" style="max-width:620px">
+    <button class="modal-close" id="ps-close" aria-label="Close">✕</button>
+    <h3>Party schedule</h3>
+    <div class="sub" id="ps-sub"></div>
+
+    <div class="note-box" style="font-size:13px;margin-bottom:16px">
+      The weekly schedule loads every day as standard. Changes here apply to
+      <b id="ps-date-label">this date only</b> — every other day keeps the usual times.
+    </div>
+
+    <div id="ps-list"></div>
+
+    <button class="btn btn-ghost btn-sm" id="ps-add" style="margin-top:6px">+ Add a slot</button>
+
+    <div class="err" id="ps-error"></div>
+    <button class="btn btn-primary btn-block" id="ps-save" style="margin-top:16px">Save for this day</button>
+    <button class="btn btn-ghost btn-block" id="ps-reset" style="margin-top:9px">Reset to the standard schedule</button>
+  </div>
+</div>
+
 <!-- Staff booking modal -->
 <div class="overlay" id="nb-overlay">
   <div class="modal">
@@ -852,68 +879,24 @@ async function load() {
   renderPartyBoard();
   renderSheet();
   loadAnalytics();
-  loadMessages();
 }
 
-/* ---------- Messages ---------- */
-async function loadMessages() {
-  const host = $('#msg-list');
-  let data;
-  try {
-    data = await api('/api/staff/outbox?limit=12');
-  } catch (err) {
-    host.innerHTML = `<div class="empty-slot">${esc(err.message)}</div>`;
-    return;
-  }
-
-  // Say plainly which channels are actually connected — a demo where "sent" might mean
-  // "pretended" has to be honest about which one it is.
-  const chip = (label, st) => {
-    const cls = st.problem ? 'bad' : st.enabled ? 'live' : '';
-    const word = st.problem ? 'needs attention' : st.enabled ? `live · ${st.from}` : 'simulated';
-    return `<span class="msg-chip ${cls}"><i></i><b>${label}</b> ${esc(word)}</span>`;
-  };
-  $('#msg-status').innerHTML = `<div class="msg-chips">
-      ${chip('SMS', data.messaging.sms)}
-      ${chip('Email', data.messaging.email)}
-    </div>` + (data.messaging.sms.problem || data.messaging.email.problem
-      ? `<div class="note-box bad" style="margin-bottom:14px">${esc(data.messaging.sms.problem || data.messaging.email.problem)}</div>`
-      : '');
-
-  if (!data.messages.length) {
-    host.innerHTML = '<div class="empty-slot" style="padding:8px 0">Nothing sent yet — make a booking and the confirmation will appear here.</div>';
-    return;
-  }
-
-  host.innerHTML = `<div class="msgs">${data.messages.map((m) => {
-    const when = new Date(m.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    const preview = (m.subject ? `${m.subject} — ` : '') + (m.body || '');
-    return `<div class="msg">
-      <span class="ch ${m.channel}">${m.channel.toUpperCase()}</span>
-      <div>
-        <div class="to">${esc(m.to)}<small>${when}${m.bookingCode ? ` · ${esc(m.bookingCode)}` : ''}</small></div>
-        <div class="body">${esc(preview.slice(0, 190))}${preview.length > 190 ? '…' : ''}</div>
-        <div class="detail">${esc(m.detail || '')}</div>
-      </div>
-      <span class="state ${m.state}">${m.state.toUpperCase()}</span>
-    </div>`;
-  }).join('')}</div>`;
-}
-
-$('#msg-refresh').onclick = loadMessages;
-
+/* ---------- Reminders ----------
+   The outbox log used to live on this page. It came off: once real bookings flow it is an
+   unreadable firehose, and "did this customer get their text" is a question about one
+   booking, answered by Resend on that booking's details. Sending the day-before reminders
+   is a genuine daily job, so the action stayed. */
 $('#msg-remind').onclick = async () => {
   const btn = $('#msg-remind');
   btn.disabled = true;
   const label = btn.textContent;
   btn.textContent = 'Sending…';
   try {
-    // "Tomorrow" relative to the day being viewed, so the desk can rehearse any date.
+    // "Tomorrow" relative to the day being viewed, so the desk can work ahead.
     const d = parseISO(state.date);
     d.setDate(d.getDate() + 1);
     const res = await jsonPost('/api/staff/send-reminders', { dateISO: isoDate(d) });
     toast(res.message);
-    await loadMessages();
   } catch (err) {
     toast(err.message);
   } finally {
@@ -1499,7 +1482,6 @@ $('#dt-resend').onclick = async () => {
   try {
     const r = await jsonPost('/api/staff/resend', { code: b.code });
     toast(`Confirmation resent — text ${r.sms}, email ${r.email}.`);
-    await loadMessages();
   } catch (err) {
     $('#dt-error').textContent = err.message;
   } finally {
@@ -2313,6 +2295,143 @@ $('#nb-save').onclick = async () => {
     btn.disabled = false;
   }
 };
+
+
+/* ==================================================================== *
+ * Party schedule editor
+ *
+ * The weekly schedule in arena.js is the default and loads every day. This edits ONE date:
+ * move a slot, change which laser tag games it plays, add a slot, drop one. Saved per date
+ * so a one-off change on a Saturday does not quietly become every Saturday.
+ * ==================================================================== */
+
+let psSlots = [];
+
+/** '10:15' -> 615. Returns null for anything unparseable. */
+function hhmmToMin(v) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(v || '').trim());
+  if (!m) return null;
+  const h = Number(m[1]), mm = Number(m[2]);
+  if (h > 23 || mm > 59) return null;
+  return h * 60 + mm;
+}
+const minToHhmm = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+
+async function openSlotEditor() {
+  $('#ps-error').textContent = '';
+  $('#ps-sub').textContent = longDate(state.date);
+  $('#ps-date-label').textContent = longDate(state.date);
+  try {
+    const d = await api(`/api/staff/party-slots?date=${encodeURIComponent(state.date)}`);
+    psSlots = d.slots.map((s) => ({ ...s }));
+  } catch (e) {
+    toast(e.message);
+    return;
+  }
+  renderSlotEditor();
+  $('#ps-overlay').classList.add('show');
+}
+
+function renderSlotEditor() {
+  $('#ps-list').innerHTML = psSlots.length ? psSlots.map((s, i) => `
+    <div class="slotedit">
+      <div class="slotedit-top">
+        <input class="input" type="time" data-ps="start" data-i="${i}" value="${minToHhmm(s.start)}" />
+        <span class="to">to</span>
+        <input class="input" type="time" data-ps="end" data-i="${i}" value="${minToHhmm(s.end)}" />
+        ${s.edited ? '<span class="edited-tag">EDITED</span>' : ''}
+        <button class="drop" data-drop="${i}" aria-label="Remove this slot">✕</button>
+      </div>
+      <div class="slotedit-row">
+        <div>
+          <label class="fld">Rooms (guests each)</label>
+          <input class="input" data-ps="rooms" data-i="${i}" value="${s.rooms.join(', ')}" placeholder="14, 14" />
+          <div class="hint">One number per room. A party takes the smallest that fits.</div>
+        </div>
+        <div>
+          <label class="fld">Laser tag times</label>
+          <input class="input" data-ps="games" data-i="${i}" value="${s.games.map(minToHhmm).join(', ')}" placeholder="13:15, 13:45" />
+          <div class="hint">24-hour, comma separated. Leave blank for “confirmed by phone”.</div>
+        </div>
+      </div>
+      <div class="slotedit-row" style="margin-top:10px">
+        <div>
+          <label class="fld">Capacity across two rooms</label>
+          <input class="input" type="number" min="0" data-ps="combined" data-i="${i}" value="${s.combined}" />
+        </div>
+      </div>
+    </div>`).join('') : '<div class="empty-note" style="padding:20px">No party slots on this day.</div>';
+
+  $('#ps-list').querySelectorAll('[data-ps]').forEach((el) => {
+    el.oninput = () => {
+      const i = Number(el.dataset.i);
+      const f = el.dataset.ps;
+      if (f === 'start' || f === 'end') {
+        const v = hhmmToMin(el.value);
+        if (v != null) psSlots[i][f === 'start' ? 'start' : 'end'] = v;
+      } else if (f === 'rooms') {
+        psSlots[i].rooms = el.value.split(',').map((x) => Number(x.trim())).filter((n) => n > 0);
+      } else if (f === 'games') {
+        psSlots[i].games = el.value.split(',').map((x) => hhmmToMin(x)).filter((n) => n != null);
+      } else if (f === 'combined') {
+        psSlots[i].combined = Number(el.value) || 0;
+      }
+    };
+  });
+
+  $('#ps-list').querySelectorAll('[data-drop]').forEach((el) => {
+    el.onclick = () => { psSlots.splice(Number(el.dataset.drop), 1); renderSlotEditor(); };
+  });
+}
+
+$('#ps-add').onclick = () => {
+  // A sensible new slot: two hours from the end of the last one, same rooms as its neighbour.
+  const last = psSlots[psSlots.length - 1];
+  const start = last ? last.start + 60 : 17 * 60;
+  psSlots.push({ start, end: start + 120, rooms: last ? [...last.rooms] : [14, 14],
+                 combined: last ? last.combined : 20, games: [] });
+  renderSlotEditor();
+};
+
+$('#ps-save').onclick = async () => {
+  const err = $('#ps-error');
+  err.textContent = '';
+  const btn = $('#ps-save');
+  btn.disabled = true;
+  try {
+    await fetch('/api/staff/party-slots', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dateISO: state.date, slots: psSlots }),
+    }).then(async (r) => { if (!r.ok) throw new Error((await r.json()).error); });
+    $('#ps-overlay').classList.remove('show');
+    toast(`Party schedule saved for ${longDate(state.date)}.`);
+    await load();
+  } catch (e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+$('#ps-reset').onclick = async () => {
+  const btn = $('#ps-reset');
+  btn.disabled = true;
+  try {
+    await jsonPost('/api/staff/party-slots/reset', { dateISO: state.date });
+    $('#ps-overlay').classList.remove('show');
+    toast(`${longDate(state.date)} is back on the standard schedule.`);
+    await load();
+  } catch (e) {
+    $('#ps-error').textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+$('#ps-edit').onclick = openSlotEditor;
+$('#ps-close').onclick = () => $('#ps-overlay').classList.remove('show');
+$('#ps-overlay').onclick = (e) => { if (e.target === $('#ps-overlay')) $('#ps-overlay').classList.remove('show'); };
 
 /* ---------- Open on the tab the URL asks for ---------- */
 showTab(location.hash.slice(1) || 'dashboard');
