@@ -276,7 +276,7 @@
 
   /* ---------- Portal tabs ---------- */
   .portal-head { border-bottom: 1px solid var(--border); margin-bottom: 22px; }
-  .portal-head .wrap { padding-top: 20px; }
+  .portal-head .wrap { padding-top: 8px; }
   .portal-title { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
   .portal-title h1 { font-size: 25px; }
   .portal-title .who { font-size: 12.5px; color: var(--dim); }
@@ -447,16 +447,58 @@
     color: var(--orange); border: 1px solid rgba(249,161,27,.45); background: rgba(249,161,27,.10);
     padding: 2px 7px; border-radius: 999px;
   }
+
+  /* ---------- Reports ---------- */
+  .rep-layout { display: grid; grid-template-columns: 200px 1fr; gap: 26px; align-items: start; }
+  @media (max-width: 860px) { .rep-layout { grid-template-columns: 1fr; gap: 16px; } }
+  .rep-rail {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px; position: sticky; top: 16px;
+  }
+  @media (max-width: 860px) { .rep-rail { position: static; display: flex; gap: 6px; overflow-x: auto; } }
+  .rep-rail .grp {
+    font-family: 'Space Grotesk'; font-size: 9.5px; font-weight: 700; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--dim); padding: 12px 10px 6px;
+  }
+  .rep-rail .grp:first-child { padding-top: 4px; }
+  @media (max-width: 860px) { .rep-rail .grp { display: none; } }
+  .rep-rail button {
+    display: block; width: 100%; text-align: left; background: none; border: none;
+    border-left: 2px solid transparent; color: var(--muted); cursor: pointer;
+    font-family: 'Raleway', sans-serif; font-size: 14px; padding: 9px 12px;
+    border-radius: 0 8px 8px 0; transition: .13s; white-space: nowrap;
+  }
+  .rep-rail button:hover { color: var(--white); background: var(--near-black); }
+  .rep-rail button.on { color: var(--cyan); border-left-color: var(--cyan); background: var(--near-black); font-weight: 600; }
+  @media (max-width: 860px) {
+    .rep-rail button { width: auto; border-left: none; border-bottom: 2px solid transparent; border-radius: 8px 8px 0 0; }
+    .rep-rail button.on { border-left: none; border-bottom-color: var(--cyan); }
+  }
+
+  .rep-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .rep-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px; }
+  .rep-kpi .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .13em; color: var(--dim); font-weight: 700; }
+  .rep-kpi .v { font-family: 'Space Grotesk'; font-weight: 700; font-size: 25px; margin-top: 6px; letter-spacing: -.02em; }
+  .rep-kpi .sub2 { font-size: 11.5px; color: var(--dim); margin-top: 4px; line-height: 1.4; }
+  .rep-kpi.cy .v { color: var(--cyan); }
+  .rep-kpi.ok .v { color: var(--ok); }
+  .rep-kpi.due .v { color: var(--danger); }
+
+  .rep-bars { display: flex; align-items: flex-end; gap: 3px; height: 140px; margin-top: 8px; }
+  .rep-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+  .rep-bar i { display: block; width: 100%; max-width: 30px; background: var(--cyan); border-radius: 4px 4px 0 0; min-height: 2px; }
+  .rep-bar.zero i { background: var(--border); }
+  .rep-axis { display: flex; gap: 3px; margin-top: 8px; }
+  .rep-axis span { flex: 1; text-align: center; font-size: 10px; color: var(--dim); }
+  .rep-empty { text-align: center; padding: 46px 20px; color: var(--dim); font-size: 14px; line-height: 1.6; }
+  .fillbar { height: 9px; border-radius: 999px; background: var(--near-black); border: 1px solid var(--border); overflow: hidden; }
+  .fillbar i { display: block; height: 100%; background: var(--cyan); }
 </style>
 </head>
 <body>
 
 <div class="portal-head">
   <div class="wrap">
-    <div class="portal-title">
-      <h1>Manager <span class="hi">portal</span></h1>
-      <span class="who" id="who"></span>
-    </div>
     <nav class="tabs" id="tabs" role="tablist">
       <button class="tab on" data-tab="dashboard" role="tab">Dashboard</button>
       <button class="tab" data-tab="gamesheet" role="tab">Game sheet</button>
@@ -464,6 +506,7 @@
       <button class="tab" data-tab="customers" role="tab">Customers</button>
       <button class="tab" data-tab="parties"   role="tab">Parties</button>
       <button class="tab" data-tab="calendar"  role="tab">Calendar</button>
+      <button class="tab" data-tab="reports"   role="tab">Reports</button>
       <button class="tab" data-tab="notes"     role="tab">Notes</button>
       <button class="tab" data-tab="settings"  role="tab">Settings</button>
       <button class="tab" data-tab="help"      role="tab">Help</button>
@@ -630,6 +673,38 @@
     <span><i style="background:var(--orange)"></i> 60+</span>
     <span><i style="background:var(--danger)"></i> 120+</span>
     <span><i style="background:var(--border-lit)"></i> Closed</span>
+  </div>
+</section>
+
+<!-- ============================== REPORTS ============================== -->
+<section class="tabp" id="tp-reports">
+  <div class="panel-head">
+    <div>
+      <h2>Reports</h2>
+      <div class="sub" id="rep-range">—</div>
+    </div>
+    <select class="input" id="rep-window" style="width:auto">
+      <option value="7">Last 7 days</option>
+      <option value="30" selected>Last 30 days</option>
+      <option value="90">Last 90 days</option>
+      <option value="ahead7">Next 7 days</option>
+      <option value="ahead30">Next 30 days</option>
+    </select>
+  </div>
+
+  <div class="rep-layout">
+    <nav class="rep-rail" id="rep-rail">
+      <div class="grp">Looking ahead</div>
+      <button data-rep="upcoming">Upcoming</button>
+      <div class="grp">Money</div>
+      <button data-rep="sales" class="on">Sales</button>
+      <button data-rep="payments">Payments</button>
+      <div class="grp">The arena</div>
+      <button data-rep="fill">Seat fill</button>
+      <button data-rep="guests">Guests</button>
+      <button data-rep="parties">Parties</button>
+    </nav>
+    <div id="rep-body"><div class="loading">Loading…</div></div>
   </div>
 </section>
 
@@ -1526,7 +1601,7 @@ load();
  * The tab is kept in the URL hash so a refresh, or a bookmark, comes back where you were.
  * ==================================================================== */
 
-const TABS = ['dashboard', 'gamesheet', 'bookings', 'customers', 'parties', 'calendar', 'notes', 'settings', 'help'];
+const TABS = ['dashboard', 'gamesheet', 'bookings', 'customers', 'parties', 'calendar', 'reports', 'notes', 'settings', 'help'];
 const loaded = new Set(['dashboard', 'gamesheet']);
 
 // The date bar drives both the dashboard and the game sheet, and means nothing on the rest.
@@ -1541,7 +1616,7 @@ function showTab(name) {
 
   if (!loaded.has(name)) {
     loaded.add(name);
-    ({ bookings: loadBookings, customers: loadCustomers, parties: loadParties, calendar: loadCalendar,
+    ({ bookings: loadBookings, customers: loadCustomers, parties: loadParties, calendar: loadCalendar, reports: loadReports,
        notes: loadNotes, settings: loadSettings, help: renderHelp }[name] || (() => {}))();
   }
 }
@@ -2432,6 +2507,195 @@ $('#ps-reset').onclick = async () => {
 $('#ps-edit').onclick = openSlotEditor;
 $('#ps-close').onclick = () => $('#ps-overlay').classList.remove('show');
 $('#ps-overlay').onclick = (e) => { if (e.target === $('#ps-overlay')) $('#ps-overlay').classList.remove('show'); };
+
+
+/* ==================================================================== *
+ * Reports
+ *
+ * Sales are grouped by the day a booking was PLACED; trade by the day the games RAN.
+ * A party booked in June for August belongs to June's sales and August's trade, and
+ * reporting both off one date is how a quiet month gets to look busy.
+ * ==================================================================== */
+
+let repView = 'sales';
+let repData = null;
+
+function repWindow() {
+  const v = $('#rep-window').value;
+  const today = parseISO(arenaToday());
+  if (v.startsWith('ahead')) {
+    const n = Number(v.slice(5));
+    const end = new Date(today); end.setDate(end.getDate() + n - 1);
+    return { from: arenaToday(), to: isoDate(end) };
+  }
+  const start = new Date(today); start.setDate(start.getDate() - (Number(v) - 1));
+  return { from: isoDate(start), to: arenaToday() };
+}
+
+async function loadReports() {
+  const host = $('#rep-body');
+  host.innerHTML = '<div class="loading">Loading…</div>';
+  const { from, to } = repWindow();
+  $('#rep-range').textContent = `${longDate(from)} — ${longDate(to)}`;
+  try {
+    repData = await api(`/api/staff/reports?from=${from}&to=${to}`);
+  } catch (e) {
+    host.innerHTML = `<div class="rep-empty">${esc(e.message)}</div>`;
+    return;
+  }
+  renderReport();
+}
+
+const kpi = (k, v, sub = '', cls = '') =>
+  `<div class="rep-kpi ${cls}"><div class="k">${k}</div><div class="v">${v}</div>${sub ? `<div class="sub2">${sub}</div>` : ''}</div>`;
+
+/** A simple column chart. Bars scale to the biggest value in the set, never to zero. */
+function bars(rows, valueOf, labelOf) {
+  const max = Math.max(1, ...rows.map(valueOf));
+  return `<div class="rep-bars">${rows.map((r) => {
+    const v = valueOf(r);
+    const pct = Math.round((v / max) * 100);
+    return `<div class="rep-bar${v ? '' : ' zero'}" title="${esc(labelOf(r))}: ${v}">
+      <i style="height:${Math.max(v ? 4 : 2, pct)}%"></i></div>`;
+  }).join('')}</div>
+  <div class="rep-axis">${rows.map((r) => `<span>${esc(labelOf(r))}</span>`).join('')}</div>`;
+}
+
+const dayLabel = (iso) => {
+  const d = parseISO(iso);
+  return d ? `${d.getDate()}` : iso;
+};
+
+function renderReport() {
+  const host = $('#rep-body');
+  const d = repData;
+  if (!d) return;
+
+  const panel = (title, sub, body) => `<div class="panel" style="margin-bottom:16px">
+    <div class="panel-head"><div><h2>${title}</h2>${sub ? `<div class="sub">${sub}</div>` : ''}</div></div>
+    ${body}</div>`;
+
+  if (repView === 'sales') {
+    host.innerHTML = `
+      <div class="rep-kpis">
+        ${kpi('Transactions', d.sales.transactions, 'bookings placed in this window')}
+        ${kpi('Sold', money(d.sales.grossCents), 'before tax', 'cy')}
+        ${kpi('Paid', money(d.sales.paidCents), `${d.sales.paidCount} of ${d.sales.transactions} paid by card`, 'ok')}
+        ${kpi('Unpaid', money(d.sales.unpaidCents), `${d.sales.unpaidCount} to collect at the desk`, d.sales.unpaidCents ? 'due' : '')}
+      </div>
+      ${panel('Sold over time', 'By the day the booking was placed.',
+        d.sales.transactions ? bars(d.sales.byDay, (r) => r.cents, (r) => dayLabel(r.date))
+          : '<div class="rep-empty">Nothing sold in this window.</div>')}`;
+    return;
+  }
+
+  if (repView === 'payments') {
+    const total = d.payments.collectedCents + d.payments.dueAtDeskCents;
+    host.innerHTML = `
+      <div class="rep-kpis">
+        ${kpi('Collected', money(d.payments.collectedCents), `${d.payments.onlineCount} booking${d.payments.onlineCount === 1 ? '' : 's'} paid online`, 'ok')}
+        ${kpi('Due at the desk', money(d.payments.dueAtDeskCents), `${d.payments.deskCount} booking${d.payments.deskCount === 1 ? '' : 's'}`, d.payments.dueAtDeskCents ? 'due' : '')}
+        ${kpi('On the books', money(total), 'for games in this window')}
+      </div>
+      ${panel('How it was paid', 'Card means Stripe confirmed the money. Everything else is owed on arrival.',
+        total ? `<div class="fillbar"><i style="width:${Math.round((d.payments.collectedCents / total) * 100)}%"></i></div>
+          <div style="display:flex;justify-content:space-between;margin-top:9px;font-size:13px">
+            <span style="color:var(--ok)">Card ${money(d.payments.collectedCents)}</span>
+            <span style="color:var(--dim)">At the desk ${money(d.payments.dueAtDeskCents)}</span>
+          </div>`
+        : '<div class="rep-empty">No money on the books for this window.</div>')}`;
+    return;
+  }
+
+  if (repView === 'fill') {
+    host.innerHTML = `
+      <div class="rep-kpis">
+        ${kpi('Seats sold', d.fill.seatsSold, `of ${d.fill.seatsOffered.toLocaleString()} offered`, 'cy')}
+        ${kpi('Seat fill', `${d.fill.pct}%`, 'across every game that ran')}
+        ${kpi('Games with players', d.fill.sessionsBooked, `of ${d.fill.sessionsOffered} scheduled`)}
+      </div>
+      ${panel('Seat fill', `The arena seats ${d.capacity} per game. This counts every game a booking occupies, not just the one it starts in.`,
+        `<div class="fillbar"><i style="width:${Math.max(1, d.fill.pct)}%"></i></div>
+         <div style="margin-top:9px;font-size:13px;color:var(--dim)">
+           ${d.fill.seatsSold.toLocaleString()} of ${d.fill.seatsOffered.toLocaleString()} seats
+         </div>`)}
+      ${panel('Players per day', 'By the day the games ran.',
+        d.trade.bookings ? bars(d.trade.byDay, (r) => r.guests, (r) => dayLabel(r.date))
+          : '<div class="rep-empty">No games ran in this window.</div>')}`;
+    return;
+  }
+
+  if (repView === 'guests') {
+    host.innerHTML = `
+      <div class="rep-kpis">
+        ${kpi('Players', d.guests.total, 'through the arena', 'cy')}
+        ${kpi('Average group', d.guests.avgPartySize, 'players per booking')}
+        ${kpi('Bookings', d.trade.bookings, 'with games in this window')}
+      </div>
+      ${panel('Group sizes', 'How many bookings came in at each size.',
+        d.guests.sizes.length
+          ? bars(d.guests.sizes, (r) => r.count, (r) => String(r.players))
+          : '<div class="rep-empty">No bookings in this window.</div>')}`;
+    return;
+  }
+
+  if (repView === 'parties') {
+    host.innerHTML = `
+      <div class="rep-kpis">
+        ${kpi('Parties', d.parties.count, 'in this window')}
+        ${kpi('Party guests', d.parties.guests)}
+        ${kpi('Party revenue', money(d.parties.grossCents), 'before tax', 'cy')}
+        ${kpi('Deposits outstanding', money(d.parties.depositsDueCents), 'not yet taken', d.parties.depositsDueCents ? 'due' : '')}
+      </div>
+      ${panel('By package', 'Which packages are actually selling.',
+        d.parties.byPackage.length ? `<table class="ptable">
+          <thead><tr><th>Package</th><th class="n">Parties</th><th class="n">Guests</th><th class="n">Revenue</th></tr></thead>
+          <tbody>${d.parties.byPackage.map((p) => `<tr>
+            <td>${esc(p.name)}</td><td class="n">${p.count}</td>
+            <td class="n">${p.guests}</td><td class="n">${money(p.cents)}</td></tr>`).join('')}</tbody></table>`
+        : '<div class="rep-empty">No parties booked in this window.</div>')}`;
+    return;
+  }
+
+  /* Upcoming */
+  host.innerHTML = `
+    <div class="rep-kpis">
+      ${kpi('Games on the books', d.trade.sessionsBooked, `of ${d.trade.sessionsOffered} running`, 'cy')}
+      ${kpi('Players expected', d.guests.total)}
+      ${kpi('Value on the books', money(d.trade.grossCents), 'before tax')}
+      ${kpi('Still to collect', money(d.payments.dueAtDeskCents), 'due at the venue', d.payments.dueAtDeskCents ? 'due' : '')}
+    </div>
+    ${panel('Players per day', "Where the gaps are. Games fill closer to the date, so distant days look emptier than they'll end up.",
+      d.trade.bookings ? bars(d.trade.byDay, (r) => r.guests, (r) => dayLabel(r.date))
+        : '<div class="rep-empty">Nothing booked in this window yet.</div>')}
+    ${panel('Where it came from', 'Booked revenue by source.',
+      d.trade.grossCents ? ['online', 'walkin', 'party'].map((k) => {
+        const label = { online: 'Booked online', walkin: 'Walk-ins', party: 'Parties' }[k];
+        const cents = d.trade.bySource[k];
+        const pct = Math.round((cents / d.trade.grossCents) * 100);
+        return `<div style="margin-bottom:11px">
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:5px">
+            <span>${label}</span><span><b>${money(cents)}</b> <span style="color:var(--dim)">${pct}%</span></span>
+          </div>
+          <div class="fillbar"><i style="width:${Math.max(pct ? 1 : 0, pct)}%"></i></div>
+        </div>`;
+      }).join('') : '<div class="rep-empty">No revenue on the books for this window.</div>')}`;
+}
+
+$('#rep-rail').querySelectorAll('[data-rep]').forEach((b) => {
+  b.onclick = () => {
+    repView = b.dataset.rep;
+    $('#rep-rail').querySelectorAll('[data-rep]').forEach((x) => x.classList.toggle('on', x === b));
+    // Looking ahead only makes sense against a forward window.
+    if (repView === 'upcoming' && !$('#rep-window').value.startsWith('ahead')) {
+      $('#rep-window').value = 'ahead7';
+      loadReports();
+      return;
+    }
+    renderReport();
+  };
+});
+$('#rep-window').onchange = loadReports;
 
 /* ---------- Open on the tab the URL asks for ---------- */
 showTab(location.hash.slice(1) || 'dashboard');

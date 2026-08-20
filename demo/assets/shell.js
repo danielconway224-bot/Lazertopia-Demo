@@ -54,7 +54,7 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
   // the customer's journey, not the front desk's. It gets a role badge instead, and the
   // view switch is how staff get back to the customer side.
   const links = chrome === 'staff'
-    ? '<span class="staff-badge">Admin</span>'
+    ? '<span class="staff-badge">Manager portal</span>'
     : NAV.map((n) => {
         const cls = ['nav-link', n.cta ? 'cta' : '', n.href === active ? 'active' : ''].filter(Boolean).join(' ');
         return `<a class="${cls}" href="${n.href}">${n.label}</a>`;
