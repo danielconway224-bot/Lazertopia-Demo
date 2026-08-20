@@ -9,43 +9,60 @@
 <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/assets/lasertopia.css" />
 <style>
-  .narrow { max-width: 660px; margin: 0 auto; }
+  .narrow { max-width: 700px; margin: 0 auto; }
+  .req { color: var(--dim); font-weight: 500; text-transform: none; letter-spacing: 0; }
+  .grp { margin-bottom: 22px; }
+  .grp > .fld { margin-bottom: 9px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
+  .three { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .three { grid-template-columns: 1fr; } }
+
+  /* The legal text. Scrolls in its own box so the form stays reachable, but the box is
+     tall enough that nobody can pretend they were not shown it. */
   .terms {
     background: var(--near-black); border: 1px solid var(--border); border-radius: 12px;
-    padding: 18px 20px; max-height: 220px; overflow-y: auto; font-size: 13.5px;
-    line-height: 1.7; color: var(--muted);
+    padding: 20px 22px; max-height: 380px; overflow-y: auto; scrollbar-width: thin;
   }
-  .terms p + p { margin-top: 11px; }
-  .terms b { color: var(--white); }
-
-  .agree { display: flex; gap: 11px; align-items: flex-start; font-size: 14px; color: var(--muted); line-height: 1.6; cursor: pointer; padding: 4px 0; }
-  .agree input { margin-top: 2px; width: 22px; height: 22px; accent-color: var(--cyan); cursor: pointer; flex-shrink: 0; }
-  @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
-    /* A 22px box is still a small target — the whole label is clickable, so give it height. */
-    .agree { padding: 10px 0; }
-    .agree input { width: 26px; height: 26px; }
+  .terms::-webkit-scrollbar { width: 8px; display: block; }
+  .terms::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 999px; }
+  .terms h3 { font-size: 15px; margin-bottom: 10px; }
+  .terms .pre {
+    font-size: 12.5px; color: var(--muted); line-height: 1.6; text-transform: uppercase;
+    letter-spacing: .01em; margin-bottom: 14px;
+  }
+  .terms ol { margin: 0 0 0 20px; padding: 0; display: grid; gap: 11px; }
+  .terms li { font-size: 12.8px; color: var(--muted); line-height: 1.65; }
+  .terms .validity {
+    margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);
+    font-size: 12.5px; color: var(--cyan); font-style: italic;
+  }
+  .gap {
+    display: inline-block; background: rgba(249,161,27,.14); color: var(--orange);
+    border: 1px dashed rgba(249,161,27,.5); border-radius: 5px; padding: 0 5px;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em;
   }
 
-  .seg-age { display: flex; gap: 4px; background: var(--near-black); border: 1px solid var(--border); border-radius: 10px; padding: 4px; }
-  .seg-age button {
-    flex: 1; border: none; background: transparent; color: var(--muted); cursor: pointer;
-    font-family: 'Space Grotesk'; font-weight: 700; font-size: 13px; padding: 9px 12px;
-    border-radius: 8px; transition: .13s;
+  .check-row {
+    display: flex; gap: 11px; align-items: flex-start; padding: 12px 14px;
+    background: var(--near-black); border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; transition: .13s;
   }
-  .seg-age button:hover:not(.on) { color: var(--white); }
-  .seg-age button.on { background: var(--cyan); color: #04121a; }
+  .check-row + .check-row { margin-top: 8px; }
+  .check-row:hover { border-color: var(--border-lit); }
+  .check-row.on { border-color: var(--cyan); background: rgba(41,171,226,.08); }
+  .check-row input { margin-top: 2px; accent-color: var(--cyan); width: 17px; height: 17px; flex-shrink: 0; }
+  .check-row span { font-size: 14px; line-height: 1.5; }
 
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .row2 .input { margin-top: 0; }
-
-  .signed { text-align: center; padding: 12px 0; }
-  .signed .check {
-    width: 62px; height: 62px; border-radius: 50%; background: rgba(53,208,127,.14);
-    border: 1px solid rgba(53,208,127,.5); display: grid; place-items: center; margin: 0 auto 18px;
+  .guard-note {
+    font-size: 12.5px; color: var(--dim); margin-top: 7px; line-height: 1.5;
   }
-  .signed .check svg { width: 30px; height: 30px; stroke: var(--ok); fill: none; }
-  #guardian-block { display: none; }
-  #guardian-block.show { display: block; }
+  .guard-note.need { color: var(--orange); }
+
+  .done-line { display: flex; justify-content: space-between; gap: 14px; font-size: 14px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .done-line:last-of-type { border-bottom: none; }
+  .done-line .k { color: var(--dim); }
+  .done-line .v { font-weight: 600; text-align: right; }
 </style>
 </head>
 <body>
@@ -53,158 +70,269 @@
 <div class="wrap hero">
   <div class="eyebrow">Before you play</div>
   <h1>Participant <span class="hi">waiver</span></h1>
-  <p>A signed waiver is required for every player. Sign it here and skip the paperwork at the front desk.</p>
+  <p>Every player needs one, and it lasts a year. Signing here saves the queue at the front
+     desk. Players under 18 need a parent or guardian to sign with them.</p>
 </div>
 
 <div class="wrap stack">
   <div class="narrow">
-    <div class="panel" id="form-panel">
-      <div class="panel-head"><div><h2>Waiver &amp; release</h2><div class="sub">One per player</div></div></div>
+    <div class="panel">
 
-      <label class="fld">Who is this waiver for?</label>
-      <div class="seg-age" id="age-seg">
-        <button class="on" data-minor="0">I'm 18 or older</button>
-        <button data-minor="1">This is for a player under 18</button>
-      </div>
-
-      <div style="margin-top:18px">
-        <label class="fld" for="w-name" id="name-label">Player's full name</label>
-        <input class="input" id="w-name" placeholder="Full name" autocomplete="name" />
-      </div>
-
-      <div id="guardian-block">
-        <div class="note-box warn" style="margin:16px 0">
-          Players under 18 must have this waiver signed by a <b>parent or legal guardian</b>.
-        </div>
-        <label class="fld" for="w-guardian">Parent or legal guardian's full name</label>
-        <input class="input" id="w-guardian" placeholder="Parent or guardian name" />
-      </div>
-
-      <div class="row2" style="margin-top:14px">
-        <div>
-          <label class="fld" for="w-phone">Phone</label>
-          <input class="input" id="w-phone" type="tel" placeholder="204-555-0142" autocomplete="tel" />
-        </div>
-        <div>
-          <label class="fld" for="w-email">Email <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500">(optional)</span></label>
-          <input class="input" id="w-email" type="email" placeholder="you@example.com" autocomplete="email" />
+      <div class="grp">
+        <span class="fld">Player’s name</span>
+        <div class="two">
+          <div>
+            <label class="fld" for="w-first">First name <span class="req">(required)</span></label>
+            <input class="input" id="w-first" autocomplete="given-name" />
+          </div>
+          <div>
+            <label class="fld" for="w-last">Last name <span class="req">(required)</span></label>
+            <input class="input" id="w-last" autocomplete="family-name" />
+          </div>
         </div>
       </div>
 
-      <label class="fld" style="margin-top:18px">Terms</label>
-      <div class="terms">
-        <p>I understand that laser tag at <b>Lasertopia Inc.</b> involves physical activity in a
-           darkened, two-level arena, and that this activity carries inherent risks including slips,
-           trips, falls, and collisions with other participants or with fixed objects.</p>
-        <p>I confirm that the participant is in good health and is not aware of any medical condition —
-           including but not limited to heart conditions, epilepsy, photosensitivity, pregnancy, or
-           recent injury or surgery — that would make participation unsafe. The arena uses
-           <b>flashing lights, fog effects and loud music</b>.</p>
-        <p>I agree to follow all posted rules and staff instructions at all times: no running, no
-           climbing, no physical contact with other players, and <b>clean, closed-toe shoes</b> must be
-           worn in the arena. I understand that staff may remove any participant who does not follow
-           these rules, without refund.</p>
-        <p>Lasertopia is a <b>nut-free facility</b>. No outside food, drinks, cakes or candies may be
-           brought into the building.</p>
-        <p>To the fullest extent permitted by law, I release and hold harmless Lasertopia Inc., its
-           owners, staff and agents from any claim for injury, loss or damage arising from
-           participation, except where caused by their own gross negligence.</p>
-        <p>I confirm I have the legal authority to sign this waiver — for myself, or as the parent or
-           legal guardian of the participant named above.</p>
+      <div class="grp">
+        <label class="fld" for="w-dob">Date of birth <span class="req">(required)</span></label>
+        <input class="input" id="w-dob" type="date" style="max-width:220px" />
+        <div class="guard-note" id="w-age-note"></div>
       </div>
 
-      <label class="agree" style="margin-top:16px">
-        <input type="checkbox" id="w-agree" />
-        <span id="agree-text">I have read and agree to the waiver and release above, and I confirm the details I've entered are accurate.</span>
-      </label>
+      <div class="grp">
+        <span class="fld">Parent / guardian name <span class="req">(if the player is under 18)</span></span>
+        <div class="two">
+          <div>
+            <label class="fld" for="w-gfirst">First name</label>
+            <input class="input" id="w-gfirst" />
+          </div>
+          <div>
+            <label class="fld" for="w-glast">Last name</label>
+            <input class="input" id="w-glast" />
+          </div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <label class="fld" for="w-email">Email <span class="req">(required)</span></label>
+        <input class="input" id="w-email" type="email" autocomplete="email" placeholder="you@example.com" />
+      </div>
+
+      <div class="grp">
+        <span class="fld">Address <span class="req">(required)</span></span>
+        <label class="fld" for="w-country" style="margin-top:8px">Country</label>
+        <select class="input" id="w-country">
+          <option>Canada</option>
+          <option>United States</option>
+          <option>Other</option>
+        </select>
+        <label class="fld" for="w-addr1" style="margin-top:12px">Address line 1</label>
+        <input class="input" id="w-addr1" autocomplete="address-line1" />
+        <label class="fld" for="w-addr2" style="margin-top:12px">Address line 2</label>
+        <input class="input" id="w-addr2" autocomplete="address-line2" />
+        <div class="three" style="margin-top:12px">
+          <div>
+            <label class="fld" for="w-city">City</label>
+            <input class="input" id="w-city" autocomplete="address-level2" />
+          </div>
+          <div>
+            <label class="fld" for="w-prov">Province</label>
+            <input class="input" id="w-prov" autocomplete="address-level1" />
+          </div>
+          <div>
+            <label class="fld" for="w-post">Postal code</label>
+            <input class="input" id="w-post" autocomplete="postal-code" />
+          </div>
+        </div>
+      </div>
+
+      <div class="grp">
+        <span class="fld" id="terms-title">Lasertopia Acknowledgement and Release</span>
+        <div class="terms" id="w-terms"><div class="loading">Loading the terms…</div></div>
+      </div>
+
+      <div class="grp">
+        <label class="fld" for="w-comments">Comments</label>
+        <textarea class="input" id="w-comments" rows="2" placeholder="Anything we should know?"></textarea>
+      </div>
+
+      <div class="grp">
+        <span class="fld">Do you agree to the terms and conditions? <span class="req">(required)</span></span>
+        <label class="check-row" id="w-agree-row">
+          <input type="checkbox" id="w-agree" />
+          <span>Yes — I have read the Acknowledgement and Release above and I agree to it.</span>
+        </label>
+      </div>
+
+      <div class="grp">
+        <span class="fld">How did you hear about us? <span class="req">(required)</span></span>
+        <div id="w-heard"></div>
+      </div>
+
+      <div class="note-box" style="margin-bottom:16px">
+        Signing today, <b id="w-today"></b>. This waiver is valid for
+        <b>one year</b> — until <b id="w-expires"></b>.
+      </div>
 
       <div class="err" id="w-error"></div>
-      <button class="btn btn-primary btn-block" id="w-sign" style="margin-top:18px">Sign the waiver</button>
-
-      <div class="note-box" style="margin-top:16px">
-        <b>Note:</b> waivers aren't stored online yet — signing shows you the confirmation
-        the real system would produce. Wiring it to the database is the next step.
-      </div>
-    </div>
-
-    <div class="panel" id="done-panel" style="display:none">
-      <div class="signed">
-        <div class="check"><svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-        <h2 style="font-size:23px;margin-bottom:8px">Waiver signed</h2>
-        <div style="color:var(--muted);font-size:14.5px;line-height:1.65" id="done-msg"></div>
-        <div class="recap" id="done-recap" style="text-align:left"></div>
-        <a class="btn btn-primary btn-block" href="/" style="margin-top:20px">Book a game</a>
-        <button class="btn btn-ghost btn-block" id="another" style="margin-top:9px">Sign another waiver</button>
-      </div>
+      <button class="btn btn-primary btn-block" id="w-send" style="margin-top:6px">Send</button>
     </div>
   </div>
 </div>
 
+<!-- Confirmation -->
+<div class="overlay" id="ok-overlay">
+  <div class="modal" style="text-align:center">
+    <div style="width:60px;height:60px;border-radius:50%;background:rgba(53,208,127,.14);border:1px solid rgba(53,208,127,.5);display:grid;place-items:center;margin:0 auto 16px">
+      <svg viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:29px;height:29px;stroke:var(--ok);fill:none"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <h3>Waiver signed</h3>
+    <div style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:4px">
+      Show your name at the front desk — we’ll have it on file.
+    </div>
+    <div class="recap" id="ok-recap" style="text-align:left"></div>
+    <a class="btn btn-primary btn-block" href="/" style="margin-top:18px">Book a game</a>
+    <button class="btn btn-ghost btn-block" id="ok-another" style="margin-top:9px">Sign another player</button>
+  </div>
+</div>
+
 <script type="module">
-import { ARENA } from '/lib/arena.js';
-import { mountShell, $, esc } from '/assets/shell.js';
+import { ARENA, isoDate, parseISO, arenaToday } from '/lib/arena.js';
+import { mountShell, hydrateConfig, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
 
 mountShell({ active: '/waiver' });
+await hydrateConfig();
 
-let isMinor = false;
+let terms = null;
 
-/* ---------- Adult / minor toggle ---------- */
-$('#age-seg').querySelectorAll('button').forEach((b) => {
-  b.onclick = () => {
-    $('#age-seg').querySelectorAll('button').forEach((x) => x.classList.remove('on'));
-    b.classList.add('on');
-    isMinor = b.dataset.minor === '1';
-    $('#guardian-block').classList.toggle('show', isMinor);
-    $('#name-label').textContent = isMinor ? "Player's full name (the person playing)" : 'Your full name';
-    $('#agree-text').textContent = isMinor
-      ? 'I am the parent or legal guardian of the player named above. I have read and agree to the waiver and release on their behalf.'
-      : "I have read and agree to the waiver and release above, and I confirm the details I've entered are accurate.";
-  };
-});
+/* ---------- Terms ---------- *
+ * Fetched rather than hard-coded in the page so the wording a customer agrees to and the
+ * version stored against their signature come from the same place. */
+try {
+  terms = await api('/api/waiver-terms');
+} catch (e) {
+  $('#w-terms').innerHTML = `<div class="empty-note">${esc(e.message)}</div>`;
+}
 
-/* ---------- Sign ---------- */
-$('#w-sign').onclick = () => {
+if (terms) {
+  $('#terms-title').textContent = terms.title;
+  $('#w-terms').innerHTML = `
+    <h3>${esc(terms.title)}</h3>
+    <div class="pre">${esc(terms.preamble)}</div>
+    <ol>${terms.clauses.map((c, i) => {
+      const gap = terms.incomplete.includes(i + 1);
+      return `<li>${gap ? '<span class="gap">WORDING TO BE CONFIRMED</span> ' : ''}${esc(c)}</li>`;
+    }).join('')}</ol>
+    <div class="validity">${esc(terms.validityNote)}</div>`;
+
+  $('#w-heard').innerHTML = terms.heardAbout.map((h) => `
+    <label class="check-row"><input type="checkbox" value="${esc(h)}" data-heard /><span>${esc(h)}</span></label>`).join('');
+
+  document.querySelectorAll('#w-heard .check-row').forEach((row) => {
+    const box = row.querySelector('input');
+    box.onchange = () => row.classList.toggle('on', box.checked);
+  });
+}
+
+$('#w-agree').onchange = () => $('#w-agree-row').classList.toggle('on', $('#w-agree').checked);
+
+/* ---------- Dates ---------- */
+const today = arenaToday();
+$('#w-today').textContent = longDate(today);
+const exp = parseISO(today);
+exp.setMonth(exp.getMonth() + 12);
+const expISO = isoDate(exp);
+
+/** longDate() omits the year, which makes a one-year expiry read as the same day. */
+const withYear = (iso) => {
+  const d = parseISO(iso);
+  return d ? d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }) : iso;
+};
+$('#w-expires').textContent = withYear(expISO);
+
+/** Whole years old today. */
+function age(dobISO) {
+  const dob = parseISO(dobISO);
+  if (!dob) return null;
+  const now = parseISO(today);
+  let a = now.getFullYear() - dob.getFullYear();
+  const m = now.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) a -= 1;
+  return a;
+}
+
+// Say what the age means as soon as it is entered, rather than refusing after they submit.
+$('#w-dob').oninput = () => {
+  const note = $('#w-age-note');
+  const a = age($('#w-dob').value);
+  if (a == null) { note.textContent = ''; note.className = 'guard-note'; return; }
+  if (a < ARENA.recommendedAge) {
+    note.className = 'guard-note need';
+    note.textContent = `Players must be ${ARENA.recommendedAge} or older on the day of play.`;
+  } else if (a < 18) {
+    note.className = 'guard-note need';
+    note.textContent = `${a} years old — a parent or guardian must sign below as well.`;
+  } else {
+    note.className = 'guard-note';
+    note.textContent = `${a} years old.`;
+  }
+};
+
+/* ---------- Send ---------- */
+$('#w-send').onclick = async () => {
   const err = $('#w-error');
   err.textContent = '';
+  const btn = $('#w-send');
 
-  const name = $('#w-name').value.trim();
-  const guardian = $('#w-guardian').value.trim();
-  const phone = $('#w-phone').value.trim();
+  const heard = [...document.querySelectorAll('[data-heard]:checked')].map((b) => b.value);
+  const body = {
+    firstName: $('#w-first').value.trim(),
+    lastName: $('#w-last').value.trim(),
+    email: $('#w-email').value.trim(),
+    dateOfBirth: $('#w-dob').value,
+    guardianFirst: $('#w-gfirst').value.trim(),
+    guardianLast: $('#w-glast').value.trim(),
+    country: $('#w-country').value,
+    address1: $('#w-addr1').value.trim(),
+    address2: $('#w-addr2').value.trim(),
+    city: $('#w-city').value.trim(),
+    province: $('#w-prov').value.trim(),
+    postalCode: $('#w-post').value.trim(),
+    comments: $('#w-comments').value.trim(),
+    heardAbout: heard,
+    agreed: $('#w-agree').checked,
+  };
 
-  if (!name) { err.textContent = "Please enter the player's full name."; $('#w-name').focus(); return; }
-  if (isMinor && !guardian) {
-    err.textContent = 'Players under 18 need a parent or legal guardian to sign. Please enter their name.';
-    $('#w-guardian').focus();
-    return;
+  btn.disabled = true;
+  try {
+    const res = await jsonPost('/api/waiver', body);
+    $('#ok-recap').innerHTML = `
+      <div class="done-line"><span class="k">Player</span><span class="v">${esc(res.waiver.firstName)} ${esc(res.waiver.lastName)}</span></div>
+      ${res.waiver.guardianFirst ? `<div class="done-line"><span class="k">Signed with</span><span class="v">${esc(res.waiver.guardianFirst)} ${esc(res.waiver.guardianLast)}</span></div>` : ''}
+      <div class="done-line"><span class="k">Signed</span><span class="v">${esc(longDate(today))}</span></div>
+      <div class="done-line"><span class="k">Valid until</span><span class="v">${esc(withYear(res.expiresOn))}</span></div>`;
+    $('#ok-overlay').classList.add('show');
+  } catch (e) {
+    err.textContent = e.message;
+    // Scroll the message into view — the form is long enough to hide it otherwise.
+    err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } finally {
+    btn.disabled = false;
   }
-  if (!phone) { err.textContent = 'Please enter a phone number so we can match this waiver to your visit.'; $('#w-phone').focus(); return; }
-  if (!$('#w-agree').checked) { err.textContent = 'Please tick the box to agree to the waiver before signing.'; return; }
-
-  const signedOn = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-  $('#done-msg').innerHTML = isMinor
-    ? `Signed by <b style="color:var(--white)">${esc(guardian)}</b> as parent or legal guardian of <b style="color:var(--white)">${esc(name)}</b>. Show your name at the front desk when you arrive.`
-    : `Thanks, <b style="color:var(--white)">${esc(name)}</b>. Show your name at the front desk when you arrive and you're good to go.`;
-
-  $('#done-recap').innerHTML = `
-    <div class="row"><span class="k">Player</span><span class="v">${esc(name)}</span></div>
-    ${isMinor ? `<div class="row"><span class="k">Signed by</span><span class="v">${esc(guardian)}</span></div>` : ''}
-    <div class="row"><span class="k">Phone</span><span class="v">${esc(phone)}</span></div>
-    <div class="row"><span class="k">Signed</span><span class="v">${esc(signedOn)}</span></div>`;
-
-  $('#form-panel').style.display = 'none';
-  $('#done-panel').style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-$('#another').onclick = () => {
-  ['#w-name', '#w-guardian', '#w-phone', '#w-email'].forEach((s) => { $(s).value = ''; });
+$('#ok-another').onclick = () => {
+  for (const id of ['w-first', 'w-last', 'w-email', 'w-dob', 'w-gfirst', 'w-glast', 'w-comments']) {
+    $(`#${id}`).value = '';
+  }
   $('#w-agree').checked = false;
-  $('#w-error').textContent = '';
-  $('#done-panel').style.display = 'none';
-  $('#form-panel').style.display = 'block';
+  $('#w-agree-row').classList.remove('on');
+  document.querySelectorAll('[data-heard]').forEach((b) => { b.checked = false; b.closest('.check-row').classList.remove('on'); });
+  $('#w-age-note').textContent = '';
+  $('#ok-overlay').classList.remove('show');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
+
+$('#ok-overlay').onclick = (e) => { if (e.target === $('#ok-overlay')) $('#ok-overlay').classList.remove('show'); };
 </script>
 </body>
 </html>

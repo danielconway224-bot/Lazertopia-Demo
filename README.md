@@ -346,7 +346,7 @@ through it before the first real customer books.
 | 2 | **Stop falling back to the in-memory store** | If `SUPABASE_URL` goes missing in production the site quietly serves an empty arena and accepts bookings that vanish. Make missing database config a hard startup failure. |
 | 2b | **Settings are editable, so guard them** | Prices, hours and the booking cutoff can now be changed from the portal and reach the customer site immediately. That is the point — and it is also why staff sign-in (item 1) matters more than it did. |
 | 3 | **Allow live Stripe keys** | `lib/payments.js` refuses `sk_live_` on purpose so a real card cannot be charged mid-build. Relax it, and add a webhook for refunds, disputes and delayed payment methods. |
-| 4 | **Store waivers** | `/waiver` shows a confirmation and saves nothing. Needs a table, and a way for the desk to look one up on arrival. |
+| 4 | **Confirm waiver clause 9** | The waiver now matches lasertopia.ca and stores to Postgres, but only the tail of clause 9 was legible in the source. It renders marked *wording to be confirmed*. Get the full text from Lasertopia before this is relied on. |
 | 5 | **Auto-refund the paid-but-unseated case** | If the last seats go while a customer is on Stripe's page they are told to ring the desk. It should refund automatically. |
 | 6 | **Schedule the reminders** | Day-before messages are a button on the game sheet so they can be demonstrated. Move to a cron. |
 | 7 | **Supabase plan and backups** | Free projects pause after inactivity and back up thinly. Confirm the plan before launch. |
