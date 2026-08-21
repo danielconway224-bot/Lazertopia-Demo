@@ -6,7 +6,7 @@
 <title>Lasertopia — Book a Laser Tag Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="/assets/lasertopia.css" />
 <style>
   /* ---------- Date panel ---------- */
@@ -27,7 +27,7 @@
     justify-content: center; min-width: 0; overflow: hidden; opacity: 1; transition: opacity .4s ease .16s;
   }
   @media (max-width: 760px) { .day-summary { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 22px; } }
-  .day-summary .picked { font-family: var(--mono); font-weight: 700; font-size: 27px; margin-bottom: 6px; }
+  .day-summary .picked { font-family: var(--ui); font-weight: 700; font-size: 27px; margin-bottom: 6px; }
   .day-summary .open { color: var(--amber); font-size: 15.5px; font-weight: 600; }
   .day-summary .open.shut { color: var(--danger); }
   .hours-list { margin-top: 24px; display: grid; gap: 10px; max-width: 340px; }
@@ -49,7 +49,7 @@
   /* Later games in a multi-game run — shows the customer exactly what they're holding */
   .sess.inspan { border-color: var(--cyan-dim); background: rgba(41,171,226,.06); }
 
-  .sess .t { font-family: var(--mono); font-weight: 700; font-size: 16.5px; letter-spacing: -.01em; }
+  .sess .t { font-family: var(--ui); font-weight: 700; font-size: 16.5px; letter-spacing: -.01em; }
   .sess .s { font-size: 11.5px; color: var(--dim); margin-top: 3px; }
   .sess.sel .s { color: #a9dcf3; }
   .sess .bar { height: 4px; border-radius: 999px; background: var(--surface-2); margin-top: 9px; overflow: hidden; }
@@ -57,7 +57,7 @@
   .sess .bar i.mid  { background: var(--orange); }
   .sess .bar i.high { background: var(--danger); }
   .sess .tag {
-    position: absolute; top: 9px; right: 9px; font-family: var(--mono); font-size: 9px;
+    position: absolute; top: 9px; right: 9px; font-family: var(--ui); font-size: 9px;
     font-weight: 800; letter-spacing: .09em; color: var(--danger);
   }
   .sess .tag.past { color: var(--dim); }
@@ -111,7 +111,7 @@
   .cb-item .k { font-size: 10px; text-transform: uppercase; letter-spacing: .13em; color: var(--dim); font-weight: 700; margin-bottom: 5px; }
   .cb-item .v { font-size: 14.5px; font-weight: 600; }
   .cb-item .v small { display: block; color: var(--dim); font-size: 11.5px; font-weight: 500; margin-top: 2px; }
-  .cb-total .v { font-family: var(--mono); font-weight: 700; font-size: 21px; color: var(--amber); }
+  .cb-total .v { font-family: var(--ui); font-weight: 700; font-size: 21px; color: var(--amber); }
   .cb-actions { display: flex; gap: 10px; align-items: center; }
   @media (max-width: 720px) {
     .checkbar .inner { padding: 11px 16px 13px; gap: 10px; }
@@ -148,12 +148,12 @@
   }
   .stepper button:hover:not(:disabled) { background: var(--surface-2); color: var(--amber); }
   .stepper button:disabled { opacity: .3; cursor: not-allowed; }
-  .stepper .val { min-width: 30px; text-align: center; font-family: var(--mono); font-weight: 700; font-size: 15px; }
+  .stepper .val { min-width: 30px; text-align: center; font-family: var(--ui); font-weight: 700; font-size: 15px; }
 
   .seg { display: flex; gap: 3px; background: var(--near-black); border: 1px solid var(--border); border-radius: 0; padding: 3px; }
   .seg button {
     border: none; background: transparent; color: var(--muted); cursor: pointer;
-    font-family: var(--mono); font-weight: 700; font-size: 12.5px; padding: 6px 12px;
+    font-family: var(--ui); font-weight: 700; font-size: 12.5px; padding: 6px 12px;
     border-radius: 0; transition: .12s; white-space: nowrap;
   }
   .seg button:hover:not(.on):not(:disabled) { color: var(--white); }
@@ -176,7 +176,7 @@
   }
   .conf .check svg { width: 30px; height: 30px; stroke: var(--ok); fill: none; }
   .code {
-    font-family: var(--mono); font-weight: 800; font-size: 25px; letter-spacing: .08em;
+    font-family: var(--ui); font-weight: 800; font-size: 25px; letter-spacing: .08em;
     color: var(--amber); margin: 6px 0 4px;
   }
   .conf-msg { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 4px; }

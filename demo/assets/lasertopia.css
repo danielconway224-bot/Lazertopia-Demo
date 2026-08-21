@@ -1,47 +1,56 @@
 /* Lasertopia design system.
  *
- * The look is a RUN SHEET, not a dashboard. A laser tag day is a column of times with
- * things happening against them, and the interface says so.
+ * Typography and colour follow lasertopia.ca, so a customer arriving from the main site
+ * does not feel handed off to a different company. Their site is Poppins on black with the
+ * amber and cyan of the logo — verified from the live stylesheet rather than guessed from a
+ * screenshot, which would have landed on Montserrat and been wrong.
  *
- * Four rules, and everything else follows from them:
+ * Structure stays the run sheet: a laser tag day is a column of times with things happening
+ * against them, and the interface says so.
  *
  *   1. No shadowed cards. Separation comes from hairline rules and background shifts.
  *      A shadow says "this floats above the page"; nothing here floats.
  *   2. Sharp corners. Rounding is reserved for status pills, where the shape IS the
  *      meaning — a pill reads as a label rather than a container.
- *   3. Archivo for interface text, IBM Plex Mono for every time, count and dollar figure.
- *      Numbers that line up vertically can be scanned; numbers that don't, can't.
- *   4. Amber is the signal colour and is spent sparingly: what is happening NOW, the money,
- *      and the one action on the page. If everything is amber, nothing is.
+ *   3. Poppins throughout, uppercase and letter-spaced for navigation and headings, exactly
+ *      as the main site sets them.
+ *   4. Amber and cyan are the brand's two signals, as on lasertopia.ca: amber for the
+ *      primary action and what is happening NOW, cyan for the secondary. Spent sparingly —
+ *      if everything is a signal, nothing is.
+ *
+ * A mono face survives for one job only: columns of times and figures in the manager
+ * portal, where a proportional face leaves the column ragged and unscannable. It never
+ * appears on a customer-facing page.
  */
 
 :root {
   /* Surfaces, darkest first. Each step is a background shift, not a shadow. */
-  --bg:         #0B0D11;
-  --panel:      #11141A;
-  --panel-2:    #161A21;
-  --inset:      #0D1015;
+  --bg:         #000000;
+  --panel:      #0D0D0D;
+  --panel-2:    #141414;
+  --inset:      #080808;
 
   /* Hairlines do the work shadows used to. */
-  --hairline:   #232936;
-  --hairline-2: #2E3542;
+  --hairline:   #242424;
+  --hairline-2: #363636;
 
-  --text:       #E4E7EB;
-  --muted:      #9BA5B4;
-  --dim:        #6B7688;
+  --text:       #FFFFFF;
+  --muted:      #A8A8A8;
+  --dim:        #6E6E6E;
 
   /* Signal. Amber is the only colour that means "look here". */
-  --amber:      #F0A93C;
-  --amber-2:    #FFC163;
-  --amber-dim:  #8A6420;
-  --amber-wash: rgba(240, 169, 60, .10);
+  --amber:      #F9A11B;
+  --amber-2:    #FFB944;
+  --amber-dim:  #8A5A10;
+  --amber-wash: rgba(249, 161, 27, .10);
 
   --error:      #E86A5C;
   --ok:         #4FB783;
-  --cyan:       #4FA8D8;   /* brand secondary, used for links and information only */
+  --cyan:       #29ABE2;   /* the logo's blue — the brand's second signal */
 
+  --ui:   'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Portal only — see the note at the top of this file. */
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --ui:   'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Kept so older rules referencing them still resolve to something sane. */
   --black: var(--bg);
@@ -56,7 +65,7 @@
   --yellow: var(--amber-2);
   --danger: var(--error);
   --cyan-dim: #2E6E93;
-  --cyan-glow: rgba(240, 169, 60, .22);
+  --cyan-glow: rgba(249, 161, 27, .22);
   --radius: 0px;
 }
 
@@ -76,15 +85,21 @@ body {
   overflow-x: hidden;
 }
 
-/* Every time, count and dollar figure. Tabular so columns of numbers line up. */
-.mono, .num, time { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+/* Poppins' default figures are proportional, which leaves a column of times or prices
+   ragged. Tabular numerals fix that without leaving the brand face. */
+body { font-variant-numeric: tabular-nums; }
+/* The portal opts into the mono face for its dense numeric columns; see the note above. */
+.mono, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 h1, h2, h3, .display {
   font-family: var(--ui);
   font-weight: 700;
-  letter-spacing: -.02em;
-  line-height: 1.15;
+  line-height: 1.18;
+  letter-spacing: -.01em;
 }
+/* The page headline is set the way the main site sets its hero: uppercase, heavy, tracked
+   open. Sub-headings stay sentence case — a portal full of shouting is unreadable. */
+.hero h1 { text-transform: uppercase; font-weight: 800; letter-spacing: .005em; }
 a { color: inherit; }
 
 .wrap { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
@@ -125,7 +140,8 @@ header {
 
 .nav-links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
 .nav-link {
-  font-family: var(--ui); font-weight: 600; font-size: 13.5px;
+  font-family: var(--ui); font-weight: 500; font-size: 13px;
+  text-transform: uppercase; letter-spacing: .07em;
   color: var(--muted); text-decoration: none; padding: 9px 14px;
   border-bottom: 2px solid transparent; transition: color .12s, border-color .12s;
   white-space: nowrap;
@@ -140,7 +156,7 @@ header {
 
 /* Says where you are on staff pages; links nowhere. */
 .staff-badge {
-  font-family: var(--mono); font-weight: 500; font-size: 11px;
+  font-family: var(--ui); font-weight: 600; font-size: 11px;
   letter-spacing: .16em; text-transform: uppercase; color: var(--amber);
   border: 1px solid var(--amber-dim); background: transparent;
   padding: 7px 14px; white-space: nowrap;
@@ -155,7 +171,7 @@ header {
 /* ---------- Hero ---------- */
 .hero { padding: 40px 0 8px; }
 .eyebrow {
-  font-family: var(--mono); color: var(--amber); font-weight: 500; font-size: 11.5px;
+  font-family: var(--ui); color: var(--amber); font-weight: 600; font-size: 11.5px;
   letter-spacing: .18em; text-transform: uppercase;
 }
 .hero h1 { font-size: 42px; margin: 12px 0 10px; }
@@ -195,7 +211,8 @@ header {
 /* ---------- Buttons ----------
    Sharp, flat, no shadow. One amber button per view. */
 .btn {
-  font-family: var(--ui); font-weight: 700; font-size: 14px;
+  font-family: var(--ui); font-weight: 600; font-size: 13.5px;
+  text-transform: uppercase; letter-spacing: .06em;
   padding: 12px 20px; border: 1px solid transparent;
   cursor: pointer; transition: background .12s, border-color .12s, color .12s;
   text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
@@ -208,6 +225,9 @@ header {
 .btn-orange:hover:not(:disabled) { background: var(--amber-2); border-color: var(--amber-2); }
 .btn-ghost { background: transparent; color: var(--muted); border-color: var(--hairline-2); }
 .btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+/* The main site pairs an amber primary with a cyan secondary. */
+.btn-cyan { background: var(--cyan); color: #04121A; border-color: var(--cyan); }
+.btn-cyan:hover:not(:disabled) { background: #4FC0F0; border-color: #4FC0F0; }
 .btn-block { width: 100%; }
 .btn-sm { padding: 8px 13px; font-size: 12.5px; }
 
@@ -236,8 +256,8 @@ select.input { appearance: none; cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7688' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; background-size: 17px; padding-right: 38px; }
 .fld {
-  display: block; font-family: var(--mono); font-size: 11px; text-transform: uppercase;
-  letter-spacing: .14em; color: var(--dim); font-weight: 500; margin-bottom: 8px;
+  display: block; font-family: var(--ui); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .12em; color: var(--dim); font-weight: 600; margin-bottom: 8px;
 }
 
 /* ---------- Notes & badges ---------- */
