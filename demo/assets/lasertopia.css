@@ -142,7 +142,18 @@ header {
 .brand-fallback .a { color: var(--amber); }
 .brand-fallback .b { color: var(--cyan); }
 
-.nav-links { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+/* The logo and the reference links travel together on the right. Reversed inside, so the
+   logo stays first in the DOM and last on screen. */
+.nav-right {
+  display: flex; flex-direction: row-reverse; align-items: center; gap: 26px;
+  flex-wrap: wrap; justify-content: flex-end;
+}
+
+.nav-links { display: flex; align-items: center; flex-wrap: wrap; }
+/* The two things people come to do: filled, side by side, on the left. */
+.nav-do { gap: 8px; }
+/* Reference: plain links, spaced apart from the decision. */
+.nav-read { gap: 4px; }
 .nav-link {
   font-family: var(--ui); font-weight: 500; font-size: 13px;
   text-transform: uppercase; letter-spacing: .07em;
@@ -152,7 +163,7 @@ header {
 }
 .nav-link:hover { color: var(--text); }
 .nav-link.active { color: var(--amber); border-bottom-color: var(--amber); }
-.nav-link.cta { font-weight: 700; padding: 9px 16px; border-bottom-color: transparent; }
+.nav-link.cta { font-weight: 700; padding: 11px 20px; border-bottom-color: transparent; }
 .nav-link.cta-amber { color: #17120A; background: var(--amber); }
 .nav-link.cta-amber:hover { background: var(--amber-2); color: #17120A; }
 /* The main site pairs an amber call to action with a cyan one. Parties takes the cyan:
@@ -160,8 +171,18 @@ header {
    item in a list of links. */
 .nav-link.cta-cyan { color: #04121A; background: var(--cyan); }
 .nav-link.cta-cyan:hover { background: #4FC0F0; color: #04121A; }
-/* A CTA that is also the current page keeps its fill and gains a rule beneath. */
-.nav-link.cta.active { border-bottom-color: var(--text); }
+/* A CTA that is also the current page keeps its fill and gains a rule beneath it, so the
+   fill can stay the brand colour rather than doubling as the "you are here" signal. */
+.nav-link.cta.active { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .45); }
+
+/* The waiver is an action, not a page to browse, so it is outlined rather than filled —
+   present without competing with the two buttons that carry the business. */
+.nav-link.outline {
+  border: 1px solid var(--hairline-2); padding: 8px 14px; margin-left: 8px;
+  border-bottom-color: var(--hairline-2);
+}
+.nav-link.outline:hover { border-color: var(--amber); color: var(--amber); }
+.nav-link.outline.active { border-color: var(--amber); color: var(--amber); }
 
 /* Says where you are on staff pages; links nowhere. */
 .staff-badge {
@@ -170,10 +191,14 @@ header {
   border: 1px solid var(--amber-dim); background: transparent;
   padding: 7px 14px; white-space: nowrap;
 }
-@media (max-width: 780px) {
-  .nav { flex-direction: column; justify-content: center; gap: 4px; min-height: 0; padding: 10px 0; }
+@media (max-width: 900px) {
+  /* Stacked: logo, then the two buttons, then the reference links. The decision stays
+     above the reference material at every width. */
+  .nav { flex-direction: column-reverse; justify-content: center; gap: 10px; min-height: 0; padding: 10px 0; }
+  .nav-right { flex-direction: column; gap: 8px; }
   .nav-links { justify-content: center; }
   .brand img { height: 66px; margin: -10px 0; }
+  .nav-link.outline { margin-left: 0; }
 }
 @media (max-width: 620px) { .nav-link { padding: 8px 11px; font-size: 12.5px; } .brand img { height: 58px; } }
 

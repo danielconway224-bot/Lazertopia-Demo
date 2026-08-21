@@ -24,12 +24,20 @@ const VOLTRIS_URL = 'https://www.voltrisbooking.com';
 // biggest booking Lasertopia takes and was buried third in a row of plain links, so it now
 // sits second and carries the brand's cyan — the same pairing lasertopia.ca uses for its
 // two calls to action.
+// Two groups, because they are two different kinds of thing.
+//
+// `do` is what someone came here for: book a game, book a party. Both are filled buttons,
+// in the brand's amber and cyan — the same pairing lasertopia.ca uses.
+//
+// `read` is reference: what it costs, when we are open, and the waiver. These sit over on
+// the right, out of the way of the decision. The waiver is an action rather than a page to
+// browse, so it gets an outline — visible, without competing with the two that matter.
 const NAV = [
-  { href: '/',         label: 'Book a game' },
-  { href: '/packages', label: 'Book a party', cta: 'cyan' },
-  { href: '/rates',    label: 'Rates' },
-  { href: '/hours',    label: 'Hours' },
-  { href: '/waiver',   label: 'Waiver', cta: 'amber' },
+  { href: '/',         label: 'Book a game',  group: 'do',   cta: 'amber' },
+  { href: '/packages', label: 'Book a party', group: 'do',   cta: 'cyan' },
+  { href: '/rates',    label: 'Rates',        group: 'read' },
+  { href: '/hours',    label: 'Hours',        group: 'read' },
+  { href: '/waiver',   label: 'Waiver',       group: 'read', outline: true },
 ];
 
 /**
@@ -59,23 +67,32 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
   // The staff page has no use for customer navigation — booking, rates and waivers are
   // the customer's journey, not the front desk's. It gets a role badge instead, and the
   // view switch is how staff get back to the customer side.
-  const links = chrome === 'staff'
-    ? '<span class="staff-badge">Manager portal</span>'
-    : NAV.map((n) => {
-        const cls = ['nav-link', n.cta ? `cta cta-${n.cta}` : '', n.href === active ? 'active' : ''].filter(Boolean).join(' ');
-        return `<a class="${cls}" href="${n.href}">${n.label}</a>`;
-      }).join('');
+  const link = (n) => {
+    const cls = ['nav-link',
+      n.cta ? `cta cta-${n.cta}` : '',
+      n.outline ? 'outline' : '',
+      n.href === active ? 'active' : ''].filter(Boolean).join(' ');
+    return `<a class="${cls}" href="${esc(n.href)}"${n.href === active ? ' aria-current="page"' : ''}>${esc(n.label)}</a>`;
+  };
+  const group = (name) => NAV.filter((n) => n.group === name).map(link).join('');
 
   document.body.insertAdjacentHTML('afterbegin', `
     ${banner ? `<div class="demo-banner">${esc(banner)}</div>` : ''}
     <header>
       <div class="wrap nav">
-        <a class="brand" href="/">
-          <img src="${LOGO}" alt="Lasertopia"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
-          <span class="brand-fallback" style="display:none"><span class="a">LASER</span><span class="b">TOPIA</span></span>
-        </a>
-        <nav class="nav-links">${links}</nav>
+        <!-- The row is reversed, so this renders on the right while staying first in the
+             DOM — where a logo that links home belongs for screen readers and tab order. -->
+        <div class="nav-right">
+          <a class="brand" href="/">
+            <img src="${LOGO}" alt="Lasertopia"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
+            <span class="brand-fallback" style="display:none"><span class="a">LASER</span><span class="b">TOPIA</span></span>
+          </a>
+          ${chrome === 'staff' ? '' : `<nav class="nav-links nav-read" aria-label="Information">${group('read')}</nav>`}
+        </div>
+        ${chrome === 'staff'
+          ? '<span class="staff-badge">Manager portal</span>'
+          : `<nav class="nav-links nav-do" aria-label="Book">${group('do')}</nav>`}
       </div>
     </header>`);
 
