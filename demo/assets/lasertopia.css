@@ -132,12 +132,12 @@ header {
    logo-links-home belongs for screen readers and keyboard order. */
 .nav {
   display: flex; flex-direction: row-reverse; align-items: center; justify-content: space-between;
-  gap: 16px; min-height: 84px; padding: 10px 0; flex-wrap: wrap;
+  gap: 16px; min-height: 84px; padding: 8px 0; flex-wrap: wrap;
 }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
-/* The source PNG carries a lot of transparent space around the burst, so the box has to be
-   taller than the wordmark to read at a sensible size. Negative margins claw some back. */
-.brand img { height: 78px; width: auto; display: block; margin: -12px 0; }
+/* The PNG is cropped to the artwork, so this height is the logo you actually see — no
+   transparent padding, and no negative margins needed to claw it back. */
+.brand img { height: 70px; width: auto; display: block; }
 .brand-fallback { font-family: var(--ui); font-weight: 800; font-size: 20px; letter-spacing: -.02em; white-space: nowrap; }
 .brand-fallback .a { color: var(--amber); }
 .brand-fallback .b { color: var(--cyan); }
@@ -197,10 +197,10 @@ header {
   .nav { flex-direction: column-reverse; justify-content: center; gap: 10px; min-height: 0; padding: 10px 0; }
   .nav-right { flex-direction: column; gap: 8px; }
   .nav-links { justify-content: center; }
-  .brand img { height: 66px; margin: -10px 0; }
+  .brand img { height: 58px; }
   .nav-link.outline { margin-left: 0; }
 }
-@media (max-width: 620px) { .nav-link { padding: 8px 11px; font-size: 12.5px; } .brand img { height: 58px; } }
+@media (max-width: 620px) { .nav-link { padding: 8px 11px; font-size: 12.5px; } .brand img { height: 50px; } }
 
 /* ---------- Hero ---------- */
 .hero { padding: 40px 0 8px; }
