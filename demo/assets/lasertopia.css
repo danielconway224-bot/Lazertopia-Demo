@@ -12,15 +12,17 @@
  *      A shadow says "this floats above the page"; nothing here floats.
  *   2. Sharp corners. Rounding is reserved for status pills, where the shape IS the
  *      meaning — a pill reads as a label rather than a container.
- *   3. Poppins throughout, uppercase and letter-spaced for navigation and headings, exactly
- *      as the main site sets them.
+ *   3. Poppins throughout — every word AND every figure, uppercase and letter-spaced for
+ *      navigation and headings, exactly as the main site sets them. No second face.
  *   4. Amber and cyan are the brand's two signals, as on lasertopia.ca: amber for the
  *      primary action and what is happening NOW, cyan for the secondary. Spent sparingly —
  *      if everything is a signal, nothing is.
  *
- * A mono face survives for one job only: columns of times and figures in the manager
- * portal, where a proportional face leaves the column ragged and unscannable. It never
- * appears on a customer-facing page.
+ * Figures were briefly set in a monospace so columns of times would line up. They are not
+ * any more: the main site has one typeface and so does this. Alignment is handled the way
+ * it should have been in the first place — tabular numerals where the font offers them, and
+ * right-aligned numeric table columns, which holds a column straight whatever the figures
+ * happen to measure.
  */
 
 :root {
@@ -48,9 +50,7 @@
   --ok:         #4FB783;
   --cyan:       #29ABE2;   /* the logo's blue — the brand's second signal */
 
-  --ui:   'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  /* Portal only — see the note at the top of this file. */
-  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ui: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Kept so older rules referencing them still resolve to something sane. */
   --black: var(--bg);
@@ -85,11 +85,10 @@ body {
   overflow-x: hidden;
 }
 
-/* Poppins' default figures are proportional, which leaves a column of times or prices
-   ragged. Tabular numerals fix that without leaving the brand face. */
-body { font-variant-numeric: tabular-nums; }
-/* The portal opts into the mono face for its dense numeric columns; see the note above. */
-.mono, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+/* Ask for tabular figures wherever the face provides them, so a column of times or prices
+   sits straight. Numeric table cells are right-aligned as well, which keeps a column true
+   even when the figures are proportional. */
+body { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1; }
 
 h1, h2, h3, .display {
   font-family: var(--ui);
@@ -201,7 +200,7 @@ header {
 .step { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); }
 .step .dot {
   width: 22px; height: 22px; border: 1px solid var(--hairline-2);
-  display: grid; place-items: center; font-family: var(--mono); font-size: 11px; color: var(--dim);
+  display: grid; place-items: center; font-family: var(--ui); font-size: 11px; color: var(--dim);
 }
 .step.active { color: var(--text); }
 .step.active .dot { background: var(--amber); color: #17120A; border-color: var(--amber); }
@@ -251,7 +250,7 @@ header {
 .input::placeholder { color: var(--dim); }
 .input:focus { outline: none; border-color: var(--amber); }
 .input + .input { margin-top: 10px; }
-input[type=number].input, input[type=date].input, input[type=time].input { font-family: var(--mono); }
+input[type=number].input, input[type=date].input, input[type=time].input { font-family: var(--ui); }
 select.input { appearance: none; cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7688' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; background-size: 17px; padding-right: 38px; }
@@ -271,7 +270,7 @@ select.input { appearance: none; cursor: pointer;
 
 /* Pills are the one place rounding is allowed — the shape says "label", not "container". */
 .badge {
-  display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);
+  display: inline-flex; align-items: center; gap: 5px; font-family: var(--ui);
   font-size: 10.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
   padding: 3px 9px; border-radius: 999px; border: 1px solid;
 }
@@ -294,7 +293,7 @@ select.input { appearance: none; cursor: pointer;
 }
 .modal h3 { font-size: 22px; margin-bottom: 6px; }
 .modal .sub {
-  font-family: var(--mono); color: var(--dim); font-size: 11.5px; text-transform: uppercase;
+  font-family: var(--ui); color: var(--dim); font-size: 11.5px; text-transform: uppercase;
   letter-spacing: .1em; margin-bottom: 20px;
 }
 .modal-close {
@@ -307,7 +306,7 @@ select.input { appearance: none; cursor: pointer;
 .recap { border-top: 1px solid var(--hairline); margin-top: 18px; padding-top: 16px; display: grid; gap: 10px; }
 .recap .row { display: flex; justify-content: space-between; gap: 14px; font-size: 14px; }
 .recap .row .k { color: var(--dim); }
-.recap .row .v { font-family: var(--mono); font-weight: 500; text-align: right; }
+.recap .row .v { font-family: var(--ui); font-weight: 500; text-align: right; }
 .recap .row.tot {
   border-top: 1px solid var(--hairline); padding-top: 13px; margin-top: 4px;
   font-size: 15px; align-items: baseline;
@@ -349,7 +348,7 @@ footer .ft-brand { color: var(--text); font-weight: 600; letter-spacing: -.01em;
 }
 .powered:hover { border-color: var(--hairline-2); }
 .powered .pb-label {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+  font-family: var(--ui); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
   color: var(--dim); white-space: nowrap;
 }
 .powered .pb-plate { display: inline-flex; align-items: center; background: #fff; padding: 7px 16px; }
@@ -363,7 +362,7 @@ footer .ft-brand { color: var(--text); font-weight: 600; letter-spacing: -.01em;
 
 /* ---------- Loading ---------- */
 .loading {
-  font-family: var(--mono); color: var(--dim); font-size: 12.5px; padding: 28px;
+  font-family: var(--ui); color: var(--dim); font-size: 12.5px; padding: 28px;
   text-align: center; letter-spacing: .08em; text-transform: uppercase;
 }
 
@@ -383,13 +382,13 @@ footer .ft-brand { color: var(--text); font-weight: 600; letter-spacing: -.01em;
 
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .cal-dow {
-  font-family: var(--mono); font-size: 10px; color: var(--dim); text-align: center;
+  font-family: var(--ui); font-size: 10px; color: var(--dim); text-align: center;
   padding-bottom: 8px; text-transform: uppercase; letter-spacing: .12em;
 }
 .cal-day {
   height: 52px; position: relative; display: grid; place-items: center;
   border: 1px solid var(--hairline); background: var(--inset); cursor: pointer;
-  font-family: var(--mono); font-size: 14px; color: var(--text);
+  font-family: var(--ui); font-size: 14px; color: var(--text);
   transition: border-color .1s, background .1s, color .1s, height .35s cubic-bezier(.4,0,.2,1);
 }
 .cal-day.empty { background: transparent; border: none; cursor: default; }
@@ -408,7 +407,7 @@ footer .ft-brand { color: var(--text); font-weight: 600; letter-spacing: -.01em;
 
 .cal-key {
   display: flex; gap: 18px; flex-wrap: wrap; margin-top: 16px;
-  font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .04em;
+  font-family: var(--ui); font-size: 11px; color: var(--dim); letter-spacing: .04em;
 }
 .cal-key span { display: inline-flex; align-items: center; gap: 7px; }
 .cal-key i { width: 8px; height: 8px; display: inline-block; }
@@ -466,7 +465,7 @@ footer .ft-brand { color: var(--text); font-weight: 600; letter-spacing: -.01em;
   transition: bottom .3s cubic-bezier(.4,0,.2,1);
 }
 .view-switch .vs-label {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+  font-family: var(--ui); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
   color: var(--dim); padding: 0 8px; white-space: nowrap;
 }
 .view-switch .vs-btn {
