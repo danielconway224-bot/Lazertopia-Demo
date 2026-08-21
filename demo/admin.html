@@ -498,7 +498,8 @@
   .setform { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
   .setfield { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
   .setfield:last-child { border-bottom: none; }
-  .setfield label { font-size: 13.5px; color: var(--muted); flex: 1; min-width: 0; }
+  .setfield { flex-wrap: wrap; }
+  .setfield label { font-size: 13.5px; color: var(--muted); flex: 1 1 120px; min-width: 96px; }
   .setfield label small { display: block; color: var(--dim); font-size: 11.5px; margin-top: 2px; line-height: 1.4; }
   .setfield .ctl { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
   .setfield input, .setfield select {
@@ -509,20 +510,135 @@
   .setfield input:focus { outline: none; border-color: var(--amber); }
   .setfield input.wide { width: 120px; }
   .setfield .unit { font-size: 12px; color: var(--dim); min-width: 46px; }
-  .setfield input[type=time] { width: 118px; text-align: left; font-family: var(--ui); }
+  .setfield input[type=time] { width: 120px; text-align: left; font-family: var(--ui); }
+
+  /* Opening hours: day above, the two times beneath it on their own line. */
+  .hours-row { display: block; padding: 10px 0; border-bottom: 1px solid var(--hairline); }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-row .day {
+    font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 7px;
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  .hours-row .times { display: flex; align-items: center; gap: 8px; }
+  .hours-row input {
+    flex: 1; min-width: 0; background: var(--inset); border: 1px solid var(--hairline);
+    color: var(--text); padding: 9px 10px; font-size: 13px; font-family: var(--ui);
+  }
+  .hours-row input:focus { outline: none; border-color: var(--amber); }
+  .hours-row .dash { color: var(--dim); flex-shrink: 0; }
+
+  /* Special hours: same idea — the date on its own line, the pair of times beneath. */
+  .sh-row { display: block; padding: 12px 0; }
+  .sh-row .sh-top { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .sh-row .sh-top input { flex: 1; min-width: 0; }
+  .sh-row .sh-times { display: flex; align-items: center; gap: 8px; }
+  .sh-row .sh-times input { flex: 1; min-width: 0; width: auto; }
+  /* Opening hours is a label and two times; below this the controls need the full row. */
+  @media (max-width: 1180px) {
+    .setform { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  }
 
   .savebar {
     position: sticky; bottom: 0; z-index: 20; margin-top: 20px;
-    background: rgba(12,12,19,.96); backdrop-filter: blur(12px);
-    border-top: 1px solid var(--border-lit); padding: 14px 0;
-    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    background: var(--bg); border-top: 1px solid var(--hairline-2); padding: 14px 0;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
   }
-  .savebar .msg { font-size: 13px; color: var(--dim); flex: 1; min-width: 160px; }
+  .savebar .msg { font-size: 13px; color: var(--dim); flex: 1 1 200px; min-width: 0; }
+  /* The view switch is fixed in the corner and would sit on the save buttons. Same trick
+     the booking page uses for its checkout bar: move the switch, not the content. */
+  body:has(#tp-settings.on) .view-switch { bottom: 84px; }
+  @media (max-width: 720px) { body:has(#tp-settings.on) .view-switch { bottom: 92px; } }
   .sh-row { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
   .sh-row:last-of-type { border-bottom: none; }
-  .sh-row input[type=date] { width: 140px; text-align: left; font-family: var(--ui); }
+  .sh-row input {
+    background: var(--inset); border: 1px solid var(--hairline); color: var(--text);
+    padding: 8px 10px; font-size: 13px; font-family: var(--ui);
+  }
+  .sh-row input:focus { outline: none; border-color: var(--amber); }
+  .sh-row input[type=date] { width: 148px; text-align: left; }
+  .sh-row input[type=time] { width: 112px; text-align: left; }
   .sh-row .drop { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 15px; padding: 0 4px; }
   .sh-row .drop:hover { color: var(--danger); }
+
+  /* ---------- Time picker (desk booking) ----------
+     The modal used to borrow .sess from the customer page, where those styles live in that
+     page's own <style> block — so here they simply did not exist and the grid rendered as
+     raw buttons. Its own styles now, sized for a modal rather than a full-width page. */
+  .tp-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px;
+    max-height: 232px; overflow-y: auto; padding: 2px;
+    scrollbar-width: thin;
+  }
+  .tp-grid::-webkit-scrollbar { width: 7px; display: block; }
+  .tp-grid::-webkit-scrollbar-thumb { background: var(--hairline-2); }
+  .tp {
+    background: var(--inset); border: 1px solid var(--hairline); color: var(--text);
+    padding: 9px 8px; cursor: pointer; text-align: left; font-family: var(--ui);
+    transition: border-color .12s, background .12s;
+  }
+  .tp:hover:not(:disabled) { border-color: var(--amber); }
+  .tp.on { background: var(--amber); border-color: var(--amber); color: #17120A; }
+  .tp:disabled { opacity: .3; cursor: not-allowed; }
+  .tp .t { font-size: 13.5px; font-weight: 600; display: block; }
+  .tp .s { font-size: 10.5px; color: var(--dim); display: block; margin-top: 2px; }
+  .tp.on .s { color: rgba(23,18,10,.72); }
+  .tp.held { border-style: dashed; border-color: var(--amber-dim); }
+  .tp-note { font-size: 11.5px; color: var(--dim); margin-top: 8px; line-height: 1.5; }
+
+  /* Desk party form reuses the customer page's add-on and food rows, which live in that
+     page's own <style> block — so they are defined here too rather than borrowed. */
+  .extras { margin-top: 18px; }
+  .extras h4 {
+    font-family: var(--ui); font-size: 11px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--dim); margin-bottom: 8px;
+  }
+  .opt-row {
+    display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+    background: var(--inset); border: 1px solid var(--hairline); cursor: pointer; transition: .13s;
+  }
+  .opt-row + .opt-row { margin-top: 6px; }
+  .opt-row:hover { border-color: var(--hairline-2); }
+  .opt-row.on { border-color: var(--amber); background: var(--amber-wash); }
+  .opt-row input { margin: 2px 0 0; accent-color: var(--amber); flex-shrink: 0; }
+  .opt-row .nm { font-size: 13.5px; font-weight: 600; }
+  .opt-row .pr { font-size: 12px; color: var(--amber); font-weight: 600; margin-left: 6px; }
+
+  details.food { margin-top: 14px; border: 1px solid var(--hairline); background: var(--inset); }
+  details.food summary {
+    cursor: pointer; padding: 11px 13px; font-weight: 600; font-size: 12.5px;
+    color: var(--muted); list-style: none; text-transform: uppercase; letter-spacing: .08em;
+  }
+  details.food summary::-webkit-details-marker { display: none; }
+  details.food summary::before { content: '+ '; color: var(--amber); }
+  details.food[open] summary::before { content: '– '; }
+  .food-body { padding: 0 13px 13px; }
+  .food-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--hairline); }
+  .food-row .nm { flex: 1; font-size: 13px; }
+  .food-row .pr { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+  .food-row input {
+    width: 56px; background: var(--panel); border: 1px solid var(--hairline); color: var(--text);
+    padding: 7px 8px; font-size: 13px; text-align: center; font-family: var(--ui);
+  }
+  .check-row {
+    display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px;
+    background: var(--inset); border: 1px solid var(--hairline); cursor: pointer; transition: .13s;
+  }
+  .check-row.on { border-color: var(--amber); background: var(--amber-wash); }
+  .check-row input { margin-top: 1px; accent-color: var(--amber); width: 16px; height: 16px; flex-shrink: 0; }
+  .check-row span { font-size: 13.5px; line-height: 1.5; }
+
+  .np-slot {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--inset); border: 1px solid var(--hairline); padding: 11px 13px;
+    cursor: pointer; transition: .13s; width: 100%; text-align: left;
+    font-family: var(--ui); color: var(--text);
+  }
+  .np-slot + .np-slot { margin-top: 6px; }
+  .np-slot:hover:not(:disabled) { border-color: var(--amber); }
+  .np-slot.on { border-color: var(--amber); background: var(--amber-wash); }
+  .np-slot:disabled { opacity: .45; cursor: not-allowed; }
+  .np-slot .t { font-size: 13.5px; font-weight: 600; }
+  .np-slot .d { font-size: 11.5px; color: var(--dim); margin-top: 3px; line-height: 1.45; }
 </style>
 </head>
 <body>
@@ -673,7 +789,8 @@
       <h2>Parties</h2>
       <div class="sub">Every booked party, with everything the desk needs on the day.</div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" id="pty-new">+ New party</button>
       <button class="nav-sq" id="pty-prev" aria-label="Previous month">‹</button>
       <div class="cur" id="pty-label" style="min-width:150px;text-align:center"></div>
       <button class="nav-sq" id="pty-next" aria-label="Next month">›</button>
@@ -908,6 +1025,75 @@
   </div>
 </div>
 
+<!-- Desk party booking -->
+<div class="overlay" id="np-overlay">
+  <div class="modal" style="max-width:620px">
+    <button class="modal-close" id="np-close" aria-label="Close">✕</button>
+    <h3>New party</h3>
+    <div class="sub">Taken at the desk or over the phone</div>
+
+    <div class="row2">
+      <div>
+        <label class="fld" for="np-date">Date</label>
+        <input class="input" id="np-date" type="date" />
+      </div>
+      <div>
+        <label class="fld" for="np-age">Birthday age turning</label>
+        <input class="input" id="np-age" type="number" min="1" max="99" value="8" />
+      </div>
+    </div>
+
+    <div class="row2" style="margin-top:14px">
+      <div>
+        <label class="fld" for="np-package">Package</label>
+        <select class="input" id="np-package"></select>
+      </div>
+      <div>
+        <label class="fld" for="np-guests">Guests</label>
+        <input class="input" id="np-guests" type="number" min="1" value="10" />
+      </div>
+    </div>
+
+    <label class="fld" style="margin-top:16px">Party room slot</label>
+    <div id="np-slots"><div class="tp-note">Pick a date to see slots.</div></div>
+
+    <div class="extras" id="np-addons"></div>
+
+    <details class="food" id="np-food-wrap">
+      <summary>Add pizza or wings</summary>
+      <div class="food-body" id="np-food"></div>
+    </details>
+
+    <div class="row2" style="margin-top:16px">
+      <div>
+        <label class="fld" for="np-name">Name</label>
+        <input class="input" id="np-name" placeholder="Guest of honour / booking name" />
+      </div>
+      <div>
+        <label class="fld" for="np-phone">Phone</label>
+        <input class="input" id="np-phone" type="tel" placeholder="204-555-0142" />
+      </div>
+    </div>
+
+    <label class="fld" for="np-email" style="margin-top:14px">Email (optional)</label>
+    <input class="input" id="np-email" type="email" placeholder="you@example.com" />
+
+    <label class="check-row" id="np-deposit-row" style="margin-top:14px">
+      <input type="checkbox" id="np-deposit" />
+      <span>Deposit already taken — mark it paid</span>
+    </label>
+
+    <label class="check-row" id="np-override-row" style="margin-top:8px;display:none">
+      <input type="checkbox" id="np-override" />
+      <span id="np-override-text"></span>
+    </label>
+
+    <div class="note-box" id="np-total" style="margin-top:16px"></div>
+    <div class="err" id="np-error"></div>
+    <button class="btn btn-primary btn-block" id="np-save" style="margin-top:14px">Save party</button>
+  </div>
+</div>
+
 <!-- Staff booking modal -->
 <div class="overlay" id="nb-overlay">
   <div class="modal">
@@ -954,7 +1140,8 @@
 
 <script type="module">
 import {
-  ARENA, PACKAGES, EVENT_PACKAGES, hoursFor, sessionSpan, priceBooking, perPersonFor,
+  ARENA, PACKAGES, EVENT_PACKAGES, ADD_ONS, EXTRA_PIZZAS, WINGS, PIZZA_TOPPINGS, WING_SAUCES,
+  hoursFor, sessionSpan, priceBooking, perPersonFor, priceEventPackage, addOnsFor, validAge,
   ageCompatible, isoDate, parseISO, fmtTime, money, arenaToday, gamesInSlot,
 } from '/lib/arena.js';
 import { mountShell, hydrateConfig, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
@@ -2108,12 +2295,12 @@ function renderSettings() {
 
     ${card('Opening hours', [1, 2, 3, 4, 5, 6, 0].map((day) => {
       const [o, c] = setState.weeklyHours[day];
-      return `<div class="setfield">
-        <label>${DAY_NAMES[day]}</label>
-        <div class="ctl">
-          <input type="time" value="${toHhmm(o)}" data-hours="${day}.0" />
-          <span class="unit" style="min-width:0">–</span>
-          <input type="time" value="${toHhmm(c)}" data-hours="${day}.1" />
+      return `<div class="hours-row">
+        <div class="day">${DAY_NAMES[day]}</div>
+        <div class="times">
+          <input type="time" value="${toHhmm(o)}" data-hours="${day}.0" aria-label="${DAY_NAMES[day]} opens" />
+          <span class="dash">–</span>
+          <input type="time" value="${toHhmm(c)}" data-hours="${day}.1" aria-label="${DAY_NAMES[day]} closes" />
         </div>
       </div>`;
     }).join(''), 'weeklyHours')}
@@ -2125,11 +2312,15 @@ function renderSettings() {
       <div id="sh-list">${Object.entries(setState.specialHours)
         .sort(([x], [y]) => (x < y ? -1 : 1)).map(([date, e]) => `
         <div class="sh-row">
-          <input type="date" value="${date}" data-sh="date" data-key="${date}" />
-          <input type="time" value="${e.hours ? toHhmm(e.hours[0]) : ''}" data-sh="open" data-key="${date}" />
-          <span class="unit" style="min-width:0">–</span>
-          <input type="time" value="${e.hours ? toHhmm(e.hours[1]) : ''}" data-sh="close" data-key="${date}" />
-          <button class="drop" data-shdrop="${date}" aria-label="Remove">✕</button>
+          <div class="sh-top">
+            <input type="date" value="${date}" data-sh="date" data-key="${date}" aria-label="Date" />
+            <button class="drop" data-shdrop="${date}" aria-label="Remove this date">✕</button>
+          </div>
+          <div class="sh-times">
+            <input type="time" value="${e.hours ? toHhmm(e.hours[0]) : ''}" data-sh="open" data-key="${date}" aria-label="Opens" />
+            <span class="dash" style="color:var(--dim)">–</span>
+            <input type="time" value="${e.hours ? toHhmm(e.hours[1]) : ''}" data-sh="close" data-key="${date}" aria-label="Closes" />
+          </div>
         </div>`).join('') || '<div style="color:var(--dim);font-size:13px;padding:6px 0">None set.</div>'}</div>
       <button class="btn btn-ghost btn-sm" id="sh-add" style="margin-top:10px">+ Add a date</button>`, 'specialHours')}
 
@@ -2538,20 +2729,32 @@ async function loadNbTimes() {
 
 function renderNbTimes() {
   const players = Math.max(1, Number($('#nb-players').value) || 1);
-  // The desk can seat people in a game that has already started, and in a party-held slot
-  // if it is going spare — neither is true for the public site.
-  $('#nb-times').innerHTML = `<div class="sessions" style="max-height:190px;overflow-y:auto">${nbSessions.map((sn) => {
-    const tight = sn.seatsLeft < players;
-    const cls = ['sess'];
-    if (sn.startMin === nbPick) cls.push('sel');
-    if (sn.past) cls.push('gone');
+  if (!nbSessions.length) {
+    $('#nb-times').innerHTML = '<div class="tp-note">No games on this date.</div>';
+    return;
+  }
+
+  // The desk may seat people in a game already underway, and in a party-held slot if it is
+  // going spare. Neither is true on the public site, so nothing here is hidden — only a
+  // closed game or one without room is refused.
+  const held = nbSessions.filter((sn) => sn.held && !sn.past).length;
+
+  $('#nb-times').innerHTML = `<div class="tp-grid">${nbSessions.map((sn) => {
+    const noRoom = sn.seatsLeft < players;
+    const cls = ['tp'];
+    if (sn.startMin === nbPick) cls.push('on');
     if (sn.held) cls.push('held');
-    if (sn.blocked || tight) cls.push('gone');
-    return `<button class="${cls.join(' ')}"${sn.blocked || tight ? ' disabled' : ` data-nbt="${sn.startMin}"`}>
-      <div class="t">${fmtTime(sn.startMin)}</div>
-      <div class="s">${sn.blocked ? 'Closed' : `${sn.seatsLeft} left${sn.held ? ' · held' : ''}${sn.past ? ' · started' : ''}`}</div>
+    const why = sn.blocked ? 'Closed'
+      : noRoom ? `Only ${sn.seatsLeft} left`
+      : `${sn.seatsLeft} left${sn.held ? ' · held' : ''}${sn.past ? ' · started' : ''}`;
+    return `<button type="button" class="${cls.join(' ')}"${sn.blocked || noRoom ? ' disabled' : ` data-nbt="${sn.startMin}"`}>
+      <span class="t">${fmtTime(sn.startMin)}</span>
+      <span class="s">${why}</span>
     </button>`;
-  }).join('')}</div>`;
+  }).join('')}</div>
+  <div class="tp-note">
+    Games already underway are still bookable from the desk${held ? `, and ${held} time${held > 1 ? 's are' : ' is'} held for parties — take one if it is going spare` : ''}.
+  </div>`;
 
   $('#nb-times').querySelectorAll('[data-nbt]').forEach((b) => {
     b.onclick = () => { nbPick = Number(b.dataset.nbt); renderNbTimes(); nbUpdateTotal(); };
@@ -2930,6 +3133,234 @@ $('#rep-rail').querySelectorAll('[data-rep]').forEach((b) => {
   };
 });
 $('#rep-window').onchange = loadReports;
+
+
+/* ==================================================================== *
+ * New party, from the desk
+ *
+ * The customer form and this one ask the same questions, but the desk gets two things the
+ * public never does: it can seat a party against the age-matching rule when it judges that
+ * fine, and it can record a deposit already taken in cash or on the terminal.
+ * ==================================================================== */
+
+let npSlots = [];
+let npPick = null;
+let npAddOns = new Set();
+let npFood = {};
+
+function openNewParty() {
+  $('#np-error').textContent = '';
+  $('#np-name').value = '';
+  $('#np-phone').value = '';
+  $('#np-email').value = '';
+  $('#np-age').value = '8';
+  $('#np-guests').value = '10';
+  $('#np-guests').max = String(ARENA.maxPartyGuests);
+  $('#np-deposit').checked = false;
+  $('#np-override').checked = false;
+  $('#np-deposit-row').classList.remove('on');
+  $('#np-override-row').style.display = 'none';
+  npPick = null;
+  npAddOns = new Set();
+  npFood = {};
+
+  $('#np-package').innerHTML = EVENT_PACKAGES
+    .map((p) => `<option value="${p.id}">${esc(p.name)} · ${money(p.cents)}</option>`).join('');
+
+  // Parties are planned ahead, so default a fortnight out rather than today.
+  const d = parseISO(state.date || arenaToday());
+  d.setDate(d.getDate() + 14);
+  $('#np-date').value = isoDate(d);
+
+  npRenderAddOns();
+  npRenderFood();
+  npUpdateTotal();
+  $('#np-overlay').classList.add('show');
+  npLoadSlots();
+}
+
+async function npLoadSlots() {
+  const host = $('#np-slots');
+  const date = $('#np-date').value;
+  if (!date) { host.innerHTML = '<div class="tp-note">Pick a date to see slots.</div>'; return; }
+  if (hoursFor(date).closed) {
+    npSlots = [];
+    host.innerHTML = '<div class="note-box bad" style="font-size:13px">Closed that day.</div>';
+    return;
+  }
+
+  host.innerHTML = '<div class="loading" style="padding:14px">Loading…</div>';
+  const age = Number($('#np-age').value) || null;
+  const guests = Number($('#np-guests').value) || null;
+  try {
+    const q = `date=${encodeURIComponent(date)}${age ? `&age=${age}` : ''}${guests ? `&guests=${guests}` : ''}`;
+    const d = await api(`/api/party-slots?${q}`);
+    npSlots = d.slots;
+  } catch (e) {
+    host.innerHTML = `<div class="note-box bad" style="font-size:13px">${esc(e.message)}</div>`;
+    return;
+  }
+  if (npPick != null && !npSlots.some((s) => s.start === npPick)) npPick = null;
+  npRenderSlots();
+}
+
+function npRenderSlots() {
+  const host = $('#np-slots');
+  if (!npSlots.length) {
+    host.innerHTML = '<div class="tp-note">No party slots on this day.</div>';
+    return;
+  }
+
+  host.innerHTML = npSlots.map((s) => {
+    // The desk may override the age rule but never capacity, so a slot with no room left
+    // is genuinely unavailable while an age clash is merely a warning.
+    const ageOnly = !s.ageFits && s.spotsLeft > 0 && s.sizeFits;
+    const blocked = !s.available && !ageOnly;
+    const detail = blocked ? s.reason
+      : ageOnly ? `Age clash — ${s.reason}`
+      : `${s.spotsLeft} of ${s.capacity} rooms free${s.positionsNeeded > 1 ? ' · takes 2' : ''}${s.games.length ? ` · laser tag ${s.games.map(fmtTime).join(', ')}` : ' · times confirmed by phone'}`;
+    return `<button type="button" class="np-slot${s.start === npPick ? ' on' : ''}"${blocked ? ' disabled' : ` data-nps="${s.start}"`}>
+      <span>
+        <span class="t">${fmtTime(s.start)} – ${fmtTime(s.end)}</span>
+        <span class="d">${esc(detail)}</span>
+      </span>
+    </button>`;
+  }).join('');
+
+  host.querySelectorAll('[data-nps]').forEach((b) => {
+    b.onclick = () => { npPick = Number(b.dataset.nps); npRenderSlots(); npUpdateTotal(); };
+  });
+
+  // Only offer the override when there is actually something to override.
+  const slot = npSlots.find((s) => s.start === npPick);
+  const needsOverride = slot && !slot.ageFits && slot.spotsLeft > 0 && slot.sizeFits;
+  $('#np-override-row').style.display = needsOverride ? '' : 'none';
+  if (needsOverride) $('#np-override-text').textContent = `Seat them anyway — ${slot.reason}`;
+  else $('#np-override').checked = false;
+}
+
+function npRenderAddOns() {
+  const pkg = $('#np-package').value;
+  const options = addOnsFor(pkg);
+  const arcade = options.filter((a) => a.group === 'arcade');
+
+  const box = (a, type, name) => `
+    <label class="opt-row${npAddOns.has(a.id) ? ' on' : ''}">
+      <input type="${type}" ${name ? `name="${name}"` : ''} value="${a.id}" ${npAddOns.has(a.id) ? 'checked' : ''} />
+      <span class="nm">${esc(a.name)}<span class="pr">${a.cents ? `${money(a.cents)} per ${a.per}` : `matched to ${money(a.matchUpToCents)}`}</span></span>
+    </label>`;
+
+  $('#np-addons').innerHTML = `<h4>Add-ons</h4>`
+    + options.filter((a) => a.group === 'attraction').map((a) => box(a, 'checkbox', '')).join('')
+    + (arcade.length ? arcade.map((a) => box(a, 'radio', 'np-arcade')).join('')
+        + `<label class="opt-row${arcade.every((a) => !npAddOns.has(a.id)) ? ' on' : ''}">
+             <input type="radio" name="np-arcade" value="" ${arcade.every((a) => !npAddOns.has(a.id)) ? 'checked' : ''} />
+             <span class="nm">No arcade card</span></label>` : '');
+
+  $('#np-addons').querySelectorAll('input').forEach((input) => {
+    input.onchange = () => {
+      if (input.type === 'radio') {
+        arcade.forEach((a) => npAddOns.delete(a.id));
+        if (input.value) npAddOns.add(input.value);
+      } else if (input.checked) npAddOns.add(input.value);
+      else npAddOns.delete(input.value);
+      npRenderAddOns();
+      npUpdateTotal();
+    };
+  });
+}
+
+function npRenderFood() {
+  const row = (item) => `
+    <div class="food-row">
+      <span class="nm">${esc(item.name)}</span>
+      <span class="pr">${money(item.cents)}</span>
+      <input type="number" min="0" max="20" value="${npFood[item.id] || 0}" data-npf="${item.id}" />
+    </div>`;
+  $('#np-food').innerHTML = EXTRA_PIZZAS.map(row).join('') + WINGS.map(row).join('')
+    + `<div class="tp-note">Toppings: ${PIZZA_TOPPINGS.join(' · ')}. Sauces: ${WING_SAUCES.join(' · ')}. These prices include tax.</div>`;
+
+  $('#np-food').querySelectorAll('[data-npf]').forEach((el) => {
+    el.oninput = () => { npFood[el.dataset.npf] = Math.max(0, Math.round(Number(el.value) || 0)); npUpdateTotal(); };
+  });
+}
+
+function npExtras() {
+  return {
+    addOns: [...npAddOns],
+    food: Object.entries(npFood).map(([id, qty]) => ({ id, qty })).filter((f) => f.qty > 0),
+  };
+}
+
+function npUpdateTotal() {
+  const priced = priceEventPackage($('#np-package').value, $('#np-guests').value, npExtras());
+  const el = $('#np-total');
+  if (!priced.ok) { el.className = 'note-box bad'; el.textContent = priced.error; return; }
+
+  const line = (k, v) => `<div class="tot-line" style="display:flex;justify-content:space-between;gap:12px;font-size:13.5px;margin-top:4px"><span style="color:var(--dim)">${k}</span><span>${v}</span></div>`;
+  el.className = 'note-box';
+  el.innerHTML = line(`${esc(priced.name)} · ${priced.guests} guests`, money(priced.baseCents))
+    + (priced.extraGuests ? line(`${priced.extraGuests} extra guest${priced.extraGuests > 1 ? 's' : ''}`, money(priced.extraCents)) : '')
+    + priced.addOns.filter((a) => !a.payAtCounter).map((a) => line(esc(a.name), money(a.cents))).join('')
+    + `<div style="display:flex;justify-content:space-between;gap:12px;margin-top:9px;padding-top:9px;border-top:1px solid var(--hairline)">
+         <span>Party total</span><span style="color:var(--amber);font-weight:700">${money(priced.totalCents)}</span></div>`
+    + (priced.foodCents ? line('Extra food (tax included)', money(priced.foodCents)) : '')
+    + line('Pizzas included', priced.pizzas)
+    + (priced.splitsForLaserTag ? `<div style="margin-top:9px;color:var(--amber);font-size:12.5px">Over ${ARENA.partySplitAbove} guests — laser tag runs as 2 groups.</div>` : '');
+}
+
+$('#pty-new').onclick = openNewParty;
+$('#np-close').onclick = () => $('#np-overlay').classList.remove('show');
+$('#np-overlay').onclick = (e) => { if (e.target === $('#np-overlay')) $('#np-overlay').classList.remove('show'); };
+$('#np-package').onchange = () => { npRenderAddOns(); npUpdateTotal(); };
+$('#np-deposit').onchange = () => $('#np-deposit-row').classList.toggle('on', $('#np-deposit').checked);
+$('#np-override').onchange = () => $('#np-override-row').classList.toggle('on', $('#np-override').checked);
+$('#np-date').onchange = npLoadSlots;
+
+// Age and guest count both change which slots can take this party, so the board is re-asked.
+let npTimer = null;
+for (const id of ['np-age', 'np-guests']) {
+  $(`#${id}`).oninput = () => {
+    npUpdateTotal();
+    clearTimeout(npTimer);
+    npTimer = setTimeout(npLoadSlots, 320);
+  };
+}
+
+$('#np-save').onclick = async () => {
+  const err = $('#np-error');
+  err.textContent = '';
+  if (npPick == null) { err.textContent = 'Pick a party room slot.'; return; }
+  if (!validAge($('#np-age').value)) { err.textContent = "Enter the age the birthday guest is turning."; return; }
+  if (!$('#np-name').value.trim())  { err.textContent = 'Enter a name for the booking.'; $('#np-name').focus(); return; }
+  if (!$('#np-phone').value.trim()) { err.textContent = 'Enter a phone number.'; $('#np-phone').focus(); return; }
+
+  const btn = $('#np-save');
+  btn.disabled = true;
+  try {
+    const res = await jsonPost('/api/staff/party', {
+      dateISO: $('#np-date').value,
+      slotStart: npPick,
+      packageId: $('#np-package').value,
+      guests: Number($('#np-guests').value),
+      age: Number($('#np-age').value),
+      name: $('#np-name').value.trim(),
+      phone: $('#np-phone').value.trim(),
+      email: $('#np-email').value.trim(),
+      override: $('#np-override').checked,
+      depositState: $('#np-deposit').checked ? 'paid' : 'due',
+      ...npExtras(),
+    });
+    $('#np-overlay').classList.remove('show');
+    toast(`Party ${res.booking.code} booked — ${res.booking.players} guests.`);
+    loadParties();
+  } catch (e) {
+    err.textContent = e.message;
+    if (e.status === 409) await npLoadSlots();
+  } finally {
+    btn.disabled = false;
+  }
+};
 
 /* ---------- Open on the tab the URL asks for ---------- */
 showTab(location.hash.slice(1) || 'dashboard');

@@ -69,6 +69,11 @@
   --radius: 0px;
 }
 
+/* Tell the browser this is a dark page. Without it the NATIVE parts of a control — the
+   date picker panel, the time spinner, the select dropdown, scrollbars — render light,
+   which is why a styled date field still opened a white calendar. */
+:root { color-scheme: dark; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 * { scrollbar-width: none; -ms-overflow-style: none; }
 *::-webkit-scrollbar { width: 0; height: 0; display: none; }
@@ -256,6 +261,11 @@ header {
 .input:focus { outline: none; border-color: var(--amber); }
 .input + .input { margin-top: 10px; }
 input[type=number].input, input[type=date].input, input[type=time].input { font-family: var(--ui); }
+/* Native date and time fields ship a light indicator glyph that vanishes on black. */
+input[type=date]::-webkit-calendar-picker-indicator,
+input[type=time]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .5; cursor: pointer; }
+input[type=date]:hover::-webkit-calendar-picker-indicator,
+input[type=time]:hover::-webkit-calendar-picker-indicator { opacity: 1; }
 select.input { appearance: none; cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7688' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center; background-size: 17px; padding-right: 38px; }
