@@ -66,6 +66,8 @@ const MIGRATIONS = [
     probe: () => db.from('waivers').select('id,first_name,email,terms_version').limit(1) },
   { file: '0007_party_deposit.sql',        what: 'party deposits and extra food',
     probe: () => db.from('party_details').select('booking_id,food,food_cents').limit(1) },
+  { file: '0008_note_images.sql',          what: 'screenshots on notes',
+    probe: () => db.from('note_images').select('id,note_id,path,mime').limit(1) },
 ];
 
 const pending = [];

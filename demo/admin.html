@@ -329,6 +329,40 @@
   .note .del { background: none; border: none; color: var(--dim); cursor: pointer; font-size: 15px; padding: 0 4px; }
   .note .del:hover { color: var(--danger); }
 
+  /* Screenshots on a note. Thumbnails are a fixed height so a row of them lines up
+     however tall the originals were, and each keeps its own aspect ratio. */
+  .shots { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+  .shot { position: relative; display: block; border: 1px solid var(--border); background: #000;
+          padding: 0; cursor: zoom-in; line-height: 0; border-radius: 3px; overflow: hidden; }
+  /* Anchored top-left, not centred: a wide screenshot cropped to its middle is usually
+     the empty part, while the top-left corner is what makes it recognisable. */
+  .shot img { height: 76px; width: auto; max-width: 220px; object-fit: cover;
+              object-position: left top; display: block; }
+  .shot:hover { border-color: var(--amber); }
+  .shot .x { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border: none;
+             border-radius: 3px; background: rgba(0,0,0,.72); color: #fff; font-size: 12px;
+             line-height: 20px; cursor: pointer; padding: 0; display: none; }
+  .shot:hover .x { display: block; }
+  .shot .x:hover { background: var(--danger); }
+  /* Uploading: dimmed until the server confirms, so a failure is visibly not-done. */
+  .shot.pending { opacity: .45; cursor: default; }
+
+  /* The area you can paste or drop a screenshot onto. */
+  .drop { border: 1px dashed var(--border); border-radius: 4px; padding: 10px 12px; margin-top: 10px;
+          font-size: 12.5px; color: var(--dim); display: flex; align-items: center; gap: 10px;
+          flex-wrap: wrap; transition: border-color .12s, background .12s; }
+  .drop.over { border-color: var(--amber); background: rgba(249,161,27,.07); color: var(--text); }
+  .drop .hint { flex: 1; min-width: 160px; }
+  kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--border); border-radius: 3px;
+        padding: 1px 5px; color: var(--text); background: rgba(255,255,255,.04); }
+
+  /* Full-size viewer. Its own layer so a tall screenshot scrolls instead of overflowing. */
+  .lightbox { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,.92);
+              display: flex; align-items: center; justify-content: center; padding: 24px; overflow: auto; }
+  .lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .lightbox .close { position: fixed; top: 14px; right: 18px; background: none; border: none;
+                     color: #fff; font-size: 28px; cursor: pointer; line-height: 1; }
+
   /* ---------- Settings ---------- */
   .setgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
   .setrow { display: flex; justify-content: space-between; gap: 14px; font-size: 13.5px; padding: 9px 0; border-bottom: 1px solid var(--border); }
@@ -866,6 +900,12 @@
   <div class="panel" style="margin-bottom:16px">
     <label class="fld" for="nt-body">New note</label>
     <textarea class="input" id="nt-body" rows="2" placeholder="What needs doing, or what should the desk know?"></textarea>
+    <div class="drop" id="nt-drop">
+      <span class="hint">Paste a screenshot with <kbd>⌘V</kbd>, drop one here, or</span>
+      <button class="btn btn-sm" id="nt-pick" type="button">Attach image</button>
+      <input type="file" id="nt-file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden />
+    </div>
+    <div class="shots" id="nt-shots"></div>
     <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center">
       <select class="input" id="nt-kind" style="width:auto">
         <option value="dev">For the developer</option>
@@ -2130,6 +2170,82 @@ $('#cal-next').onclick = () => { calMonth = new Date(calMonth.getFullYear(), cal
  * Notes
  * ==================================================================== */
 
+/* ---- Screenshots -------------------------------------------------------
+ *
+ * A retina screenshot is several megabytes of PNG, and Vercel rejects request bodies over
+ * roughly 4.5mb before they ever reach a handler. So the browser re-encodes first: capped
+ * at 2000px on the long edge, which still leaves screenshot text readable, and WebP, which
+ * turns a ~2mb capture into a couple of hundred kilobytes. Small files are left alone —
+ * re-encoding an already-small image only loses quality.
+ */
+const MAX_EDGE = 2000;
+
+async function shrinkImage(file) {
+  let bmp;
+  try { bmp = await createImageBitmap(file); }
+  catch (_) { throw new Error("That file couldn't be read as an image."); }
+
+  const scale = Math.min(1, MAX_EDGE / Math.max(bmp.width, bmp.height));
+  const w = Math.round(bmp.width * scale);
+  const h = Math.round(bmp.height * scale);
+
+  // GIFs move; drawing one to a canvas would flatten it to a single frame.
+  const keep = file.type === 'image/gif' || (scale === 1 && file.size <= 900 * 1024);
+  if (keep) { bmp.close(); return { blob: file, w, h }; }
+
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  bmp.close();
+  const blob = await new Promise((r) => c.toBlob(r, 'image/webp', 0.9));
+  return blob ? { blob, w, h } : { blob: file, w, h };
+}
+
+/** Send one prepared image to a note. Dimensions ride along so the list can reserve space. */
+async function uploadShot(noteId, shot) {
+  if (shot.blob.size > 4 * 1024 * 1024) {
+    throw new Error('That image is too large to upload, even after shrinking.');
+  }
+  return api(`/api/staff/notes/${noteId}/image?w=${shot.w}&h=${shot.h}`, {
+    method: 'POST',
+    headers: { 'Content-Type': shot.blob.type || 'application/octet-stream' },
+    body: shot.blob,
+  });
+}
+
+/** Images picked but not yet posted, held until the note they belong to exists. */
+let pendingShots = [];
+
+function renderPending() {
+  const host = $('#nt-shots');
+  host.innerHTML = pendingShots.map((s, i) => `
+    <span class="shot">
+      <img src="${s.preview}" alt="" />
+      <button class="x" data-drop="${i}" type="button" aria-label="Remove image">✕</button>
+    </span>`).join('');
+  host.querySelectorAll('[data-drop]').forEach((el) => {
+    el.onclick = () => {
+      URL.revokeObjectURL(pendingShots[el.dataset.drop].preview);
+      pendingShots.splice(Number(el.dataset.drop), 1);
+      renderPending();
+    };
+  });
+}
+
+async function acceptFiles(files) {
+  const err = $('#nt-error');
+  for (const f of [...files].filter((f) => f.type.startsWith('image/'))) {
+    try {
+      const shot = await shrinkImage(f);
+      shot.preview = URL.createObjectURL(shot.blob);
+      pendingShots.push(shot);
+    } catch (e) { err.textContent = e.message; }
+  }
+  renderPending();
+}
+
+/* ---- Notes ------------------------------------------------------------ */
+
 async function loadNotes() {
   const host = $('#nt-list');
   let data;
@@ -2146,11 +2262,21 @@ async function loadNotes() {
       database is not connected on this server.
     </div>`;
 
+  const shots = (n) => (n.images || []).map((im) => `
+    <a class="shot" href="/api/staff/notes/image/${im.id}" data-view="${im.id}">
+      <img src="/api/staff/notes/image/${im.id}" alt="Screenshot on this note" loading="lazy"
+           ${im.width && im.height ? `width="${im.width}" height="${im.height}"` : ''} />
+      <button class="x" data-unshot="${im.id}" type="button" aria-label="Remove image">✕</button>
+    </a>`).join('');
+
   host.innerHTML = warning + (data.notes.length ? data.notes.map((n) => `
     <div class="note${n.done ? ' done' : ''}">
       <input type="checkbox" data-done="${n.id}"${n.done ? ' checked' : ''} aria-label="Mark done" />
       <div class="body">${esc(n.body)}
-        <div class="meta">${n.kind === 'ops' ? 'Front desk' : 'Developer'}${n.author ? ` · ${esc(n.author)}` : ''} · ${esc(longDate(n.createdAt.slice(0, 10)))}</div>
+        ${(n.images || []).length ? `<div class="shots">${shots(n)}</div>` : ''}
+        <div class="meta">${n.kind === 'ops' ? 'Front desk' : 'Developer'}${n.author ? ` · ${esc(n.author)}` : ''} · ${esc(longDate(n.createdAt.slice(0, 10)))}
+          · <a href="#" data-addshot="${n.id}" style="color:var(--dim)">add image</a>
+        </div>
       </div>
       <button class="del" data-del="${n.id}" aria-label="Delete note">✕</button>
     </div>`).join('') : '<div class="empty-note">No notes yet.</div>');
@@ -2170,18 +2296,110 @@ async function loadNotes() {
       } catch (e) { toast(e.message); }
     };
   });
+
+  // Click a thumbnail to see it full size. The anchor still points at the image, so
+  // middle-click and "open in new tab" keep working.
+  host.querySelectorAll('[data-view]').forEach((el) => {
+    el.onclick = (ev) => {
+      if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button !== 0) return;
+      ev.preventDefault();
+      openLightbox(el.getAttribute('href'));
+    };
+  });
+
+  host.querySelectorAll('[data-unshot]').forEach((el) => {
+    el.onclick = async (ev) => {
+      ev.preventDefault(); ev.stopPropagation();
+      try {
+        await api(`/api/staff/notes/image/${el.dataset.unshot}`, { method: 'DELETE' });
+        loadNotes();
+      } catch (e) { toast(e.message); }
+    };
+  });
+
+  // Attach to a note that already exists.
+  host.querySelectorAll('[data-addshot]').forEach((el) => {
+    el.onclick = (ev) => {
+      ev.preventDefault();
+      const picker = document.createElement('input');
+      picker.type = 'file';
+      picker.accept = 'image/png,image/jpeg,image/webp,image/gif';
+      picker.multiple = true;
+      picker.onchange = async () => {
+        try {
+          for (const f of [...picker.files].filter((f) => f.type.startsWith('image/'))) {
+            await uploadShot(el.dataset.addshot, await shrinkImage(f));
+          }
+          loadNotes();
+        } catch (e) { toast(e.message); }
+      };
+      picker.click();
+    };
+  });
 }
+
+function openLightbox(src) {
+  const box = document.createElement('div');
+  box.className = 'lightbox';
+  box.innerHTML = `<button class="close" aria-label="Close">✕</button><img src="${esc(src)}" alt="" />`;
+  const shut = () => { box.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') shut(); };
+  box.onclick = (e) => { if (e.target !== box.querySelector('img')) shut(); };
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(box);
+}
+
+/* ---- Attaching to a new note ------------------------------------------ */
+
+$('#nt-pick').onclick = () => $('#nt-file').click();
+$('#nt-file').onchange = (e) => { acceptFiles(e.target.files); e.target.value = ''; };
+
+// Paste anywhere in the note box. This is the path that matters: screenshot, click, ⌘V.
+$('#nt-body').addEventListener('paste', (e) => {
+  const files = [...(e.clipboardData?.files || [])];
+  if (files.length) { e.preventDefault(); acceptFiles(files); }
+});
+
+const dropZone = $('#nt-drop');
+['dragenter', 'dragover'].forEach((t) => dropZone.addEventListener(t, (e) => {
+  e.preventDefault(); dropZone.classList.add('over');
+}));
+['dragleave', 'drop'].forEach((t) => dropZone.addEventListener(t, (e) => {
+  e.preventDefault(); dropZone.classList.remove('over');
+}));
+dropZone.addEventListener('drop', (e) => acceptFiles(e.dataTransfer.files));
 
 $('#nt-add').onclick = async () => {
   const err = $('#nt-error');
+  const btn = $('#nt-add');
   err.textContent = '';
   const body = $('#nt-body').value.trim();
   if (!body) { err.textContent = 'Write something first.'; return; }
+
+  btn.disabled = true;
   try {
-    await jsonPost('/api/staff/notes', { body, kind: $('#nt-kind').value, author: $('#nt-author').value.trim() });
+    // The note has to exist before its images can point at it, so this is two steps
+    // rather than one. If an upload fails the note is still saved — losing the words
+    // because a picture failed would be the worse trade.
+    const { note } = await jsonPost('/api/staff/notes', {
+      body, kind: $('#nt-kind').value, author: $('#nt-author').value.trim(),
+    });
+    const failed = [];
+    for (const shot of pendingShots) {
+      try { await uploadShot(note.id, shot); }
+      catch (e) { failed.push(e.message); }
+    }
+    pendingShots.forEach((s) => URL.revokeObjectURL(s.preview));
+    pendingShots = [];
+    renderPending();
     $('#nt-body').value = '';
+    if (failed.length) err.textContent = `Note saved, but the image didn't attach: ${failed[0]}`;
     loadNotes();
-  } catch (e) { err.textContent = e.message; }
+  } catch (e) {
+    err.textContent = e.message;
+  } finally {
+    btn.disabled = false;
+  }
 };
 
 /* ==================================================================== *
