@@ -343,25 +343,24 @@ footer .ft-brand { color: var(--text); font-weight: 600; letter-spacing: -.01em;
   footer { line-height: 1.5; }
 }
 
-/* Powered by Voltris Booking. The supplied lockup sets "Voltris" in black, invisible on this
-   background, so it sits on a light plate — the standard treatment for a dark-text logo on a
-   dark surface, keeping their brand colours as drawn rather than inverting them. */
+/* Powered by Voltris Booking.
+   The lockup sets "Voltris" in white and "Booking" in blue, so it sits straight on the
+   page. The earlier version had "Voltris" in black and needed a white plate behind it to
+   be visible at all — a plate is the fix for a dark-text logo on a dark surface, and with
+   a light-text version it is just a box round someone's wordmark. */
 .powered {
-  display: inline-flex; align-items: center; gap: 13px; margin-top: 24px;
-  padding: 8px 8px 8px 18px; border: 1px solid var(--hairline);
-  text-decoration: none; transition: border-color .14s;
+  display: inline-flex; align-items: center; gap: 14px; margin-top: 24px;
+  text-decoration: none; opacity: .72; transition: opacity .16s;
 }
-.powered:hover { border-color: var(--hairline-2); }
+.powered:hover { opacity: 1; }
 .powered .pb-label {
   font-family: var(--ui); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--dim); white-space: nowrap;
+  color: var(--dim); white-space: nowrap; font-weight: 600;
 }
-.powered .pb-plate { display: inline-flex; align-items: center; background: #fff; padding: 7px 16px; }
-.powered .pb-plate img { height: 17px; width: auto; display: block; }
+.powered .pb-mark { height: 19px; width: auto; display: block; }
 @media (max-width: 480px) {
-  .powered { padding: 6px 6px 6px 14px; gap: 10px; }
-  .powered .pb-plate { padding: 6px 13px; }
-  .powered .pb-plate img { height: 15px; }
+  .powered { gap: 10px; }
+  .powered .pb-mark { height: 16px; }
   .powered .pb-label { font-size: 9.5px; }
 }
 

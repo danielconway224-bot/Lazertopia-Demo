@@ -17,7 +17,7 @@ export function esc(s) {
 // Both logos are served from /assets rather than hotlinked, so the pages don't depend on
 // anyone else's CDN staying up and render instantly.
 const LOGO = '/assets/lasertopia-logo.png';
-const VOLTRIS_LOGO = '/assets/voltrisbooking-text-2x.png';
+const VOLTRIS_LOGO = '/assets/voltrisbooking-white-2x.png';
 const VOLTRIS_URL = 'https://www.voltrisbooking.com';
 
 // Order follows what people come here to do. Booking a game is first; a party is the
@@ -90,7 +90,7 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
       <a class="powered" href="${VOLTRIS_URL}" target="_blank" rel="noopener noreferrer"
          aria-label="Powered by Voltris Booking — opens voltrisbooking.com in a new tab">
         <span class="pb-label">Powered by</span>
-        <span class="pb-plate"><img src="${VOLTRIS_LOGO}" alt="Voltris Booking" /></span>
+        <img class="pb-mark" src="${VOLTRIS_LOGO}" alt="Voltris Booking" />
       </a>
     </footer>`);
 
