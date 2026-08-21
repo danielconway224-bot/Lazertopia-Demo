@@ -147,11 +147,16 @@ header {
 }
 .nav-link:hover { color: var(--text); }
 .nav-link.active { color: var(--amber); border-bottom-color: var(--amber); }
-.nav-link.cta {
-  color: #17120A; background: var(--amber); border-bottom-color: var(--amber);
-  font-weight: 700; padding: 9px 16px;
-}
-.nav-link.cta:hover { background: var(--amber-2); color: #17120A; }
+.nav-link.cta { font-weight: 700; padding: 9px 16px; border-bottom-color: transparent; }
+.nav-link.cta-amber { color: #17120A; background: var(--amber); }
+.nav-link.cta-amber:hover { background: var(--amber-2); color: #17120A; }
+/* The main site pairs an amber call to action with a cyan one. Parties takes the cyan:
+   it is the biggest booking the business sells and needs to look like an option, not an
+   item in a list of links. */
+.nav-link.cta-cyan { color: #04121A; background: var(--cyan); }
+.nav-link.cta-cyan:hover { background: #4FC0F0; color: #04121A; }
+/* A CTA that is also the current page keeps its fill and gains a rule beneath. */
+.nav-link.cta.active { border-bottom-color: var(--text); }
 
 /* Says where you are on staff pages; links nowhere. */
 .staff-badge {

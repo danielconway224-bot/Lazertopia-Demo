@@ -151,6 +151,10 @@
   .stepper .val { min-width: 30px; text-align: center; font-family: var(--ui); font-weight: 700; font-size: 15px; }
 
   .seg { display: flex; gap: 3px; background: var(--near-black); border: 1px solid var(--border); border-radius: 0; padding: 3px; }
+  .games-select {
+    width: auto; min-width: 156px; padding: 9px 34px 9px 12px; font-size: 13.5px;
+    font-weight: 600; background-position: right 10px center;
+  }
   .seg button {
     border: none; background: transparent; color: var(--muted); cursor: pointer;
     font-family: var(--ui); font-weight: 700; font-size: 12.5px; padding: 6px 12px;
@@ -324,7 +328,7 @@
 
 <script type="module">
 import {
-  ARENA, PACKAGES, HOUSE_RULES, WEEKLY_HOURS,
+  ARENA, PACKAGES, HOUSE_RULES, WEEKLY_HOURS, perPersonFor,
   hoursFor, sessionSpan, priceBooking, groupNoticeOk,
   isoDate, parseISO, fmtTime, money, arenaToday,
 } from '/lib/arena.js';
@@ -581,9 +585,13 @@ function renderCheckbar() {
   const seats = seatsLeftAt(state.startMin);
   const fits = spanOk(state.startMin, state.games, state.players);
 
-  const gameBtns = PACKAGES.map((p) => {
-    const ok = spanOk(state.startMin, p.games, state.players);
-    return `<button class="${p.games === state.games ? 'on' : ''}" data-games="${p.games}"${ok ? '' : ' disabled title="Not enough room for a run that long"'}>${p.games}</button>`;
+  // Ten buttons will not fit the checkout bar, least of all on a phone, so the run length
+  // is a select once it goes past the three published tiers. It carries the price, which
+  // the bare number never did.
+  const gameOpts = Array.from({ length: ARENA.maxGames }, (_, i) => i + 1).map((g) => {
+    const ok = spanOk(state.startMin, g, state.players);
+    const per = money(perPersonFor(g));
+    return `<option value="${g}"${g === state.games ? ' selected' : ''}${ok ? '' : ' disabled'}>${g} game${g > 1 ? 's' : ''} · ${per}${ok ? '' : ' — no room'}</option>`;
   }).join('');
 
   const totalHTML = (priced.ok && fits)
@@ -605,7 +613,7 @@ function renderCheckbar() {
     </div>
     <div class="cb-item">
       <div class="k">Games each</div>
-      <div class="seg" id="sg-games">${gameBtns}</div>
+      <select class="input games-select" id="sg-games">${gameOpts}</select>
     </div>
     <div class="cb-item cb-total">
       <div class="k">Total</div>
@@ -631,13 +639,11 @@ function renderCheckbar() {
     };
   });
 
-  $('#sg-games').querySelectorAll('button').forEach((b) => {
-    b.onclick = () => {
-      state.games = Number(b.dataset.games);
-      renderSessions();
-      renderCheckbar();
-    };
-  });
+  $('#sg-games').onchange = (e) => {
+    state.games = Number(e.target.value);
+    renderSessions();
+    renderCheckbar();
+  };
 }
 
 function setStep(n) {

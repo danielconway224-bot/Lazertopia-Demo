@@ -20,12 +20,16 @@ const LOGO = '/assets/lasertopia-logo.png';
 const VOLTRIS_LOGO = '/assets/voltrisbooking-text-2x.png';
 const VOLTRIS_URL = 'https://www.voltrisbooking.com';
 
+// Order follows what people come here to do. Booking a game is first; a party is the
+// biggest booking Lasertopia takes and was buried third in a row of plain links, so it now
+// sits second and carries the brand's cyan — the same pairing lasertopia.ca uses for its
+// two calls to action.
 const NAV = [
   { href: '/',         label: 'Book a game' },
+  { href: '/packages', label: 'Book a party', cta: 'cyan' },
   { href: '/rates',    label: 'Rates' },
-  { href: '/packages', label: 'Parties' },
   { href: '/hours',    label: 'Hours' },
-  { href: '/waiver',   label: 'Waiver', cta: true },
+  { href: '/waiver',   label: 'Waiver', cta: 'amber' },
 ];
 
 /**
@@ -58,7 +62,7 @@ export function mountShell({ active = '', banner = '', chrome = 'customer' } = {
   const links = chrome === 'staff'
     ? '<span class="staff-badge">Manager portal</span>'
     : NAV.map((n) => {
-        const cls = ['nav-link', n.cta ? 'cta' : '', n.href === active ? 'active' : ''].filter(Boolean).join(' ');
+        const cls = ['nav-link', n.cta ? `cta cta-${n.cta}` : '', n.href === active ? 'active' : ''].filter(Boolean).join(' ');
         return `<a class="${cls}" href="${n.href}">${n.label}</a>`;
       }).join('');
 

@@ -813,11 +813,7 @@
       </div>
       <div>
         <label class="fld" for="wi-games">Games each</label>
-        <select class="input" id="wi-games">
-          <option value="1">1 game — $8.49</option>
-          <option value="2">2 games — $15.49</option>
-          <option value="3">3 games — $21.49</option>
-        </select>
+        <select class="input" id="wi-games"></select>
       </div>
     </div>
 
@@ -932,11 +928,7 @@
       </div>
       <div>
         <label class="fld" for="nb-games">Games each</label>
-        <select class="input" id="nb-games">
-          <option value="1">1 game</option>
-          <option value="2">2 games</option>
-          <option value="3">3 games</option>
-        </select>
+        <select class="input" id="nb-games"></select>
       </div>
     </div>
 
@@ -962,7 +954,7 @@
 
 <script type="module">
 import {
-  ARENA, PACKAGES, EVENT_PACKAGES, hoursFor, sessionSpan, priceBooking,
+  ARENA, PACKAGES, EVENT_PACKAGES, hoursFor, sessionSpan, priceBooking, perPersonFor,
   ageCompatible, isoDate, parseISO, fmtTime, money, arenaToday, gamesInSlot,
 } from '/lib/arena.js';
 import { mountShell, hydrateConfig, $, esc, toast, api, jsonPost, longDate } from '/assets/shell.js';
@@ -1377,6 +1369,7 @@ $('#date-input').onchange = (e) => {
 
 /* ---------- Walk-in ---------- */
 function openWalkin(startMin) {
+  fillGameOptions($('#wi-games'), 1);
   state.target = startMin;
   $('#wi-sub').textContent = `${fmtTime(startMin)} game · ${longDate(state.date)}`;
   $('#wi-name').value = '';
@@ -2500,8 +2493,15 @@ $('#pty-next').onclick = () => { ptyMonth = new Date(ptyMonth.getFullYear(), pty
 let nbSessions = [];
 let nbPick = null;
 
+function fillGameOptions(select, selected = 1) {
+  select.innerHTML = Array.from({ length: ARENA.maxGames }, (_, i) => i + 1)
+    .map((g) => `<option value="${g}"${g === selected ? ' selected' : ''}>${g} game${g > 1 ? 's' : ''} · ${money(perPersonFor(g))} each</option>`)
+    .join('');
+}
+
 function openNewBooking() {
   $('#nb-error').textContent = '';
+  fillGameOptions($('#nb-games'));
   $('#nb-name').value = '';
   $('#nb-phone').value = '';
   $('#nb-email').value = '';

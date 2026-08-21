@@ -104,7 +104,7 @@
 </div>
 
 <script type="module">
-import { PACKAGES, money } from '/lib/arena.js';
+import { PACKAGES, ARENA, perPersonFor, money } from '/lib/arena.js';
 import { mountShell, hydrateConfig, $ } from '/assets/shell.js';
 
 mountShell({ active: '/rates' });
@@ -122,7 +122,13 @@ $('#prices').innerHTML = PACKAGES.map((p) => {
     <div class="per">per person</div>
     <div class="save">${saving > 0 ? `Save ${money(saving)}` : ''}</div>
   </div>`;
-}).join('');
+}).join('') + `
+  <div class="price">
+    <div class="n">Longer runs</div>
+    <div class="p">+${money(ARENA.extraGameCents)}</div>
+    <div class="per">per extra game, per person</div>
+    <div class="save">Up to ${ARENA.maxGames} games · ${money(perPersonFor(ARENA.maxGames))} for ${ARENA.maxGames}</div>
+  </div>`;
 </script>
 </body>
 </html>
