@@ -1,7 +1,18 @@
 -- ============================================================
 -- Lasertopia booking — full schema bootstrap
--- Generated from supabase/migrations/. Paste the whole file into
--- the Supabase SQL Editor and press Run. Safe to run twice.
+--
+-- THIS FILE IS FOR SETTING UP A NEW, EMPTY DATABASE.
+--
+-- On a database that is already running, do NOT paste this. Run only the new
+-- numbered file in supabase/migrations/ — `npm run check-db` lists exactly which
+-- ones are outstanding, and there is usually just one.
+--
+-- Re-running this whole file is harmless today (every statement is guarded with
+-- `if not exists`, `or replace` or `on conflict do nothing`) but it hides which
+-- migration actually applied, and the first migration that carries a data change
+-- rather than a schema change will not be safe to repeat.
+--
+-- Generated from supabase/migrations/. Do not edit here; edit the numbered file.
 -- ============================================================
 
 -- ─────────────────────────────────────────────────────────────

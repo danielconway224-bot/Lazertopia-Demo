@@ -334,6 +334,28 @@ Vercel runs each API call in its own short-lived process, so the in-memory store
 state between requests** in production. That shared live state is exactly what Supabase will
 take over — it's the next piece of work, not a surprise.
 
+## Database migrations
+
+Schema changes live as numbered files in `supabase/migrations/`. Each is one discrete
+change, and they are applied by pasting into the Supabase SQL Editor.
+
+```bash
+npm run check-db     # lists which migrations are applied and which are not
+```
+
+**On a running database, run only the files `check-db` lists as outstanding** — usually
+just the newest one. `supabase/RUN_ALL.sql` is every migration concatenated and exists for
+standing up a *new* database.
+
+Re-running everything is harmless today, because each statement is guarded with
+`if not exists`, `or replace` or `on conflict do nothing`. It is still the wrong habit: it
+hides which migration actually applied, and the first migration that carries a data change
+rather than a schema change will not be safe to repeat.
+
+`check-db` works out what is applied by probing for something each migration creates, rather
+than by keeping a version table. That way it cannot disagree with the database — including
+when migrations have been applied by hand, out of order, or twice.
+
 ## Go-live checklist
 
 Everything below is deliberate, and each one is a decision rather than an oversight. Work

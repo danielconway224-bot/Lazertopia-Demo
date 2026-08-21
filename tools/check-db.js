@@ -38,29 +38,68 @@ ok(`configured for ${status.url}`);
 
 const db = getSupabase();
 
-/* ---------- 2. Schema ---------- */
-console.log('\nSchema');
-// Probe a column the migration actually creates. `select('*')` is not enough — PostgREST
-// answers it without complaint for a table that does not exist, which silently reported
-// a schema that was never installed as present.
-const TABLES = [
-  ['bookings',       'id,code,date,start_min,games,players,kind,checkout_session_id'],
-  ['party_details',  'booking_id,slot_start,rooms,positions,deposit_state'],
-  ['hold_overrides', 'date,start_min,state'],
-  ['messages',       'id,channel,state'],
+/* ---------- 2. Migrations ----------
+ *
+ * Each migration is identified by something it CREATES, probed directly, rather than by a
+ * version table. That means it works on a database that has been migrated by hand, in any
+ * order, with no bookkeeping to get out of step with reality — and it tells you the one
+ * thing you actually want to know: which file to run next.
+ *
+ * Probe a real column, never select('*'): PostgREST answers a star select without complaint
+ * for a table that does not exist, which once reported a schema that was never installed as
+ * fully present.
+ */
+console.log('\nMigrations');
+
+const MIGRATIONS = [
+  { file: '0001_init.sql',                 what: 'bookings, parties, holds, messages',
+    probe: () => db.from('bookings').select('id,code,date,start_min,checkout_session_id').limit(1) },
+  { file: '0002_atomic_booking.sql',       what: 'no-oversell booking functions',
+    rpc: 'book_session' },
+  { file: '0003_portal.sql',               what: 'notes and the customers view',
+    probe: () => db.from('notes').select('id,body,kind,done').limit(1) },
+  { file: '0004_party_slot_overrides.sql', what: 'editable party schedule',
+    probe: () => db.from('party_slot_overrides').select('date,slot_start,rooms,games').limit(1) },
+  { file: '0005_settings.sql',             what: 'editable prices and hours',
+    probe: () => db.from('settings').select('id,data').limit(1) },
+  { file: '0006_waivers.sql',              what: 'signed waivers',
+    probe: () => db.from('waivers').select('id,first_name,email,terms_version').limit(1) },
+  { file: '0007_party_deposit.sql',        what: 'party deposits and extra food',
+    probe: () => db.from('party_details').select('booking_id,food,food_cents').limit(1) },
 ];
-for (const [table, columns] of TABLES) {
-  const { error } = await db.from(table).select(columns).limit(1);
-  if (error) {
-    fail(`${table} — ${error.message}`);
+
+const pending = [];
+for (const m of MIGRATIONS) {
+  let missing;
+  if (m.rpc) {
+    // A function cannot be probed by selecting from it, and calling it with NO arguments
+    // reports the zero-argument overload missing whether or not the real one exists — which
+    // is how this first reported an applied migration as pending.
+    //
+    // So call it properly, with a capacity of zero: it raises session_full before reaching
+    // the insert, which proves the function is there and changes nothing.
+    const { error } = await db.rpc(m.rpc, {
+      p_code: 'ZZ-PROBE', p_date: '2099-12-31', p_start_min: 720,
+      p_games: 1, p_players: 1, p_kind: 'online', p_capacity: 0,
+    });
+    missing = /could not find the function/i.test(String(error?.message || ''));
   } else {
-    ok(`${table}`);
+    const { error } = await m.probe();
+    missing = !!error;
   }
+  if (missing) { pending.push(m); bad(`${m.file.padEnd(30)} not run — ${m.what}`); }
+  else ok(`${m.file.padEnd(30)} ${m.what}`);
 }
 
-if (failures) {
-  console.log('\nRun the migrations first: paste supabase/migrations/*.sql into the');
-  console.log('Supabase SQL Editor, oldest first, and run each one.\n');
+if (pending.length) {
+  failures += pending.length;
+  console.log('');
+  console.log(`  \x1b[33mRun ${pending.length === 1 ? 'this file' : 'these files'}, oldest first:\x1b[0m`);
+  for (const m of pending) console.log(`    supabase/migrations/${m.file}`);
+  console.log('');
+  console.log('  Only the ones listed — the rest are already applied. supabase/RUN_ALL.sql');
+  console.log('  is every migration at once and is for setting up a NEW database.');
+  console.log('');
   process.exit(1);
 }
 
